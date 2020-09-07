@@ -24,11 +24,11 @@ By working on this project, I hope to accomplish the following:
     
 2. Establish a project template that:
     1. Has its dependencies isolated from other projects on the system.
-  2. Comes with a pre-configured linting solution.
-  3. Comes with a pre-configured testing solution.
-  4. Comes with a pre-configured database solution.
-  5. Comes with a pre-configured containerization solution (Dockerfile and secret management).
-  6. Comes with a pre-configured Github Actions integration (for CI/CD and automatic deployment to a cloud-hosting service).
+    1. Comes with a pre-configured linting solution.
+    1. Comes with a pre-configured testing solution.
+    1. Comes with a pre-configured database solution.
+    1. Comes with a pre-configured containerization solution (Dockerfile and secret management).
+    1. Comes with a pre-configured Github Actions integration (for CI/CD and automatic deployment to a cloud-hosting service).
   
 3. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
 
