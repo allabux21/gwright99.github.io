@@ -38,6 +38,11 @@ By working on this project, I hope to accomplish the following:
         <td>Cloud-hosting provider must offer extensive service catalog, including managed Kubernetes hosting</td>
         <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and / or make use of other vendor services (<i>like Identity Access Management</i>).</td>
     </tr>
+    <tr>
+        <td>005</td>
+        <td>Container solution must be Docker</td>
+        <td>Docker is the de facto base containerization solution of the day, and is well-understood and documented. The solution will ignore newer Kubernetes-centric containerization solutions like CRI-O in order to minimize the risk of unresolvable implementation errors. </td>
+    </tr>
     
 </table>
 
