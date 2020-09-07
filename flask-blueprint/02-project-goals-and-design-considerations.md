@@ -17,12 +17,21 @@ By working on this project, I hope to accomplish the following:
   
 3. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
 
-### Design Consideration
-| No. | Consideration | Description |
-| --- | ------------- | ----------- |
-| 001 | Minimize package installation problems| While Python runs on both Windows and Linux, |
-
 ### Design Constraints
+<table>
+    <tr>
+        <th>#</th>
+        <th>Constraint</th>
+        <th>Description</th></tr>
+    <tr><td>001</td>
+        <td>Solution must be local machine centric</td>
+        <td>I want to make use of cloud computing to host my completed solution but do not want to develop on the cloud platform itself. The solution must be capable of being run on local development machine.</td></tr>
+    <tr><td>002</td>
+        <td>Solution must be run direcly on Windows 10, not a VM</td>
+        <td>My development laptop runs Windows 10. It has 32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). Given its [mediocre benchmarks](www.laptoping.com/cpus/product/intel-core-i5-7200u/) and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. </td></tr>
+</table>
+
+### Design Considerations
 <table>
     <tr>
         <th>#</th>
