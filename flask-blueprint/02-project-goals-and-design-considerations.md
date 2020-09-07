@@ -3,7 +3,7 @@ By working on this project, I hope to accomplish the following:
 1. Settle on a development environment that:
     1. Removes the aggravation of Python development in a Windows environment.
     1. Allows me to work locally but can migrate to the cloud effortlessly.
-    &nbsp
+    &nbsp;
     
 2. Establish a project template that:
     1. Has its dependencies isolated from other projects on the system.
@@ -20,7 +20,7 @@ By working on this project, I hope to accomplish the following:
 ### Design Consideration
 No. | Consideration | Description
 --- | ------------- | -----------
-001 | test | test1
+001 | Minimize package installation problems| While Python runs on both Windows and Linux, 
 
 ### Design Constraints
 
