@@ -19,8 +19,8 @@ Theoretically, if I fix the template problem I can stop working about my infrast
 
 By working on this project, I hope to accomplish the following:
 1. Settle on a development environment that:
-    1.1 Removes the aggravation of Python development in a Windows environment. i.
-    1.1 Allows me to work locally but can migrate to the cloud effortlessly. ii.
+    1. Removes the aggravation of Python development in a Windows environment. i.
+    1. Allows me to work locally but can migrate to the cloud effortlessly. ii.
     
 2. Establish a project template that:
   i. Has its dependencies isolated from other projects on the system.
