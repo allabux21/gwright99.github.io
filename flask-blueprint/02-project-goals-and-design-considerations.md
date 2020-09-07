@@ -18,9 +18,9 @@ By working on this project, I hope to accomplish the following:
 3. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
 
 ### Design Consideration
-No. | Consideration | Description
---- | ------------- | -----------
-001 | Minimize package installation problems| While Python runs on both Windows and Linux, 
+| No. | Consideration | Description |
+| --- | ------------- | ----------- |
+| 001 | Minimize package installation problems| While Python runs on both Windows and Linux, |
 
 ### Design Constraints
 
