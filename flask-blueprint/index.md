@@ -15,7 +15,7 @@ One of my favoured education methods is to reproduce interesting programming tut
 Ultimately, the problems all centred around one simple fact: 
 **I did not have a stable, reuseable project template that handled these problems from the outset**.
 
-Theoretically, if I fix the template problem I can stop working about my infrastructure and focus exclusively on my code.
+Theoretically, if I fix the template problem, I stop worrying about the infrastructure and focus exclusively on my code.
 
 ### Project Goals
 By working on this project, I hope to accomplish the following:
