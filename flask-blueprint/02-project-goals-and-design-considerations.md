@@ -23,6 +23,17 @@ By working on this project, I hope to accomplish the following:
 | 001 | Minimize package installation problems| While Python runs on both Windows and Linux, |
 
 ### Design Constraints
+<table>
+    <tr>
+        <th>#</th>
+        <th>Consideration</th>
+        <th>Description</th></tr>
+    <tr>
+        <td>001</td>
+        <td>Minimize pip package installation problems</td>
+        <td>Although Python runs on both Windows and Linux ...</td>
+    </tr>
+</table>
 
 
 ### Design Decisions
