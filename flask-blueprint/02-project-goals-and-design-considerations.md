@@ -3,7 +3,7 @@ By working on this project, I hope to accomplish the following:
 1. Settle on a development environment that:
     1. Removes the aggravation of Python development in a Windows environment.
     1. Allows me to work locally but can migrate to the cloud effortlessly.
-    
+    &nbsp
     
 2. Establish a project template that:
     1. Has its dependencies isolated from other projects on the system.
