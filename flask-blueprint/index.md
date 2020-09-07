@@ -2,7 +2,7 @@
 This is the main page for my Flask blueprint project.
 
 ### Why I've embarked on the project
-I am a liberal arts graduate who is a self-taught programmer and ascended to a Solution Architecture role via a Business Analysis route rather than the more traditional developer path. While I believe that my background has generally equipped me well for the job (_something I may choose to explore in another article series_), I recognized that the lack of years as a hardcore developer needed to be compensated or else I risked being hoodwinked when discussing physical implementations and not properly identifying technical process implications for some architectural decisions.    
+I am a liberal arts graduate who is a self-taught programmer and ascended to a Solution Architecture role via a Business Analysis route rather than the more traditional developer path. While I believe that my background has generally equipped me well for the job, the lack of official developer experience needed to be compensated for or else I risked being hoodwinked when discussing physical implementations and not properly identifying technical process implications for some architectural decisions.    
 
 I regularly read and try interesting programming tutorials in an effort to expand and update my technical skills. As a result of growing up in the pre-cloud era, however, I still favour working in a local environment (_sometimes a Linux VM on a Windows host, sometimes directly on Windows_). Although this approach is effective for getting started quickly (_pip install a few packages, start coding!_), I have noticed that I continually encountered the same problems like:
 
@@ -23,7 +23,7 @@ By working on this project, I hope to accomplish the following:
     1. Allows me to work locally but can migrate to the cloud effortlessly. ii.
     
 2. Establish a project template that:
-  i. Has its dependencies isolated from other projects on the system.
+    1. Has its dependencies isolated from other projects on the system.
   2. Comes with a pre-configured linting solution.
   3. Comes with a pre-configured testing solution.
   4. Comes with a pre-configured database solution.
