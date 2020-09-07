@@ -15,7 +15,18 @@ One of my favoured education methods is to reproduce interesting programming tut
 Ultimately, the problems all centred around one simple fact: 
 **I did not have a stable, reuseable project template that handled these problems from the outset**.
 
-Theoretically, if I fix the template problem, I stop worrying about the infrastructure and focus exclusively on my code.
+Theoretically, if I could fix the template problem, I could stop worrying about the infrastructure and focus exclusively on my code.
+
+#### Reuse, Don't Reinvent!
+Martin Heinz, an author regularly featured in the Hacker News newsletter, wrote an excellent set of articles on the [Ultimate Setup for Your Next Python Project](https://martinheinz.dev/blog/14) and [Automating Every Aspect of Your Python Project](https://martinheinz.dev/blog/17). I highly recommend that readers of this blog series check them out, because I've heavily reused his material within my own efforts (_and made some design decision based on his explanations_).
+
+Despite the excellence of the series, there was a problem that caused it to be insufficient for fulfilling my needs: the resulting Docker container returned a 'Hello World' response to the CLI. 
+
+From a plumbing perspective, a CLI response was perfectly acceptable. One could expect a technically-saavy individual to download the Docker image from the Github Packages Registry, spin up the image via their local Docker installation, and witness the container's CLI response before it terminated. 
+
+I, on the otherhand, did not want to have to rely on an individual to be technically-saavy in order to see the result. Whether fair or not, visuals - particularly those easily-accessible to a layperson via a web browser - earn kudos from the stakeholders far more easily than more advanced (but harder to visualize) plumbing solutions. I still wanted Heinz' project automation, I just wanted the result to be visible from a browser.
+
+Like many efforts in the world of IT, this "simple" change ended up kicking off a plethora of other changes and design considerations. This series is born of that effort. 
 
 ### Project Goals
 By working on this project, I hope to accomplish the following:
@@ -30,7 +41,10 @@ By working on this project, I hope to accomplish the following:
     1. Comes with a pre-configured database solution.
     1. Comes with a pre-configured containerization solution (Dockerfile and secret management).
     1. Comes with a pre-configured Github Actions integration (for CI/CD and automatic deployment to a cloud-hosting service).
+    1. Comes with the pre-developed capability to respond to browser-based RESTful transactions
   
 3. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
+
+### Design Consideration
 
 
