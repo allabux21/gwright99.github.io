@@ -25,7 +25,7 @@ By working on this project, I hope to accomplish the following:
         <th>Description</th></tr>
     <tr><td>001</td>
         <td>Solution must be local machine centric</td>
-        <td>I want to make use of cloud computing to host my completed solution but do not want to develop on the cloud platform itself. <br><br>The solution must be capable of being run on local consumer-grade machine.</td></tr>
+        <td>I want to make use of cloud computing to host my completed solution but do not want to develop on the cloud platform itself. <br><br>The entire solution must be capable of being run on local consumer-grade machine.</td></tr>
     <tr><td>002</td>
         <td>Solution must be run direcly on Windows 10, not a VM</td>
         <td>My development laptop runs Windows 10. It has 32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). <br><br>Given its <a href="www.laptoping.com/cpus/product/intel-core-i5-7200u/">mediocre benchmarks</a> and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. </td></tr>
