@@ -31,12 +31,12 @@ By working on this project, I hope to accomplish the following:
         <td>My development laptop runs Windows 10. It has 32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). <br><br>Given its <a href="www.laptoping.com/cpus/product/intel-core-i5-7200u/">mediocre benchmarks</a> and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. </td></tr>
     <tr><td>003</td>
         <td>Source control and CI/CD solutions must be served by same component</td>
-        <td>Modern-day applications already require a plethora of technology components. <br><br>I do not want to add extra complexity by having to integrate two separate services (_e.g. GitLab and Jenkins_) if a single service alternative exists (_e.g. GitHub_).</td>
+        <td>Modern-day applications already require a plethora of technology components. <br><br>I do not want to add extra complexity by having to integrate two separate services (<i>e.g. GitLab and Jenkins</i>) if a single service alternative exists (<i>e.g. GitHub</i>).</td>
     </tr>
     <tr>
         <td>004</td>
         <td>Cloud-hosting provider must offer extensive service catalog, including managed Kubernetes hosting</td>
-        <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and / or make use of other vendor services (_like Identity Access Management_).</td>
+        <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and / or make use of other vendor services (<i>like Identity Access Management</i>).</td>
     </tr>
     
 </table>
