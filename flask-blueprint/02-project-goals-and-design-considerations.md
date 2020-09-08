@@ -168,7 +168,7 @@ After mulling my design constraints, design considerations, previous project exp
         When one talks web frameworks and databases, ORMs always seem to be included in the conversation too. To be honest, I hate ORMs - every time I try to learn SQLAlchemy, I find I always get confused and lose motivation to continue my project. I told myself this time would be different and I would finally hunker down and figure it out <i>(*foreshadow alert*: it didn't go so well)</i>.<br>I'll be documenting my opinion on flask-sqlalchemy and SQLAlchemy more in later articles in the series (to reflect what I encountered while trying to implement my solution). For the purposes of this technology selection portion, I'll simply say that I started with flask-sqlalchemy and then started to immediately regress once I began to learn more.
     </li>
     <br><li>
-        <b>Web framework/b><span><h4>Flask</h4></span>
+        <b>Web framework</b><span><h4>Flask</h4></span>
         Surprise! Given that this series is about creating a Flask solution, this should shock no one. As per the <a href="https://www.jetbrains.com/lp/python-developers-survey-2019/">2019 Jetbrains Developer survey</a>, Flask is the #1 web framework - slightly ahead of Django and miles ahead of the rest of the competition. Given its market dominance and (theoretical) ease of initial deployment, Flask is the obvious selection.
     </li>
     
