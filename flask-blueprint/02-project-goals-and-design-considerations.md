@@ -11,6 +11,7 @@ By completing the project, I aim to fulfill the following goals.
     1. Comes with the pre-developed capability to respond to browser-based RESTful transactions<br><br> 
 1. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
 
+
 ### Design Constraints
 <table>
     <tr>
@@ -28,25 +29,25 @@ By completing the project, I aim to fulfill the following goals.
         <td>My development machine runs Windows 10, with  32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). <br><br>Given its <a href="http://www.laptoping.com/cpus/product/intel-core-i5-7200u/">mediocre benchmarks</a> and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. <br><br><i><b>Note:</b> To avoid the "Dude, just install Linux as your base OS!" conversation, I also game on this machine (which is far easier on Windows). Furthermore, I feel a Windows-based solution is a necessary approach given that many employers still equip their employees with Windows-based machines.</i> </td></tr>
     <tr><td>004</td>
         <td>Source control and CI/CD solutions must use same component</td>
-        <td>Modern-day applications already require a plethora of technology components. <br><br>I do not want to add extra complexity by having to integrate two separate services (<i>e.g. GitLab and Jenkins</i>) if a single service alternative exists (<i>e.g. GitHub</i>).</td>
+        <td>Modern-day applications already require a plethora of technology components. I do not want to add extra complexity by having to integrate two separate services (<i>e.g. GitLab and Jenkins</i>) if a single service alternative exists (<i>e.g. GitHub</i>).</td>
     </tr>
     <tr>
         <td>005</td>
-        <td>Cloud-hosting provider must offer extensive service catalog, including managed Kubernetes hosting</td>
+        <td>Cloud provider must have extensive service catalog</td>
         <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and/or make use of other vendor services like Identity Access Management.</td>
     </tr>
     <tr>
         <td>006</td>
         <td>Container solution must be Docker</td>
-        <td>Docker is the de facto base containerization solution of the day, and is well-understood and documented. The solution will ignore newer Kubernetes-centric containerization solutions like CRI-O in order to minimize the risk of unresolvable implementation errors. </td>
+        <td>Docker is the de facto base containerization solution of the day. The solution will ignore newer Kubernetes-centric containerization solutions like CRI-O in order to minimize the risk of unresolvable implementation errors. </td>
     </tr>
     <tr>
         <td>006</td>
-        <td>Solution must provide HTTP-accessible visual responses</td>
-        <td>Any solution I build is meant for portfolio demonstration purposes and/or for potential future web-based businesses. Building in visual response capabilities (<i>i.e. webpage responses</i>) from the outset means my project can easily support both human-based portal-type and system-based data API-type usage models. </td>
+        <td>Solution must provide HTTP-accessible HTML responses</td>
+        <td>Any solution I build is meant for portfolio demonstration purposes and/or future web-based businesses. Building HTML response capabilities from the outset means my project can easily support both human-based portal-type and system-based data API-type usage models. </td>
     </tr>
-    
 </table>
+
 
 ### Design Considerations
 <table>
@@ -57,7 +58,7 @@ By completing the project, I aim to fulfill the following goals.
     <tr>
         <td>001</td>
         <td>Use tools that are specifically designed for their task</td>
-        <td>Do not waste time trying to make a tool fulfill a role it is not specifically designed to do. <br><br><b>Example: Using SublimeText as an IDE.</b> In past development efforts, I have modified and extended <a href="https://www.sublimetext.com/">Sublime Text</a> as a "lite" IDE. The product is an excellent text editor, but the initial setup required hours of reading and decisions re: which packages to install and how to configure them properly, with ongoing support obligations that were frequent enough to be noticeaable but infrequent enough for me to immediately remember the solution. This took up limited time & attention resources which I could have better spent on actually writing code.</td>
+        <td>Do not waste time trying to make a tool fulfill a role it is not specifically designed to do. <br><br><b>Example: Using SublimeText as an IDE.</b><br> In past development efforts, I have modified and extended <a href="https://www.sublimetext.com/">Sublime Text</a> as a "lite" IDE. The product is an excellent text editor, but the initial setup required hours of reading and decisions re: which packages to install and how to configure them properly, with ongoing support obligations that were frequent enough to be noticeaable but infrequent enough for me to immediately remember the solution. This took up limited time & attention resources which I could have better spent on actually writing code.</td>
     </tr>
     <tr>
         <td>002</td>
