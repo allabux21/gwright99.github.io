@@ -110,7 +110,7 @@ By working on this project, I hope to accomplish the following:
     </tr>
     <tr>
         <td>007</td>
-        <td>Use synchronous framework</td>
+        <td>Use a synchronous framework</td>
         <td>Python has gotten better at supporting asynchronous programming <i>(e.g. making async/await reserved keywords in Python3.7)</i>. However, I find asynchronous programming more difficult for two reasons:
             <ul>
                 <li>It requires logic to be structured and written in a different manner than traditional synchronous programs.</li>
@@ -119,12 +119,29 @@ By working on this project, I hope to accomplish the following:
             Asynchronous programming is clearly preferrable when designing applications that must be performant under extremely high load, and this is programming style that I should become more familiar with for my own professional career. With that said, I don't think the extra complexity makes sense for my initial delivery goals. For this reason, I've decided to stick with WSGI and make a note that I should have a follow-up project that converts this WSGI-based solution to an ASGI-based framework <i>(e.g. moving from a framework like Flask to Starlette or FastApi)</i>.
         </td>
     </tr>
-        
+    <tr>
+        <td>008</td>
+        <td>Find right level of database abstraction</td>
+        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-build database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.
+    </tr>
 </table>
 
 ### Design Decisions
+After mulling my design constraints, design considerations, previous project experience, availability of documentation/guides, and future expected benefits to both my job duties and personal goals, I decided on the following solution stack:
+
+<ul>
+    <li>
+        <b>Development OS: Ubuntu 20.04 WSL2 running on Windows 10</b><br>
+        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to have to move away from Windows 10 as my OS, but I *really* didn't want to directly develop on it either.Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows).<br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
+    </li>
+    
+</ul>
+
 Use linux - Python scientific libs, more comfortable with Linux CLI, makefile
+venv
 AWS
 GitHub
 WSL2
 VSCode
+Sqlite
+Pytest
