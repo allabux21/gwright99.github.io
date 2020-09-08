@@ -157,7 +157,7 @@ After mulling my design constraints, design considerations, previous project exp
     </li>
     <br><li>
         <b>Testing framework</b><span><h4>Pytest</h4></span>
-        I'm not super familiar with Python testing frameworks. Regardless, I know I need an automated testing solution in order to leverage CI/CD effectively, and Pytest is works in a way that I find more natural than the Python standard library's unittest module. 
+        I'm not super familiar with Python testing frameworks. Regardless, I know I need an automated testing solution in order to leverage CI/CD effectively, and Pytest works in a way that I find more natural than the Python standard library's unittest module. 
     </li>
     <br><li>
         <b>Database</b><span><h4>SQLite3</h4></span>
