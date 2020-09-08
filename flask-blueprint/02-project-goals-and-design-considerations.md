@@ -141,7 +141,7 @@ After mulling my design constraints, design considerations, previous project exp
     </li>
     <br><li>
         <b>Local source control</b><span><h4>Git</h4></span>
-        Git is extremely easy to setup in Linux and very easy to integrate with an Git-based cloud solution <i>(e.g. GitHub, GitLab)</i>. Any developer worth their salt should know the basics of Git, so this is a must-learn topic regardless of project outcome.
+        Git is extremely easy to set up in Linux and integrate with a Git-based cloud solution <i>(e.g. GitHub, GitLab)</i>. Any developer worth their salt should know the basics of Git, so this is a must-learn topic regardless of project outcome.
     </li>
     <br><li>
         <b>Cloud source control & CI/CD</b><span><h4>GitHub</h4></span>
