@@ -1,17 +1,15 @@
 ### Project Goals
-
+By completing the project, I aim to fulfill the following goals.
     
-2. Establish a project template that:
-    1. Has its dependencies isolated from other projects on the system.
+1. Establish a project template that:
+    [] Has its dependencies isolated from other projects on the system.
     1. Comes with a pre-configured linting solution.
     1. Comes with a pre-configured testing solution.
     1. Comes with a pre-configured database solution.
     1. Comes with a pre-configured containerization solution (Dockerfile and secret management).
     1. Comes with a pre-configured Github Actions integration (for CI/CD and automatic deployment to a cloud-hosting service).
-    1. Comes with the pre-developed capability to respond to browser-based RESTful transactions
-  
-  
-3. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
+    1. Comes with the pre-developed capability to respond to browser-based RESTful transactions<br><br> 
+1. Define the processes and supporting configuration scripts necessary to easily deploy the template into a newly-instantiated local project.
 
 ### Design Constraints
 <table>
@@ -118,7 +116,7 @@
     <tr>
         <td>008</td>
         <td>Find right level of database abstraction</td>
-        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-built database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
+        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-built database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br><b>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
     </tr>
     <tr>
         <td>009</td>
@@ -150,6 +148,10 @@ After mulling my design constraints, design considerations, previous project exp
     <br><li>
         <b>Cloud hosting provider</b><span><h4>AWS</h4></span>
         Given my evident preference for other Microsoft solutions, you'd be forgiven for thinking I'd pick Azure. Azure is probably worth looking at in the long-term, but I have more familiarity with the AWS platform and have a few Serverless tutorials that I would like to try soon that are all based on AWS infrastructure. Winner: AWS. 
+    </li>
+    <br><li>
+        <b>Container solution</b><span><h4>Docker</h4></span>
+        The only legitimate contender in my mind. Docker is well-documented and well-supported. It helps that the latest iteration of Docker For Windows has tight integration with WSL2. 
     </li>
     <br><li>
         <b>IDE</b><span><h4>VSCode</h4></span>
