@@ -122,7 +122,7 @@ By working on this project, I hope to accomplish the following:
     <tr>
         <td>008</td>
         <td>Find right level of database abstraction</td>
-        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-build database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.
+        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-build database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
     </tr>
 </table>
 
