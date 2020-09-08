@@ -156,7 +156,7 @@ After mulling my design constraints, design considerations, previous project exp
         It's a free, full-feared IDE with great official Microsoft language support plugins. Better yet, it is fully integrated with WSL2 and can be directly invoked from the venv CLI. Plus I like how it looks.
     </li>
     <br><li>
-        <b>Testing framework/b><span><h4>Pytest</h4></span>
+        <b>Testing framework</b><span><h4>Pytest</h4></span>
         I'm not super familiar with Python testing frameworks. Regardless, I know I need an automated testing solution in order to leverage CI/CD effectively, and Pytest is works in a way that I find more natural than the Python standard library's unittest module. 
     </li>
     <br><li>
