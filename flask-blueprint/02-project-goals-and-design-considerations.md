@@ -98,12 +98,29 @@ By working on this project, I hope to accomplish the following:
             </ul>
         </td>
     </tr>
+    <tr>
+        <td>005</td>
+        <td>Use an unopinionated framework</td>
+        <td>This one is a matter of personal preference. Using an opinionated web framework like Django would likely make it easier to get a fully featured-website up and running. However, one of the reasons I'm engaged in this exercise is to learn, and that's harder to do if there is only "one" correct way to do things. As a result, (and acknowledging the days of frustration this decision is likely to cause) the solution should use a framework that leaves the majority of design decisions up to me.</td>
+    </tr>
+    <tr>
+        <td>006</td>
+        <td>Use a well-documented framework</td>
+        <td>Given Design Consideration #005, I'm going to need to make many decisions and it's likely I wont immediately know what the correct decision is. As a result, I should choose a framework that is well-established and has a large community. This will increase the chance that someone has encountered the same problem I'm having, and that a solution already exists on some blog or Stack Overflow discussion page. For this reason, I should favour an older framework like Flask over a newer framework like FastApi.</td>
+    </tr>
+    <tr>
+        <td>007</td>
+        <td>Use synchronous framework</td>
+        <td>Python has gotten better at supporting asynchronous programming <i>(e.g. making async/await reserved keywords in Python3.7)</i>. However, I find asynchronous programming more difficult for two reasons:
+            <ul>
+                <li>It requires logic to be structured and written in a different manner than traditional synchronous programs.</li>
+                <li>It requires a different application server implementation (ASGI-compliant vs. WSGI-compliant) </li>
+            </ul>
+            Asynchronous programming is clearly preferrable when designing applications that must be performant under extremely high load, and this is programming style that I should become more familiar with for my own professional career. With that said, I don't think the extra complexity makes sense for my initial delivery goals. For this reason, I've decided to stick with WSGI and make a note that I should have a follow-up project that converts this WSGI-based solution to an ASGI-based framework <i>(e.g. moving from a framework like Flask to Starlette or FastApi)</i>.
+        </td>
+    </tr>
         
 </table>
-
-unopinionated (Django)
-well documented (Flask vs FastApi)
-Synchronous to start (Flask vs Starlette)
 
 ### Design Decisions
 Use linux - Python scientific libs, more comfortable with Linux CLI, makefile
