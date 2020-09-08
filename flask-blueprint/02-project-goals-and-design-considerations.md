@@ -165,7 +165,7 @@ After mulling my design constraints, design considerations, previous project exp
     </li>
     <br><li>
         <b>ORM</b><span><h4>*-SQLAlchemy</h4></span>
-        When one talks web frameworks and databases, ORMs always seem to be included in the conversation too. To be honest, I hate ORMs - every time I try to learn SQLAlchemy, I find I always get confused and lose motivation to continue my project. I told myself this time would be different and I would finally hunker down and figure it out <i>(*foreshadow alert*: it didn't go so well)</i>.<br>I'll be documenting my opinion on flask-sqlalchemy and SQLAlchemy more in later articles in the series (to reflect what I encountered while trying to implement my solution). For the purposes of this technology selection portion, I'll simply say that I started with flask-sqlalchemy and then started to immediately regress once I began to learn more.
+        When one talks web frameworks and databases, ORMs always seem to eventually show up. To be honest, I really dislike ORMs; every time I try to learn SQLAlchemy, I find I get confused and eventually lose motivation to continue my project. I told myself this time would be different and I would finally hunker down and figure it out <i>(foreshadow alert: it didn't go so well this time either)</i>.<br>I'll be documenting my opinion on flask-sqlalchemy and SQLAlchemy more in later articles in the series (to reflect what I encountered while trying to implement my solution). For the purposes of this technology selection portion, I'll simply say that I started with flask-sqlalchemy and then started to immediately regress once I began to learn more.
     </li>
     <br><li>
         <b>Web framework</b><span><h4>Flask</h4></span>
