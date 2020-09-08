@@ -36,12 +36,17 @@ By working on this project, I hope to accomplish the following:
     <tr>
         <td>004</td>
         <td>Cloud-hosting provider must offer extensive service catalog, including managed Kubernetes hosting</td>
-        <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and / or make use of other vendor services (<i>like Identity Access Management</i>).</td>
+        <td>The solution being built is meant to serve as the nucleus of more advanced future applications. Despite the risk of vendor-lockin, the initial design must have the integration hooks necessary to allow easy deployment into the vendor's environment and/or make use of other vendor services like Identity Access Management.</td>
     </tr>
     <tr>
         <td>005</td>
         <td>Container solution must be Docker</td>
         <td>Docker is the de facto base containerization solution of the day, and is well-understood and documented. The solution will ignore newer Kubernetes-centric containerization solutions like CRI-O in order to minimize the risk of unresolvable implementation errors. </td>
+    </tr>
+    <tr>
+        <td>006</td>
+        <td>Solution must provide HTTP-accessible visual responses</td>
+        <td>Any solution I build is meant for portfolio demonstration purposes and/or for potential future web-based businesses. Building in visual response capabilities (<i>i.e. webpage responses</i>) from the outset means my project can easily support both human-based portal-type and system-based data API-type usage models. </td>
     </tr>
     
 </table>
@@ -54,6 +59,18 @@ By working on this project, I hope to accomplish the following:
         <th>Description</th></tr>
     <tr>
         <td>001</td>
+        <td>Use tools that are specifically designed for theit task</td>
+        <td>Do not waste time trying to make a tool fulfill a role it is not specifically designed to do. <br><br><b>Example: Using SublimeText as an IDE.</b> In past development efforts, I have modified and extended <a href="https://www.sublimetext.com/">Sublime Text</a> as a "lite" IDE. The product is an excellent text editor, but the initial setup required hours of reading and decisions re: which packages to install and how to configure them properly, with ongoing support obligations that were frequent enough to be noticeaable but infrequent enough for me to immediately remember the solution. This took up limited time & attention resources which I could have better spent on actually writing code.</td>
+    </tr>
+    
+    <tr>
+        <td>002</td>
+        <td>Minimize necessary system component configuration</td>
+        <td>My approach should favour using tools that require minimal effort to configure/integrate with other components. <br><br>I should not be wasting my own limited time and attention of setting up my infrastructure if I have the option of leveraging the development & support efforts of a large software company. <br> For example: I like the experience of using SublimeText as a text editor, and even managed to transform it into a small resources of a </td>
+    </tr>
+    
+    <tr>
+        <td>001</td>
         <td>Minimize pip package installation problems</td>
         <td>Although Python runs on both Windows and Linux ...</td>
     </tr>
@@ -61,3 +78,8 @@ By working on this project, I hope to accomplish the following:
 
 
 ### Design Decisions
+Use linux - Python scientific libs, more comfortable with Linux CLI, makefile
+AWS
+GitHub
+WSL2
+VSCode
