@@ -80,7 +80,7 @@ By working on this project, I hope to accomplish the following:
                 <li>Watching my ISP data cap get chewed up as I download components from Microsoft that turn out to not be what I need</li>
                 <li>Swearing at my computer and myself for not having learned from the last time I had to go through this ordeal.</li>
             </ol>
-            This time: <b><u>I'll do it RIGHT</u></b>
+            This time <b><u>I'll do it RIGHT</u></b>
         </td>
     </tr>
     <tr>
