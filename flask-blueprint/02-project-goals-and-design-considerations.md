@@ -132,11 +132,11 @@ After mulling my design constraints, design considerations, previous project exp
 
 <ul>
     <li>
-        <b>Development OS:</b> <span><h4>Ubuntu 20.04 WSL2 running on Windows 10</h4></span><br>
+        <b>Development OS</b> <span><h4>Ubuntu 20.04 WSL2 running on Windows 10</h4></span>
         This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to have to move away from Windows 10 as my OS, but I *really* didn't want to directly develop on it either.Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows). This is important note only for avoiding Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
     </li>
     <br><li>
-        <b>Python package managemet and isolation solution:</b> pip & venv<br>
+        <b>Python package managemet and isolation solution:<span><h4>pip & venv</h4></span>
             <a href="https://docs.python.org/3/tutorial/venv.html#managing-packages-with-pip">Pip</a> and <a href="https://docs.python.org/3/library/venv.html">venv</a> aren't new or fancy, but they work.<br>I may eventually look at newer solutions like <a href="https://pypi.org/project/pipenv/">pipenv</a> or <a href="https://python-poetry.org/docs/">poetry</a>, but see no compelling reason to complicate my life when I already have acceptable solutions shipped with the standard library.
     </li>
     <br><li>
