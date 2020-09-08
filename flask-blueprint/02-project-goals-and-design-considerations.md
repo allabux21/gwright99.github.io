@@ -2,7 +2,7 @@
 By completing the project, I aim to fulfill the following goals.
     
 1. Establish a project template that:
-    [] Has its dependencies isolated from other projects on the system.
+    [ ] Has its dependencies isolated from other projects on the system.
     1. Comes with a pre-configured linting solution.
     1. Comes with a pre-configured testing solution.
     1. Comes with a pre-configured database solution.
