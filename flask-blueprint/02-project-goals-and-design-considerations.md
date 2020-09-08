@@ -77,8 +77,8 @@ By working on this project, I hope to accomplish the following:
             <ol>
                 <li>Searching Google for an answer that actually works.</li>
                 <li>Searching the endless Microsoft website for the exact required component.</li>
-                <li>Spend hours of time and ISP data cap be chewed up as I download components from Microsoft that turn out to not be what I need</li>
-                <li>Swear at my computer and myself for not having learned from the last time I had to go through this ordeal.</li>
+                <li>Watching my ISP data cap get chewed up as I download components from Microsoft that turn out to not be what I need</li>
+                <li>Swearing at my computer and myself for not having learned from the last time I had to go through this ordeal.</li>
             </ol>
             This time: <b><u>I'll do it RIGHT</u></b>
         </td>
