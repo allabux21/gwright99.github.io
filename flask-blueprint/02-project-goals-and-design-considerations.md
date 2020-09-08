@@ -1,9 +1,5 @@
 ### Project Goals
-By working on this project, I hope to accomplish the following:
-1. Settle on a development environment that:
-    1. Removes the aggravation of Python development in a Windows environment.
-    1. Allows me to work locally but can migrate to the cloud effortlessly.
-    &nbsp;
+
     
 2. Establish a project template that:
     1. Has its dependencies isolated from other projects on the system.
@@ -124,6 +120,11 @@ By working on this project, I hope to accomplish the following:
         <td>Find right level of database abstraction</td>
         <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-build database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
     </tr>
+    <tr>
+        <td>009</td>
+        <td>Use source control system that easily integrates with CI/CD solutions</td>
+        <td>I'm going to make alot of mistakes in this project, so I cannot be afraid to modify working code lest I never manage to recreate a useable product. As such, I absolutely must have a source control system that can operate in my preferred local environment, but also integrates easily with a cloud source control solution, for backup and CI/CD purposes.</td>
+    </tr>
 </table>
 
 ### Design Decisions
@@ -131,17 +132,23 @@ After mulling my design constraints, design considerations, previous project exp
 
 <ul>
     <li>
-        <b>Development OS: Ubuntu 20.04 WSL2 running on Windows 10</b><br>
-        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to have to move away from Windows 10 as my OS, but I *really* didn't want to directly develop on it either.Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows).<br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
+        <b>Development OS:<b> <u>Ubuntu 20.04 WSL2 running on Windows 10</u><br>
+        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to have to move away from Windows 10 as my OS, but I *really* didn't want to directly develop on it either.Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows). This is important note only for avoiding Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
     </li>
+    <li>
+        <b>Python package managemet and isolation solution:</b> <u>pip & venv</u><br>
+            <a href="https://docs.python.org/3/tutorial/venv.html#managing-packages-with-pip">Pip</a> and <a href="https://docs.python.org/3/library/venv.html">venv</a> aren't new or fancy, but they work.<br>I may eventually look at newer solutions like <a href="https://pypi.org/project/pipenv/">pipenv</a> or <a href="https://python-poetry.org/docs/">poetry</a>, but see no compelling reason to complicate my life when I already have acceptable solutions shipped with the standard library.
+    </li>
+    <li>
+        <b>Local source control:</b><u> Git</u><br>
+        Git is extremely easy to setup in Linux and very easy to integrate with an Git-based cloud solution <i>(e.g. GitHub, GitLab)</i>. Any developer worth their salt should know the basics of Git, so this is a must-learn topic regardless of project outcome.
+    </li>
+            <li></li>
     
 </ul>
 
-Use linux - Python scientific libs, more comfortable with Linux CLI, makefile
-venv
 AWS
 GitHub
-WSL2
 VSCode
 Sqlite
 Pytest
