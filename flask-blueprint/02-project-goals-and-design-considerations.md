@@ -73,7 +73,7 @@ By working on this project, I hope to accomplish the following:
     <tr>
         <td>003</td>
         <td>Minimize Python package installation dependencies</td>
-        <td>Favour a Python environment with the lowest likelihood of pip package installation failures.<br><br>I like being able to type `pip install <pkg>` and having that package's functionality availble just seconds later. What drives me <u>crazy</u> is trying to install a package only to receive the dreaded <i>"Microsoft Visual C++ Build Tools" </i> error, because this means I'll spend the next twelve hours: 
+        <td>Favour a Python environment with the lowest likelihood of pip package installation failures.<br><br>I like being able to type `pip install` and having that package's functionality availble just seconds later. What drives me <u>crazy</u> is trying to install a package only to receive the dreaded <i>"Microsoft Visual C++ Build Tools" </i> error, because this means I'll spend the next twelve hours: 
             <ol>
                 <li>Searching Google for an answer that actually works.</li>
                 <li>Searching the endless Microsoft website for the exact required component.</li>
@@ -93,7 +93,7 @@ By working on this project, I hope to accomplish the following:
             </ul>
         While both of these solutions are viable and successfully solved my problems in the past, I dont like having to rely on them:
             <ul>
-                <li>Using Gohlke's libraries makes me dependent on the generosity of a single contributor (which he even calls out as being unofficial) as well as requiring trust in the security of his web infrastructure. (<i>I am <b><u>NOT</u></b> saying that Christoph Gohlke is untrustworthy. Rather, harkening back to my earlier Design Considerations, I philosophically don't like the increased complexity of Python library acquisition as well as the addition of an extra attack vector to any resulting application's attack surface).</i></li>
+                <li>Using Gohlke's libraries makes me dependent on the generosity of a single contributor (which he even calls out as being unofficial) as well as requiring trust in the security of his web infrastructure. <br>(<i>I am <b><u>NOT</u></b> saying that Christoph Gohlke is untrustworthy. Rather, harkening back to my earlier Design Considerations, I philosophically don't like the increased complexity of Python library acquisition as well as the addition of an extra attack vector to any resulting application's attack surface).</i></li>
                 <li>Using the Anaconda distribution ties me more tightly to the decisions and fortunes of Anaconda, Inc. Furthermore, it requires the use of the <a href="https://en.wikipedia.org/wiki/Conda_(package_manager)">conda package management system </a> and <a href="https://conda-forge.org/">conda-forge</a> for additional packages not directly available from conda. This solution is certainly viable but my personal preference is to avoid having to learn/remember the idiosyncracies of the Anaconda stack if I can fulfill the result just as easily with the standard distribution.</li>
             </ul>
         </td>
