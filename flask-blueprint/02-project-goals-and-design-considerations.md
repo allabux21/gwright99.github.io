@@ -1,7 +1,7 @@
 ### Project Goals
 By completing the project, I aim to fulfill the following goals.
     
-1. Establish a project template that:
+1. Establish a project template that:<br><br>
     1. Has its dependencies isolated from other projects on the system.
     1. Comes with a pre-configured linting solution.
     1. Comes with a pre-configured testing solution.
@@ -22,12 +22,12 @@ By completing the project, I aim to fulfill the following goals.
         <td>Probably a little self-evident given that this is a series about <i>Flask</i>, but still worth calling out.<br><br>The solution must use Python3.7 or higher to take advantage of quality-of-life <a href="https://docs.python.org/3/whatsnew/">improvements</a> (f-string, native async/await, etc.) </td></tr>
     <tr><td>002</td>
         <td>Solution must be local machine centric</td>
-        <td>I want to make use of cloud computing to host my completed solution but do not want to develop on the cloud platform itself. <br><br>The entire solution must be capable of being run on local consumer-grade machine.</td></tr>
+        <td>I want to use cloud computing to host my completed solution but do not want to develop in the cloud. <br><br>The entire solution must be capable of being run on a local consumer-grade machine.</td></tr>
     <tr><td>003</td>
-        <td>Solution must be run direcly on Windows 10, not a VM</td>
-        <td>My development laptop runs Windows 10. It has 32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). <br><br>Given its <a href="http://www.laptoping.com/cpus/product/intel-core-i5-7200u/">mediocre benchmarks</a> and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. <br><br><i><b>Note: To avoid the "Dude, just install Linux as your base OS!" conversation, I'll note right now that I like to play games on this machine (which Windows makes far easier) and I feel that developing for a Windows-first OS is a good practice given that a majority of employers in the marketplace still equip their employees with Windows-based machines. So the Windows requirement sticks.</b></i> </td></tr>
+        <td>Solution must be run direcly on Windows 10 (not a VM)</td>
+        <td>My development machine runs Windows 10, with  32GB of memory and a mid-tier Intel Kaby Lake 7th gen i5-7200 CPU (dual core). <br><br>Given its <a href="http://www.laptoping.com/cpus/product/intel-core-i5-7200u/">mediocre benchmarks</a> and my expectation that future projects will be CPU-intensive, the solution cannot be run in a traditional resource-restricted VM. <br><br><i><b>Note:</b> To avoid the "Dude, just install Linux as your base OS!" conversation, I also game on this machine (which is far easier on Windows). Furthermore, I feel a Windows-based solution is a necessary approach given that many employers still equip their employees with Windows-based machines.</i> </td></tr>
     <tr><td>004</td>
-        <td>Source control and CI/CD solutions must be served by same component</td>
+        <td>Source control and CI/CD solutions must use same component</td>
         <td>Modern-day applications already require a plethora of technology components. <br><br>I do not want to add extra complexity by having to integrate two separate services (<i>e.g. GitLab and Jenkins</i>) if a single service alternative exists (<i>e.g. GitHub</i>).</td>
     </tr>
     <tr>
