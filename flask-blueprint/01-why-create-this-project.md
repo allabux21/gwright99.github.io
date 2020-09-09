@@ -1,4 +1,4 @@
-### Why I've embarked on the project
+## Why I've embarked on the project
 I am a liberal arts graduate (and self-taught programmer) who ascended to a Solution Architecture role via business system analysis rather than the more traditional developer path. My background has generally equipped me well for the job but I constantly try to improve my technical skills and knowledge to compensate for the lack of official developer experience.    
 
 One of my favoured education methods is to reproduce interesting programming tutorials in my local development environment. Although this approach is easy to initiate and has minimal entry barriers, I've noticed that I repeatedly encounter the same kinds of problems once I progress far enough, like:
@@ -14,7 +14,7 @@ Ultimately, the problems all centred around one simple fact:
 
 Theoretically, if I could fix the template problem, I could stop worrying about the infrastructure and focus exclusively on my code.
 
-#### Reuse, Don't Reinvent!
+### Reuse, Don't Reinvent!
 Martin Heinz, an author regularly featured in the Hacker News newsletter, wrote an excellent set of articles on the [Ultimate Setup for Your Next Python Project](https://martinheinz.dev/blog/14) and [Automating Every Aspect of Your Python Project](https://martinheinz.dev/blog/17). I highly recommend that readers of this blog series check them out, because I've heavily reused his material within my own efforts (_and made some design decision based on his explanations_).
 
 Despite the excellence of the series, there was a problem that caused it to be insufficient for fulfilling my needs: the resulting Docker container returned a 'Hello World' response to the CLI. 
