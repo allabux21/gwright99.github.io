@@ -18,7 +18,7 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
 1. Open the [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) screen in your GitHub console.
 1. Create a PAT for the GitHub Container Registry, ensuring to include [these scopes](https://docs.github.com/en/packages/getting-started-with-github-container-registry/migrating-to-github-container-registry-for-docker-images#authenticating-with-the-container-registry).
 1. Copy the newly-generated token to your local WSL2 environment.
-        1.1 GitHub suggests storing the PAT as an environment variable named `CR_PAT` (_Example: `export CR_PAT=123`_).
+        1.1. GitHub suggests storing the PAT as an environment variable named `CR_PAT` (_Example: `export CR_PAT=123`_).
   <br>Unfortunately, I already had a `CR_PAT` from a previous integration between Docker and the GitHub Packages Docker Registry, and immediately started struggling to remember which token granted access to what.
   <br><br>To fix this, I created two new entries in `~/.profile` with clear (i.e. _long_) names: 
                 1. `GH_Container_Registry_PAT`
