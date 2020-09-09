@@ -176,4 +176,4 @@ Accounting for the stated design constraints, design considerations, my previous
 </ul>
 
 Previous: [Why this project?](./01-why-create-this-project.html)<br>
-Next: Setting up WSL2 on Windows
+Next: [Setting up WSL2 on Windows](./03-set-up-WSL2.html)
