@@ -20,19 +20,15 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
 1. Create a PAT for the GitHub Container Registry, ensuring to include [these scopes](https://docs.github.com/en/packages/getting-started-with-github-container-registry/migrating-to-github-container-registry-for-docker-images#authenticating-with-the-container-registry).
 
 1. Copy the newly-generated token to your local WSL2 environment:
-    1. GitHub suggests storing the PAT as an environment variable named `CR_PAT`(_Example: `export CR_PAT=123`_).
-
-
-1. 
-1. 
-        1.1. 
-  <br>Unfortunately, I already had a `CR_PAT` from a previous integration between Docker and the GitHub Packages Docker Registry, and immediately started struggling to remember which token granted access to what.
+    1. GitHub suggests storing the PAT as an environment variable named `CR_PAT`.
+    <br>(_Example: `export CR_PAT=123`_).
+    1. Unfortunately, I already had a `CR_PAT` from a previous integration between Docker and the GitHub Packages Docker Registry, and immediately started struggling to remember which token granted access to what.
   <br><br>To fix this, I created two new entries in `~/.profile` with clear (i.e. _long_) names: 
-                1. `GH_Container_Registry_PAT`
-    1.1.1. `GH_Packages_Docker_Registry_PAT`
-  1.1. Add the GitHub-generated values to the newly-created environment variable(s).
-  1.1. Type `source .profile` to load the newly-created environment variable(s).
-  1.1. Connect your WSL2 docker to the GitHub Container Registry by typing `echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
+      * `GH_Container_Registry_PAT`
+      * `GH_Packages_Docker_Registry_PAT`
+    1. Add the GitHub-generated values to the newly-created environment variable(s).
+    1. Type `source .profile` to load the newly-created environment variable(s).
+    1. Connect your WSL2 docker to the GitHub Container Registry by typing `echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
   <br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
     
 
