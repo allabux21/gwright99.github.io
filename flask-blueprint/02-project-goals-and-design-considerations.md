@@ -1,4 +1,4 @@
-### Project Goals
+## Project Goals
 By completing the project, I aim to fulfill the following goals.
     
 1. Establish a project template that:<br><br>
