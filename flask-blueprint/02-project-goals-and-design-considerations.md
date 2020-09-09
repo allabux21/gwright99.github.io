@@ -174,3 +174,6 @@ Accounting for the stated design constraints, design considerations, my previous
         Given that this series is about creating a Flask solution, I chose Flask. Surprise!!<br><br>As per the <a href="https://www.jetbrains.com/lp/python-developers-survey-2019/">2019 Jetbrains Developer survey</a>, Flask is the #1 web framework - slightly ahead of Django and miles ahead of the rest of the competition. Given its market dominance and (theoretical) ease of initial deployment, Flask is the obvious selection.
     </li> 
 </ul>
+
+Previous: [Why this project?](./01-why-create-this-project.html)
+Next: Setting up WSL2 on Windows
