@@ -15,5 +15,5 @@ Microsoft has provided a helpful step-by-step guide [here](https://docs.microsof
 </ul>
     
 
-Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.html)<br>
+Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
 Next: 
