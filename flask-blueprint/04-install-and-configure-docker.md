@@ -41,6 +41,6 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
     <br>`echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
     <br><br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
     
-
+<br><br>
 Previous: [Setting Up WSL2 on Windows 10](./03-set-up-WSL2.md)<br>
 Next: 
