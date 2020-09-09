@@ -1,4 +1,4 @@
-### Setting Up WSL2 on Windows
+### Setting Up WSL2 on Windows 10
 Setting up WSL2 on Windows is a relatively painless process. 
 Microsoft has provided a helpful step-by-step guide [here](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 <br><br>As per Design Consideration #002 (don't recreate when you can leverage someone to do it for you), I'll leverage the might of the Microsoft communications team to keep the steps fully up-to-date and identify important gotchas.
