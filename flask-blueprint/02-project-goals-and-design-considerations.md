@@ -175,6 +175,6 @@ Accounting for the stated design constraints, design considerations, my previous
     </li> 
 </ul>
 
-Previous: [Why this project?](./01-why-create-this-project.html)<br>
-Next: [Setting up WSL2 on Windows 10](./03-set-up-WSL2.html)
+Previous: [Why this project?](./01-why-create-this-project.md)<br>
+Next: [Setting up WSL2 on Windows 10](./03-set-up-WSL2.md)
  
