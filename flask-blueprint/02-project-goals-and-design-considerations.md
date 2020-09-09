@@ -175,5 +175,5 @@ Accounting for the stated design constraints, design considerations, my previous
     </li> 
 </ul>
 
-Previous: [Why this project?](./01-why-create-this-project.html)
+Previous: [Why this project?](./01-why-create-this-project.html)<br>
 Next: Setting up WSL2 on Windows
