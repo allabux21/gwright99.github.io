@@ -25,4 +25,5 @@ I, on the otherhand, did not want to have to rely on an individual to be technic
 
 Like many efforts in the world of IT, this "simple" change ended up kicking off a plethora of other changes and design considerations. This series is born of that effort. 
 
+<br><br>
 NEXT: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)
