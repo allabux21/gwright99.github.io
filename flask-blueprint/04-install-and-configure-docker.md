@@ -6,7 +6,9 @@ In order to properly support the project, our Docker implementation (Docker Desk
 
 ### Integrate Docker Desktop with WSL2
 Follow [these steps](https://docs.docker.com/docker-for-windows/wsl/) to install the Docker Desktop application and tie it to you WSL2 instance. The steps are simple and 
-straight-forward so there's not much to comment on. For those considering multi-stage Docker builds, you may wish to enable 
+straight-forward so there's not much to comment on. 
+
+For those considering multi-stage Docker builds, you may wish to enable 
 [DOCKER_BUILDKIT](https://www.docker.com/blog/docker-desktop-wsl-2-best-practices/) in order to use multiple CPU cores to run different build stages concurrently. I followed Docker's advice and added the entry to my `~/.profile`.<br>
 
 Once this work is complete, docker is available via the WSL2 CLI through the `docker` command.
