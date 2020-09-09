@@ -15,6 +15,9 @@ Once this work is complete, docker is available via the WSL2 CLI through the `do
 With Docker now available on the WSL2 CLI, it's time to integrate it with the GitHub Container Registry (**NOTE**: _Docker Container Registry was very recently announced (Sept 2020), and is set to supercede the existing GitHub Packages Docker registry. This has two implications readers should note: (1) As of Sept 9, 2020 the Martin Heinz [reference articles](./01-why-create-this-project.md) are not yet updated to reflect use of the new registry, (2) As oer the GitHub Container Registry [information page](https://docs.github.com/en/packages/getting-started-with-github-container-registry/about-github-container-registry), the Container Registry is still in public beta, subject to change, and does not yet have a definite storage & costing model. Beware.)
 
 #### Steps
+1. abc
+    1. def
+
 <ol>
         <li>Open the <a href="https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token">Personal Access Token</a> screen in your GitHub console.</li>
         <li>Create a PAT for the GitHub Container Registry, ensuring to include <a href="https://docs.github.com/en/packages/getting-started-with-github-container-registry/migrating-to-github-container-registry-for-docker-images#authenticating-with-the-container-registry">these scopes</a>.</li>
