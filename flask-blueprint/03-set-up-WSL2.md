@@ -11,7 +11,7 @@ you can leverage someone to do it for you), I'll leverage the might of the Micro
   
   <br><li>While updating to Windows version 2004, my update process froze at 61%. This kicked off a multihour troubleshooting session 
   (<i>ultimately determined to be caused by a known Conexant sound driver conflict, and resolved by deleting everything in the C:\Windows\SoftwareDistribution folder</i>).
-  Hopefully this doesn't happen to you.</i>
+  <br>Hopefully this doesn't happen to you.</li>
   
   <br><li>Some WSL2 set up guides advise installing the new <a href="https://www.microsoft.com/en-ca/p/windows-terminal/9n0dx20hk701">Windows Terminal</a> after 
   completing the WSL2 install. I did this and struggled to configure the fonts & colours to an acceptable state (ultimately failing). 
