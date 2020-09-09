@@ -20,7 +20,7 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
         <li>Create a PAT for the GitHub Container Registry, ensuring to include <a href="https://docs.github.com/en/packages/getting-started-with-github-container-registry/migrating-to-github-container-registry-for-docker-images#authenticating-with-the-container-registry">these scopes</a>.</li>
         <li>Copy the newly-generated token to your local WSL2 environment:
                 <ol>
-                        <li markdown="1">GitHub suggests storing the PAT as an environment variable named `CR_PAT` (<i>Example: `export CR_PAT=123`<i>).</li>
+                        <li>GitHub suggests storing the PAT as an environment variable named <span markdown="1">`CR_PAT`</span> (<i>Example: `export CR_PAT=123`<i>).</li>
                 </ol>
         </li>
 </ol>
