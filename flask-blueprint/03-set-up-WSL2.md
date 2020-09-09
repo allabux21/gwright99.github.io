@@ -15,5 +15,5 @@ Setting up WSL2 on Windows is a relatively painless process.
 </ul>
     
 
-Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
+Previous: [Setting UP WSL2 on Windows 10](./03-set-up-WSL2.md)<br>
 Next: 
