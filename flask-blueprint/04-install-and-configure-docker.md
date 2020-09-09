@@ -2,7 +2,7 @@
 In order to properly support the project, our Docker implementation (Docker Desktop) needs to do the following: 
 
 1. Integrate with the WSL2 development environment
-1. Integrate with the GitHub Package Registry
+1. Integrate with a GitHub Container Registry
 
 ### Integrate Docker Desktop with WSL2
 Follow [these steps](https://docs.docker.com/docker-for-windows/wsl/) to install the Docker Desktop application and tie it to you WSL2 instance. The steps are simple and 
