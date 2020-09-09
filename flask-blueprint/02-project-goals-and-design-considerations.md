@@ -85,53 +85,53 @@ By completing the project, I aim to fulfill the following goals.
                 <li>Use <a href="https://www.lfd.uci.edu/~gohlke/pythonlibs/">pre-compiled libraries</a> from Christoph Gohlke</li>
                 <li>Use the <a href="https://docs.anaconda.com/anaconda/install/">Anaconda distribution</a> of Python</li>
             </ul>
-        While both of these solutions are viable and successfully solved my problems in the past, I dont like having to rely on them beacuse:<br>
+        While both of these solutions are viable and successfully solved my problems in the past, I dont like having to rely on them beacuse:<br><br>
             <ul>
-                <li>Using Gohlke's libraries makes me dependent on the generosity of a single contributor (which he even calls out as being unofficial) as well as requiring trust in the security of his web infrastructure. <br>(<i>I am <b><u>NOT</u></b> saying that Christoph Gohlke is untrustworthy. Rather, harkening back to my earlier Design Considerations, I philosophically don't like the increased complexity of Python library acquisition as well as the addition of an extra attack vector to any resulting application's attack surface).</i></li>
-                <li>Using the Anaconda distribution ties me more tightly to the decisions and fortunes of Anaconda, Inc. Furthermore, it requires the use of the <a href="https://en.wikipedia.org/wiki/Conda_(package_manager)">conda package management system </a> and <a href="https://conda-forge.org/">conda-forge</a> for additional packages not directly available from conda. This solution is certainly viable but my personal preference is to avoid having to learn/remember the idiosyncracies of the Anaconda stack if I can fulfill the result just as easily with the standard distribution.</li>
+                <li>Using Gohlke's libraries makes me dependent on the unofficial generosity of a single contributor, and requires trusting the security of his packages.<br><br>(<i>I am <b><u>NOT</u></b> saying that Christoph Gohlke is untrustworthy. Rather, philosophically I don't like the increased complexity of Python library acquisition, and the addition of an extra attack vector).</i></li><br>
+                <li>Using the Anaconda distribution ties me to the decisions of Anaconda, Inc. Furthermore, it requires the use of the <a href="https://en.wikipedia.org/wiki/Conda_(package_manager)">conda package management system </a> and <a href="https://conda-forge.org/">conda-forge</a> for packages not available through conda. My personal preference is to avoid learning/remembering the idiosyncracies of the Anaconda stack if I can fulfill the same result with the standard distribution.</li>
             </ul>
         </td>
     </tr>
     <tr>
         <td>005</td>
         <td>Use an unopinionated framework</td>
-        <td>This one is a matter of personal preference. Using an opinionated web framework like Django would likely make it easier to get a fully featured-website up and running. However, one of the reasons I'm engaged in this exercise is to learn, and that's harder to do if there is only "one" correct way to do things. As a result, (and acknowledging the days of frustration this decision is likely to cause) the solution should use a framework that leaves the majority of design decisions up to me.</td>
+        <td>Using an opinionated web framework like Django would make it easier to stand-up a fully featured-website. However, I'm doing this work to learn and that's harder to do if there is only "one" correct way to do things. Despite the extra problem-solving time and research that an unopinionate framework will demand, the solution should leave the majority of design decisions up to me.</td>
     </tr>
     <tr>
         <td>006</td>
         <td>Use a well-documented framework</td>
-        <td>Given Design Consideration #005, I'm going to need to make many decisions and it's likely I wont immediately know what the correct decision is. As a result, I should choose a framework that is well-established and has a large community. This will increase the chance that someone has encountered the same problem I'm having, and that a solution already exists on some blog or Stack Overflow discussion page. For this reason, I should favour an older framework like Flask over a newer framework like FastApi.</td>
+        <td>Given Design Consideration #005, I'll need to make many semi-blind decisions. As a result, I should choose a framework that is well-established and has a large community. This will increase the chance that the problem has been previously encountered, solved, and documented. For this reason, I should favour an older framework like Flask over a newer framework like FastApi.</td>
     </tr>
     <tr>
         <td>007</td>
         <td>Use a synchronous framework</td>
-        <td>Python has gotten better at supporting asynchronous programming <i>(e.g. making async/await reserved keywords in Python3.7)</i>. However, I find asynchronous programming more difficult for two reasons:
+        <td>Python has improved its asynchronous programming support <i>(e.g. making async/await reserved keywords in Python3.7)</i>. However, I find asynchronous programming more difficult for two reasons:
             <ul>
-                <li>It requires logic to be structured and written in a different manner than traditional synchronous programs.</li>
+                <li>It requires logic to be structured and written differently than traditional synchronous programs.</li>
                 <li>It requires a different application server implementation (ASGI-compliant vs. WSGI-compliant) </li>
             </ul>
-            Asynchronous programming is clearly preferrable when designing applications that must be performant under extremely high load, and this is programming style that I should become more familiar with for my own professional career. With that said, I don't think the extra complexity makes sense for my initial delivery goals. For this reason, I've decided to stick with WSGI and make a note that I should have a follow-up project that converts this WSGI-based solution to an ASGI-based framework <i>(e.g. moving from a framework like Flask to Starlette or FastApi)</i>.
+            Asynchronous programming is clearly preferrable when designing applications to be performant under high load, and this is a style that I should become more familiar with. With that said, I don't believe the extra complexity makes sense for my initial delivery goals. For this reason, I'll stick with WSGI and make a note that I should have a follow-up project to convert to an ASGI-based framework <i>(e.g. moving to a framework like Starlette or FastApi)</i>.
         </td>
     </tr>
     <tr>
         <td>008</td>
         <td>Find right level of database abstraction</td>
-        <td>Most real-world applications are going to require some sort of stateful storage. As a result, the solution should come with an pre-built database integration component. <br><br>The major decision I will need to make is whether to use an ORM like SQLAlchemy which heavily abstracts my database interactions, or use a less fulsome solution that places more reliance on the developer to interact with the database directly.<br><br><b>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
+        <td>Most real-world applications will require stateful storage. As a result, the solution should come with an pre-built database integration component. <br><br>The major decision to make is whether to leverage an ORM like SQLAlchemy which heavily abstracts my database interactions, or rely more heavily on raw SQL / an SQL query builder.<br><br><b>NOTE:</b>This particular item caused several downstream complications, which I will write about more in later project documentation pages.</td>
     </tr>
     <tr>
         <td>009</td>
         <td>Use source control system that easily integrates with CI/CD solutions</td>
-        <td>I'm going to make alot of mistakes in this project, so I cannot be afraid to modify working code lest I never manage to recreate a useable product. As such, I absolutely must have a source control system that can operate in my preferred local environment, but also integrates easily with a cloud source control solution, for backup and CI/CD purposes.</td>
+        <td>I will make many mistakes during this project, so I must have a way to roll back changes that I fail to implement succesfully. Source control is mandatory and must not only operate in my preferred local environment but also integrate easily with the cloud source control & CI/CD solution.</td>
     </tr>
 </table>
 
 ### Design Decisions
-After mulling my design constraints, design considerations, previous project experience, availability of documentation/guides, and future expected benefits to both my job duties and personal goals, I decided on the following solution stack:
+Accounting for the stated design constraints, design considerations, my previous project experience, availability of documentation/guides, and future expected benefits to both my job duties and personal goals, I decided on the following solution stack:
 
 <ul>
     <li>
         <b>Development OS</b> <span><h4>Ubuntu 20.04 WSL2 running on Windows 10</h4></span>
-        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to have to move away from Windows 10 as my OS, but I *really* didn't want to directly develop on it either.Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows). This is important note only for avoiding Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
+        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to abandon Windows 10 as my OS, but I *really* didn't want to directly develop on it either.<br><br>Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows). This is important note only for avoiding Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
     </li>
     <br><li>
     <b>Python package management and isolation solution</b><span><h4>pip & venv</h4></span>
