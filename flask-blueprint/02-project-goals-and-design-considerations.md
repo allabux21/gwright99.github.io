@@ -131,11 +131,11 @@ Accounting for the stated design constraints, design considerations, my previous
 <ul>
     <li>
         <b>Development OS</b> <span><h4>Ubuntu 20.04 WSL2 running on Windows 10</h4></span>
-        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to abandon Windows 10 as my OS, but I *really* didn't want to directly develop on it either.<br><br>Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides access to a full Linux-development environment (accessible to Windows). This is important note only for avoiding Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 as my base Linux image because I have some previous experience working with that flavour of Linux, and because it is the most recent long term support release, with <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">regular updates until 2029</a>.
+        This struck me as the only viable technology stack given my stated constraints and preferences. I didn't want to abandon Windows 10 as my OS, but I *really* didn't want to directly develop on it either.<br><br>Thankfully, Microsoft has perfect solution: <a href="https://docs.microsoft.com/en-us/windows/wsl/wsl2-index">Windows Subsystem for Linux 2</a>.<br><br>The Microsoft documentation re: WSL2 capabilities is extensive and explains the Subsystem's capabilities far better than I could, so I wont try to repeat it here. What is most important to note is that the WSL2 provides a full Linux-development environment that is accessible to Windows. This is not only avoids Windows compilation errors, but also gives native access to a host of Linux support tools like SSH and Make.<br><br>I chose Ubuntu 20.04 LTS as my base Linux image because I have some previous experience working with this flavour of Linux and because it has long-term support <a href="https://ubuntu.com/blog/what-is-an-ubuntu-lts-release">updates until 2029</a>.
     </li>
     <br><li>
     <b>Python package management and isolation solution</b><span><h4>pip & venv</h4></span>
-            <a href="https://docs.python.org/3/tutorial/venv.html#managing-packages-with-pip">Pip</a> and <a href="https://docs.python.org/3/library/venv.html">venv</a> aren't new or fancy, but they work so why change?.<br>I may eventually look at newer solutions like <a href="https://pypi.org/project/pipenv/">pipenv</a> or <a href="https://python-poetry.org/docs/">poetry</a>, but see no compelling reason to complicate my life when I already have acceptable solutions shipped with the standard library.
+            <a href="https://docs.python.org/3/tutorial/venv.html#managing-packages-with-pip">Pip</a> and <a href="https://docs.python.org/3/library/venv.html">venv</a> aren't new or fancy, but they work so why change?<br>I may eventually look at newer solutions like <a href="https://pypi.org/project/pipenv/">pipenv</a> or <a href="https://python-poetry.org/docs/">poetry</a>, but I see no compelling reason to complicate my life when I already have acceptable solutions shipped with the standard library.
     </li>
     <br><li>
         <b>Local source control</b><span><h4>Git</h4></span>
@@ -143,35 +143,34 @@ Accounting for the stated design constraints, design considerations, my previous
     </li>
     <br><li>
         <b>Cloud source control & CI/CD</b><span><h4>GitHub</h4></span>
-        It's established, versatile, and now a member of the Microsoft product family. GitHub offers easy-to-use source control, extensive CI/CD capabilities via GitHub Actions, project documentation facilities, and project management capabilities. It's possible other services may provide better individual functionality, but GitHub provides a one-stop shop for many. I would rather learn one platform well, than be mediocre at several.
+        It's established, versatile, and now a member of the Microsoft product family. GitHub offers easy-to-use source control, extensive CI/CD capabilities via GitHub Actions, project documentation facilities, and project task management tools. Other services may provide better individual functionality, but GitHub provides a one-stop shop for many. I would rather learn one platform well, than be mediocre at several.
     </li>
     <br><li>
         <b>Cloud hosting provider</b><span><h4>AWS</h4></span>
-        Given my evident preference for other Microsoft solutions, you'd be forgiven for thinking I'd pick Azure. Azure is probably worth looking at in the long-term, but I have more familiarity with the AWS platform and have a few Serverless tutorials that I would like to try soon that are all based on AWS infrastructure. Winner: AWS. 
+        Given my evident preference for other Microsoft solutions, you'd be forgiven for thinking I'd pick Azure. Azure is probably worth looking at in the long term, but I have more familiarity with the AWS platform, and have a few Serverless tutorials that I would like to try soon that are all based on AWS infrastructure. Winner: AWS. 
     </li>
     <br><li>
         <b>Container solution</b><span><h4>Docker</h4></span>
-        The only legitimate contender in my mind. Docker is well-documented and well-supported. It helps that the latest iteration of Docker For Windows has tight integration with WSL2. 
+        The only possible contender given the constraint that required usign Docker. It helps that the latest iteration of Docker For Windows has tight integration with WSL2. 
     </li>
     <br><li>
         <b>IDE</b><span><h4>VSCode</h4></span>
-        It's a free, full-feared IDE with great official Microsoft language support plugins. Better yet, it is fully integrated with WSL2 and can be directly invoked from the venv CLI. Plus I like how it looks.
+        A free, full-feared IDE with great official Microsoft language support plugins. Better yet, it is fully integrated with WSL2 and can be directly invoked from the venv CLI. Plus I like how it looks.
     </li>
     <br><li>
         <b>Testing framework</b><span><h4>Pytest</h4></span>
-        I'm not super familiar with Python testing frameworks. Regardless, I know I need an automated testing solution in order to leverage CI/CD effectively, and Pytest works in a way that I find more natural than the Python standard library's unittest module. 
+        I'm not super familiar with Python testing frameworks. Regardless, I need an automated testing solution in order to leverage CI/CD effectively, and Pytest works in a way that I find more natural than the Python standard library's unittest module. 
     </li>
     <br><li>
         <b>Database</b><span><h4>SQLite3</h4></span>
-        I'll probably revist this at a later point when my Docker container management skills are better. From a getting started point-of-view, however, it's just too easy to use SQLite3 to consider using anything else. It is effortless to install, cross-platform, and exceedingly easy to manage (given that the whole database is just a single file). Sqlite3 is not as robust as other database solutions when it comes to handling concurrent connections (i.e. <a href="https://en.wikipedia.org/wiki/Comparison_of_relational_database_management_systems">it can't</a>), but this was not deemed to be a be a deal-breaker for the purposes of my initial activities.
+        I'll probably revist this at a later point when my Docker container management skills are better. From a getting started point-of-view, however, it's just too easy to use SQLite3 to consider using anything else. It is effortless to install, cross-platform, and exceedingly easy to manage (given that the whole database is just a single file). <br><br>Sqlite3 is not as robust as other database solutions when it comes to handling concurrent connections (i.e. <a href="https://en.wikipedia.org/wiki/Comparison_of_relational_database_management_systems">it can't</a>), but this is not a deal-breaker for my initial needs.
     </li>
     <br><li>
         <b>ORM</b><span><h4>*-SQLAlchemy</h4></span>
-        When one talks web frameworks and databases, ORMs always seem to eventually show up. To be honest, I really dislike ORMs; every time I try to learn SQLAlchemy, I find I get confused and eventually lose motivation to continue my project. I told myself this time would be different and I would finally hunker down and figure it out <i>(foreshadow alert: it didn't go so well this time either)</i>.<br>I'll be documenting my opinion on flask-sqlalchemy and SQLAlchemy more in later articles in the series (to reflect what I encountered while trying to implement my solution). For the purposes of this technology selection portion, I'll simply say that I started with flask-sqlalchemy and then started to immediately regress once I began to learn more.
+        When one talks web frameworks and databases, ORMs always seem to eventually show up. To be honest, I really dislike ORMs; every time I try to learn SQLAlchemy, I find I become confused and lose motivation to continue my project. I swore this time would be different and I would finally become a skilled ORM user <i>(foreshadowing alert: it didn't go well this time either)</i>.<br>I'll be documenting my opinions regarding flask-sqlalchemy and SQLAlchemy more in later articles, but for the purposes of this section, I'll simply say that I started with flask-sqlalchemy and then immediately began backsliding as I tried to build a coherent, scalable application.
     </li>
     <br><li>
         <b>Web framework</b><span><h4>Flask</h4></span>
-        Surprise! Given that this series is about creating a Flask solution, this should shock no one. As per the <a href="https://www.jetbrains.com/lp/python-developers-survey-2019/">2019 Jetbrains Developer survey</a>, Flask is the #1 web framework - slightly ahead of Django and miles ahead of the rest of the competition. Given its market dominance and (theoretical) ease of initial deployment, Flask is the obvious selection.
-    </li>
-    
+        Given that this series is about creating a Flask solution, I chose Flask. Surprise!!<br><br>As per the <a href="https://www.jetbrains.com/lp/python-developers-survey-2019/">2019 Jetbrains Developer survey</a>, Flask is the #1 web framework - slightly ahead of Django and miles ahead of the rest of the competition. Given its market dominance and (theoretical) ease of initial deployment, Flask is the obvious selection.
+    </li> 
 </ul>
