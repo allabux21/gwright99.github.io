@@ -32,8 +32,9 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
     
     1. Type `source .profile` to load the newly-created environment variable(s).
     
-    1. Connect your WSL2 docker to the GitHub Container Registry by typing `echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
-  <br><br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
+    1. Connect your WSL2 docker to the GitHub Container Registry by typing 
+    <br>`echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
+    <br><br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
     
 
 Previous: [Project Goals and Design Considerations](./03-set-up-WSL2.md)<br>
