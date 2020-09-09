@@ -43,4 +43,4 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
     
 <br><br>
 Previous: [Setting Up WSL2 on Windows 10](./03-set-up-WSL2.md)<br>
-Next: 
+Next: [Install and Configure VS Code](./05-install-and-configure-vscode.md)
