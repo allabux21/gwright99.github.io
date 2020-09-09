@@ -11,7 +11,6 @@ With that said, I will note a few caveats that I encountered during my own upgra
 * Some guides advise installing the new [Windows Terminal](https://www.microsoft.com/en-ca/p/windows-terminal/9n0dx20hk701) after completing the WSL2 install. I struggled (and failed) to configure the fonts & colours to an acceptable state, ultimately deciding to run my WSL2 in the native Windows launcher (which looks and works just fine). 
 <br>I likely am paying a performance price for having multiple WSL2 consoles open at once, but it hasn't seemed to impact me yet. YMMV. 
 
-    
-
+<br><br>
 Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
 Next: [Install and Configure Docker Desktop](./04-install-and-configure-docker.md)
