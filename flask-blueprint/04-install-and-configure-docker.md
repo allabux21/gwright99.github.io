@@ -21,7 +21,7 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
         1. GitHub suggests storing the PAT as an environment variable named `CR_PAT` (_Example: `export CR_PAT=123`_).
   <br>Unfortunately, I already had a `CR_PAT` from a previous integration between Docker and the GitHub Packages Docker Registry, and immediately started struggling to remember which token granted access to what.
   <br><br>To fix this, I created two new entries in `~/.profile` with clear (i.e. _long_) names: 
-    1.1.1. `GH_Container_Registry_PAT`
+                1. `GH_Container_Registry_PAT`
     1.1.1. `GH_Packages_Docker_Registry_PAT`
   1.1. Add the GitHub-generated values to the newly-created environment variable(s).
   1.1. Type `source .profile` to load the newly-created environment variable(s).
