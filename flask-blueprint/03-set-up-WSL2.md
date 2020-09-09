@@ -1,4 +1,4 @@
-### Setting Up WSL2 on Windows 10
+## 003 - Setting Up WSL2 on Windows 10
 Setting up WSL2 on Windows is a relatively painless process. 
 
 <br><br>As per Design Consideration #002 (don't recreate if you can leverage someone else's work), I'll defer documentation details to the mighty Microsoft communications team. You can find the latest steps and gotchas in their [official installation guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
@@ -15,5 +15,5 @@ Setting up WSL2 on Windows is a relatively painless process.
 </ul>
     
 
-Previous: [Setting UP WSL2 on Windows 10](./03-set-up-WSL2.md)<br>
-Next: 
+Previous: [002 - Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
+Next: [004 - Install and Configure Docker Desktop](./04-install-and-configure-docker.md)
