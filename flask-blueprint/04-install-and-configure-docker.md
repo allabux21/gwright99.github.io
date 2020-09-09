@@ -7,28 +7,24 @@ In order to properly support the project, our Docker implementation (Docker Desk
 ### Integrate Docker Desktop with WSL2
 Follow [these steps](https://docs.docker.com/docker-for-windows/wsl/) to install the Docker Desktop application and tie it to you WSL2 instance. The steps are simple and 
 straight-forward so there's not much to comment on. For those considering multi-stage Docker builds, you may wish to enable 
-[DOCKER_BUILDKIT](https://www.docker.com/blog/docker-desktop-wsl-2-best-practices/) in order to use multiple CPU cores to run different build stages concurrently.<br>
+[DOCKER_BUILDKIT](https://www.docker.com/blog/docker-desktop-wsl-2-best-practices/) in order to use multiple CPU cores to run different build stages concurrently. I followed Docker's advice and added the entry to my `~/.profile`.<br>
 
 Once this work is complete, docker is available via the WSL2 CLI through the `docker` command.
 
 ### Integrate Docker with GitHub
-Now that 
+With Docker now available on the WSL2 CLI, it's time to integrate it with the GitHub Container Registry (**NOTE**: _Docker Container Registry was very recently announced (Sept 2020), and is set to supercede the existing GitHub Packages Docker registry. This has two implications readers should note: (1) As of Sept 9, 2020 the Martin Heinz [reference articles](./01-why-create-this-project.md) are not yet updated to reflect use of the new registry, (2) As oer the GitHub Container Registry [information page](https://docs.github.com/en/packages/getting-started-with-github-container-registry/about-github-container-registry), the Container Registry is still in public beta, subject to change, and does not yet have a definite storage & costing model. Beware.)
 
-
-
-<br><br>As per Design Consideration #002 (don't recreate if you can leverage someone else's work), I'll defer documentation details to the mighty Microsoft communications team. You can find the latest steps and gotchas in their [official installation guide](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
-
-<br>With that said, I will note a few caveats that I encountered during my own upgrade effort:
-<ul>
-  <li>When I upgraded to WSL2 (mid-2020), joining the Windows Insider Program was mandatory to access the necessary build version 
-    (I was following <a href="https://char.gd/blog/2019/windows-web-dev-with-wsl2">this post</a>). I believe Microsoft recently changed this requirement, because its official guide does not mention this as a precursor step.</li>
-  
-  <br><li>While updating to Windows version 2004, my update process froze at 61%. This kicked off a multihour troubleshooting session, ultimately isolating the problem as a known Conexant sound driver conflict. The problem was resolved by deleting everything in the C:\Windows\SoftwareDistribution folder, deleting the Conexant driver, and not reinstalling it until my system update was complete.</li>
-  
-  <br><li>Some guides advise installing the new <a href="https://www.microsoft.com/en-ca/p/windows-terminal/9n0dx20hk701">Windows Terminal</a> after 
-  completing the WSL2 install. I struggled (and failed) to configure the fonts & colours to an acceptable state, ultimately deciding to run my WSL2 in the native Windows launcher (which looks and works just fine). <br>I likely am paying a performance price for having multiple WSL2 consoles open at once, but it hasn't seemed to impact me yet. YMMV. </li>
-</ul>
+#### Steps
+1. Navigate to [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) screen in your GitHub console.
+1. Create a PAT for the GitHub Container Registry, ensuring to include [these scopes](https://docs.github.com/en/packages/getting-started-with-github-container-registry/migrating-to-github-container-registry-for-docker-images#authenticating-with-the-container-registry).
+1. Copy the newly-generated token to your local WSL2 environment:
+  1.1 The GitHub documentation suggests storing the PAT as an environment variable called `CR_PAT` (_Example: `export CR_PAT=123`_).
+  <br>Unfortunately, I already had a `CR_PAT` from a previous integration I did between my local Docker and the GitHub Packages Docker Registry, and promptly confused myself trying to juggle the old and new tokens when logging in to `ghrcr.io`.
+  <br><br>To fix this, I created two new entries in `~/.profile` with very clear (i.e. _long_) names: `GH_Container_Registry_PAT` and `GH_Packages_Docker_Registry_PAT` and added the relevant token values.
+  1.1 Type `source .profile` to load the newly-created environment variable(s).
+  1.1 Connect your WSL2 docker to the GitHub Container Registry by typing `echo $GH_Container_Registry_PAT | docker login ghcr.io -u USERNAME_HERE --password-stdin`.
+  <br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
     
 
-Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
+Previous: [Project Goals and Design Considerations](./03-set-up-WSL2.md)<br>
 Next: 
