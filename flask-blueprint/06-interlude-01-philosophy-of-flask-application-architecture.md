@@ -59,9 +59,24 @@ Unfortunately, it also begins engraining [bad development habits](https://hacker
 * Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
 * The official [Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/) (_which i still have reservations about, more on this later in the database commentary_)
 
-I began my own learning journey with the official Flask tutorial series. I followed the steps but was constantly questioning WHY the application was being built in a manner that felt convoluted and unnatural. This prompted a search for dissenting opinions, whereupon I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). I found Birchard's writing style entertaining, but more importantly I found that his explanations __made sense__ and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I have drawn heavily upon his work to complete my own.
+I began my own learning journey with the official Flask tutorial series. I followed the steps but was constantly questioning WHY the application was being built in a manner that felt convoluted and unnatural. This prompted a search for dissenting opinions, whereupon I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). I found Birchard's writing style entertaining, but more importantly I found that his explanations made sense and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
 
+The **Application Factory Model** was of particular interest to me because it offered:
+* A clean entrypoint for WSGI-based application servers
+* A way to decouple application configuration from application instantiation (configuration values are passed in as parameters at runtime, thereby facilitating testing).
+* A modular structure that mostly resolves the [circular import problem](https://itnext.io/flask-factory-pattern-to-setup-your-project-8fe7d6b23247) 
 
+These capabilities meant I could:
+1. Implement Flask Blueprints to logically separate different application functional areas.
+2. Build the application knowing that I could eventually drop-in an industrial-grade application server when I was ready to go to Production.
+3. Facilitate the integration of a testing framework.
+
+Plenty has been written about the Flask Application Factory Model so I will not spend more time parroting ideas already written more clearly by others. However, it is crucial to point out that the decision to implement this model then prompted two other design implications:
+
+1. How to invoke the Flask application via the `wsgi.py` entrypoint
+2. How to supply the Flask application with a database access solution
+
+### Choosing Your Flask Application Invocation Model
 
 
 ### Choosing Your Database Integration Model
@@ -71,6 +86,7 @@ I began my own learning journey with the official Flask tutorial series. I follo
 
 
 Defining a proper design is crucial for me purposes.
+Circular import problem
 
     
 <br><br>
