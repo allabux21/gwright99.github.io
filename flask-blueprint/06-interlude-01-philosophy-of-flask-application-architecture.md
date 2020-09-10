@@ -2,8 +2,8 @@
 So we've picked our technology components and configured our tooling - time to get coding, right!? Not quite.
 
 I specifically chose Flask over Django because: <br>
-(1) Flask is an unopinionated framework that grants me a greater degree of control over my implementation, and <br>
-(2) Flask's design makes it very easy to stand up a microservice with just a few lines of code in a single `.py` file.
+1. Flask is an unopinionated framework that grants me a greater degree of control over my implementation, and <br>
+1. Flask's design makes it very easy to stand up a microservice with just a few lines of code in a single `.py` file.
 
 These are amazing features which work very well with Rapid Application Development, an application development methodology that I favour. Being able to move quickly and delivery results promptly builds trust with your stakeholders and helps ensure you are actually building the solution that is needed rather than risk encountering a horrible surprise close to the end of a project.
 
@@ -15,19 +15,53 @@ I will be the first to admit that I don't have all the answers (to be fair, I do
 
 With that said, onto my opinions ...
 
-### Choosing Your Flask Application
-Many of the Flask tutorials I've encountered look somethign like this:
+### Choosing Your Flask Application Model
+Many of the simplest Flask tutorials I've encountered look something like this:
 ```python
 from flask import Flask
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['GET'])
 def hello_world():
     return "Hello world!"
-    
+ 
+ 
 app.run()
 ```
+If the tutorial is feeling especially bold, it will also include a basic database connection as well:
+```python
+from flask import Flask
+import sqlite3
+
+app = Flask(__name__)
+
+
+@app.route('/', methods=['GET'])
+def hello_world():
+    return "Hello world!"
+
+
+def connect_to_db():
+    conn = sqlite3.connect('somedb.db')
+    cur = conn.cursor()
+    db_results = cur.execute('SELECT * FROM some_table;').fetchall()
+
+
+app.run()
+```
+
+This makes perfect sense for teaching a beginner: it requires minimal code, will work immediately, and encourages the reader to continue their learning journey. Unfortunately, it also begins engraining bad development habits immediately.
+
+As Todd Birchard succint
+
+Unfortunately, it also immediately begins to normalize [bad development habits](https://hackersandslackers.com/flask-application-factory/) that will need to be unlearned later when the reader finds more fulsome tutorials like:
+* Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
+* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+* The official [Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/) (_which i still have reservations about, more on this later in the database commentary_)
+
+
 
 
 ### Choosing Your Database Integration Model
