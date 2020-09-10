@@ -52,11 +52,9 @@ def connect_to_db():
 app.run()
 ```
 
-This makes perfect sense for teaching a beginner: it requires minimal code, will work immediately, and encourages the reader to continue their learning journey. Unfortunately, it also begins engraining bad development habits immediately.
+This makes perfect sense for teaching a beginner: it requires minimal code, will work immediately, and encourages the reader to continue their learning journey. 
 
-As Todd Birchard succint
-
-Unfortunately, it also immediately begins to normalize [bad development habits](https://hackersandslackers.com/flask-application-factory/) that will need to be unlearned later when the reader finds more fulsome tutorials like:
+Unfortunately, it also begins engraining [bad development habits](https://hackersandslackers.com/flask-application-factory/) immediately, and which the reader will need to unlearn later as they are exposed to more fulsome tutorials like:
 * Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
 * Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
 * The official [Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/) (_which i still have reservations about, more on this later in the database commentary_)
