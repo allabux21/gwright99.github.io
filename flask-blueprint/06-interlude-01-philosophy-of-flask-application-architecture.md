@@ -86,12 +86,9 @@ Before you continue, go read [How to Run a Flask Application](https://www.twilio
 
 TLDR:
 1. `flask run` is the newest invocation method and is recommended by the Flask project (_not surprising, they obviously created this functionality for reason_).
-
-This method offers multiple ways to identify the target application and gives fine-grain control over your development server behaviour. It is essential to note, however, that you CANNOT control debug mode via this command - you must do it via the FLASK_ENV environment variable (e.g. `export FLASK_ENV=development`). 
-
-This is also where we start to see knock-on effects: certain `flask run` options like `--reload` and `--debugger` draw their default values based on whether debug is enabled (with debug itself enabled via `FLASK_ENV=development`. To add to the fun, other settings like `eager-loading` draw their default values from the `--reload` value.
-
-Confused yet? Yep, I was too.
+<br><br>This method offers multiple ways to identify the target application and gives fine-grain control over your development server behaviour. It is essential to note, however, that you CANNOT control debug mode via this command - you must do it via the FLASK_ENV environment variable (e.g. `export FLASK_ENV=development`). 
+<br><br>This is also where we start to see knock-on effects: certain `flask run` options like `--reload` and `--debugger` draw their default values based on whether debug is enabled (with debug itself enabled via `FLASK_ENV=development`. To add to the fun, other settings like `eager-loading` draw their default values from the `--reload` value.
+<br><br>Confused yet? Yep, I was too.
  
 1. `app.run()` is less robust when it comes to reloading and has no CLI, but you also avoid spaghetti dependencies
 
