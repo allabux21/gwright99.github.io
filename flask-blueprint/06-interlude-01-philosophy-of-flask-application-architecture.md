@@ -74,7 +74,7 @@ These capabilities meant I could:
 2. Build the application knowing that I could eventually drop-in an industrial-grade application server when I was ready to go to Production.
 3. Facilitate the integration of a testing framework.
 
-Plenty has been written about the Flask Application Factory Model so I will not spend more time parroting ideas already written more clearly by others. However, it is crucial to point out that the decision to implement this model then prompted two other design implications:
+Plenty has been written about the Flask Application Factory Model so I will not spend more time parroting ideas already written more clearly by others. However, it is crucial to point out that the decision to implement this model then sparked two other design problems:
 
 1. How to invoke the Flask application via the `wsgi.py` entrypoint
 2. How to supply the Flask application with a database access solution
