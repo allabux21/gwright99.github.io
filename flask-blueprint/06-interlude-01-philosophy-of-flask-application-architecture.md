@@ -15,7 +15,22 @@ I will be the first to admit that I don't have all the answers (to be fair, I do
 
 With that said, onto my opinions ...
 
+### Choosing Your Flask Application
+Many of the Flask tutorials I've encountered look somethign like this:
+```python
+from flask import Flask
 
+app = Flask(__name__)
+
+@app.route('/', methods=['GET'])
+def hello_world():
+    return "Hello world!"
+    
+app.run()
+```
+
+
+### Choosing Your Database Integration Model
 
 
 
