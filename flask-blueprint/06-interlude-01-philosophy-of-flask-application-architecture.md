@@ -82,7 +82,7 @@ Plenty has been written about the Flask Application Factory Model so I will not 
 ### Choosing Your Flask Application Invocation Model
 Not gonna lie, i found this WAAAAY more challenging than it had any right to be. 
 
-Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation upon which we will decide how to invoke on a go-forward basis.
+Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation to decide our own preferred invocation model.
 
 TLDR:
 1. `flask run` is the newest invocation method and is recommended by the Flask project (_not surprising, they obviously created this functionality for reason_).
