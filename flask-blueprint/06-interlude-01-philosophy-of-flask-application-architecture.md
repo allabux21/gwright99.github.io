@@ -63,6 +63,7 @@ Unfortunately, it also begins engraining [bad development habits](https://hacker
 
 I began my own learning journey with the official Flask tutorial series. I followed the steps but was constantly questioning WHY the application was being built in a manner that felt convoluted and unnatural. This prompted a search for dissenting opinions, whereupon I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). I found Birchard's writing style entertaining, but more importantly I found that his explanations made sense and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
 
+#### Decision: Use the Flask Application Factory Model
 The **Application Factory Model** was of particular interest to me because it offered:
 * A clean entrypoint for WSGI-based application servers
 * A way to decouple application configuration from application instantiation (configuration values are passed in as parameters at runtime, thereby facilitating testing).
