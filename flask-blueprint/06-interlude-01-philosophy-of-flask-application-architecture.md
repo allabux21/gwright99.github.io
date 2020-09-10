@@ -67,7 +67,7 @@ The **Application Factory Model** was of particular interest to me because it of
 * A modular structure that mostly resolves the [circular import problem](https://itnext.io/flask-factory-pattern-to-setup-your-project-8fe7d6b23247) 
 
 These capabilities meant I could:
-1. Implement Flask Blueprints to logically separate different application functional areas.
+1. Implement Flask Blueprints to logically separate different functional areas.
 2. Build the application knowing that I could eventually drop-in an industrial-grade application server when I was ready to go to Production.
 3. Facilitate the integration of a testing framework.
 
