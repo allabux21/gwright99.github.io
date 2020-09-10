@@ -80,6 +80,22 @@ Plenty has been written about the Flask Application Factory Model so I will not 
 2. How to supply the Flask application with a database access solution
 
 ### Choosing Your Flask Application Invocation Model
+Not gonna lie, i found this WAAAAY more challenging than it had any right to be. 
+
+Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation upon which we will decide how to invoke on a go-forward basis.
+
+TLDR:
+1. `flask run` is the newest invocation method and is recommended by the Flask project (_not surprising, they obviously created this functionality for reason_).
+
+This method offers multiple ways to identify the target application and gives fine-grain control over your development server behaviour. It is essential to note, however, that you CANNOT control debug mode via this command - you must do it via the FLASK_ENV environment variable (e.g. `export FLASK_ENV=development`). 
+
+This is also where we start to see knock-on effects: certain `flask run` options like `--reload` and `--debugger` draw their default values based on whether debug is enabled (with debug itself enabled via `FLASK_ENV=development`. To add to the fun, other settings like `eager-loading` draw their default values from the `--reload` value.
+
+Confused yet? Yep, I was too.
+ 
+1. `app.run()` is less robust when it comes to reloading and has no CLI, but you also avoid spaghetti dependencies
+
+
 
 
 ### Choosing Your Database Integration Model
