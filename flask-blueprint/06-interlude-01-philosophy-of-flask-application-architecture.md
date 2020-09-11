@@ -82,7 +82,7 @@ Plenty has been written about the Flask Application Factory Model so I will not 
 ### Choosing Your Flask Application Invocation Model
 Not gonna lie, i found this WAAAAY more challenging than it had any right to be. 
 
-Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation to decide our own preferred invocation model.
+Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation to decide our own preferred invocation model. (The Production deployemnt model remains unchanged, with a dedicated application server [directly calling the Flask Application Factory](https://flask.palletsprojects.com/en/1.1.x/tutorial/deploy/)).
 
 TLDR:
 1. `flask run` is the newest invocation method and is recommended by the Flask project (_not surprising, they obviously created this functionality for reason_).
@@ -106,8 +106,19 @@ Seems pretty straightforward, so why am I claiming it's actually more complicate
 * Dockerfile command definition and sequencing (both development & production instances)
 * Makefile command invocation 
 
+To keep my life simple over the short term, I opted to:
+1. Add `export FLASK_ENV=development` to my WSL2 instances's `~/.profile`
+1. Modify the Makefile run command to use `flask run`
+1. Add `app.run()` to the `__main__` dunder of my `wsgi.py` file.
 
-- Set FLASK_ENV in .profile?
+TO DOS: 
+(1) FIGURE OUT IF THE DEVELOPMENT DOCKER SHOULD BE BUILT WTIH A PROPER APPLICATION SERVER OR USE THE BUILT-IN WEB SERVER.
+(2) CONFIRM THAT SETTING development AS THE FLASK_ENV VALUE IN ~/.profile DOES NOT IMPACT INVOCATION OF TESTING INSTANCE.
+
+Don't worry if you are a little confused as to the exact position of these files in the project hierarchy, I'll be sure to call these changes out again when we get to the 
+actual code.
+
+
 ### Choosing Your Database Integration Model
 
 
