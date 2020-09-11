@@ -90,11 +90,24 @@ TLDR:
 <br><br>This is also where we start to see knock-on effects: certain `flask run` options like `--reload` and `--debugger` draw their default values based on whether debug is enabled (with debug itself enabled via `FLASK_ENV=development`). To add to the fun, other settings like `--eager-loading` draw their default values from the `--reload` value.
 <br><br>Confused yet? Yep, I was too.
  
-1. `app.run()` is less robust when it comes to reloading and has no CLI, but you also avoid spaghetti dependencies
+1. `app.run()` is less robust when it comes to reloading and has no CLI, but you also avoid spaghetti dependencies.
+
+At the end of the article, Grinberg gives us an easy out: just use both! 
+* Set your environment variable `export FLASK_APP=main_application_file.py`, and
+* Make sure your main application file contains: 
+```python
+if __name__ == "__main__":
+    app.run()
+```
+
+Seems pretty straightforward, so why am I claiming it's actually more complicated than this? The challenge is less about which invocation command to use and more about how to properly account for the decision when integrating it into other areas of the solution that we will be building, including:
+* `__init__.py` verification logic
+* dotenv configuration logic
+* Dockerfile command definition and sequencing (both development & production instances)
+* Makefile command invocation 
 
 
-
-
+- Set FLASK_ENV in .profile?
 ### Choosing Your Database Integration Model
 
 
