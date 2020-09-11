@@ -134,12 +134,38 @@ I CAN comment on my own experience trying to get an ORM (`flask-sqlalchemy` and 
 
 With my digressing out of the way, onto the main points.
 
-#### how about you stop digressing and get to the point?
-My beef with using an ORM primarily centres around X point:
+#### How about you stop digressing and get to the point?
+Ok ok, my beef with ORMs is centred around the following 4 points:
 1. Registering the ORM when using the Flask Application Factory (tight coupling)
 2. Intermingling SQL abstractions with object relationships
 3. Obfuscation of underlying database interactions
 4. Learning the ORM rather than learning SQL
+
+##### Beef #1: Registering the ORM with the Flask Application Factory Model
+This is the most minor of the beefs, but important to call out due to its impact on application architecture.
+
+Consider the following application:
+
+```python
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+# Globally accessible db
+db = SQLAlchemy()
+
+def create_app():
+    app = Flask(__name__)
+    db.init_app(app)
+    
+    with app.app_context():
+        db.create_all()  # Create sql tables for our data models
+```
+Have a look at Todd Birchard's [Demystifying Flask's Application Factory](https://hackersandslackers.com/flask-application-factory/) article for a step-by-step breakdown of how the database is registered with the Flask application, and [Connect Flask to a Database with Flask-SQLAlchemy](https://hackersandslackers.com/flask-sqlalchemy-database-models/) understand how the database tables are created once the db is registered with the app. 
+
+The two most crucial items to remember are:
+1. The database connection is not available for use until its been registered with the application (_at runtime_).
+1. The database is not created until the first time the application is executed.
+
 
 
 
