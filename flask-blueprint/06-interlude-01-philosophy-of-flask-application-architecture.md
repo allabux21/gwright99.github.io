@@ -79,8 +79,8 @@ Plenty has been written about the Flask Application Factory Model so I will not 
 1. How to invoke the Flask application via the `wsgi.py` entrypoint
 2. How to supply the Flask application with a database access solution
 
-### Choosing Your Flask Application Invocation Model
-Not gonna lie, i found this WAAAAY more challenging than it had any right to be. 
+### Choosing Your Flask Development Server Invocation Model
+Not gonna lie, i found this more challenging than it had any right to be. 
 
 Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation to decide our own preferred invocation model. (The Production deployemnt model remains unchanged, with a dedicated application server [directly calling the Flask Application Factory](https://flask.palletsprojects.com/en/1.1.x/tutorial/deploy/)).
 
@@ -106,6 +106,7 @@ Seems pretty straightforward, so why am I claiming it's actually more complicate
 * Dockerfile command definition and sequencing (both development & production instances)
 * Makefile command invocation 
 
+#### Decision: Use flask run AND app.run()
 To keep my life simple over the short term, I opted to:
 1. Add `export FLASK_ENV=development` to my WSL2 instances's `~/.profile`
 1. Modify the Makefile run command to use `flask run`
@@ -115,12 +116,30 @@ TO DOS:
 (1) FIGURE OUT IF THE DEVELOPMENT DOCKER SHOULD BE BUILT WTIH A PROPER APPLICATION SERVER OR USE THE BUILT-IN WEB SERVER.
 (2) CONFIRM THAT SETTING development AS THE FLASK_ENV VALUE IN ~/.profile DOES NOT IMPACT INVOCATION OF TESTING INSTANCE.
 
-Don't worry if you are a little confused as to the exact position of these files in the project hierarchy, I'll be sure to call these changes out again when we get to the 
+Don't worry if you aren't totally clear on the exact position of these files in the project hierarchy, I'll be sure to call these changes out again when we get to the 
 actual code.
 
 
 ### Choosing Your Database Integration Model
+I'll just come out and say it: I really don't like using an ORM.
 
+I understand that using an ORM is supposed to make my life easier by abstracting away the mechanics of interacting with a database and allowing me to retrieve/manipulate records using Pythonic syntax. I understand that an application that uses an ORM can be more easily forklifted to a different database solution, requiring only minor changes to the database connection settings. I also understand that the ORM offers coding shortcuts to access record data (e.g. relationship definitions and `Object.query.filter_by()...` rather than `db.session.query(Object).filter_by()...`. But I don't find these helpful enough to compensate for the headspace I need to devote to keeping track of what the ORM is doing for me and how I'm supposed to use it.
+
+#### Aside: Graham admits how little he knows about this topic (but will compensate for that with Truthiness)
+Before I continue, I need to make it very clear that this is a topic I'm not 100% about. There are tons of opinions on the web supporting the pro- and anti- ORM cause. Both sides appear to be well-informed and can back up their cases with plenty of technical facts. The comment sections are then filled with anecdotes like _"sure you can get away without using an ORM when you are building a small project, but GOOD LUCK trying to maintain a multi-million line entreprise code base without one!"_, _"We built our application using an ORM but now the ORM isn't doing what we need it to do and have spent the last six months struggling to rip it out of our codebase"_, and _"Won't somebody PLEASE think of performance!!"_ (this one is used by both sides).
+
+I don't know who the authors or commenting practitioners are. I don't know what solutions they built. I don't know how those who chose to use an ORM architected their integration. I don't know what solutions those who chose not to use an ORM used to avoid having to write bespoke SQL for every transaction. I don't know if it's realistic to expect to the availability of a complete, up-to-date Logical Data Model if one is brought in as a developer on a large legacy codebase. I don't know who or what to trust, and this makes it exceedingly hard to make an informed decision regarding my own project.
+
+I CAN comment on my own experience trying to get an ORM (`flask-sqlalchemy` and the `SQLAlchemy`) integrated my own small project, and the thoughts I had while observing myself trying to get the initial solution working as well as wondering "How would I get this to scale if this was more than a one-man operation?".
+
+With my digressing out of the way, onto the main points.
+
+#### how about you stop digressing and get to the point?
+My beef with using an ORM primarily centres around X point:
+1. Registering the ORM when using the Flask Application Factory (tight coupling)
+2. Intermingling SQL abstractions with object relationships
+3. Obfuscation of underlying database interactions
+4. Learning the ORM rather than learning SQL
 
 
 
