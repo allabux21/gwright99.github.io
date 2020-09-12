@@ -46,6 +46,8 @@ As per Grinberg, it basically boils down this:
 ##### Seems simple enough, what's so challenging about it?
 For reasons I don't fully understand, the `flask run` method relies upon a combination of CLI options AND environment variable values. The only way to activate Flask's debug mode is by setting `FLASK_ENV=development` in the environment. Options like `--reload` and `--debugger` draw their default values based on whether debug is enabled. Other settings like `--eager-loading` draw their default values from the `--reload` value. Furthermore, the `FLASK_APP` environment variable needed to be set to identify the actual application to invoke. Confused yet? Yep, I was too.
 
+<INSERT IMAGE FROM GRINBERG HERE>
+
 Despite Grinberg giving us an easy way out (just use both!), I declined because it felt hacky. The creation of the new method clearly indicated that the Flask team felt that the old way was insufficient, and I had a sneaking (unproven) suspicion that using both methods would eventually cause some bizarre bug. Given my desire to build a modern project, use the application factory pattern, and the fact that I would be Dockerizing the Production instance, I decided that the `flask run` method was more appropriate.
 
 This decision, however, rippled to other components of the project that demanded a reckoning:
