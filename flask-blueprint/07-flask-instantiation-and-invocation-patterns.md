@@ -1,6 +1,6 @@
-## Flask Application Instantiation & Invocation Models
+## Flask Application Instantiation & Invocation Patterns
 
-Choosing your Flask application's _instantiation_ & _invocation_ models is an essential first decision because it will have ramifications that ripple throughout the rest of the development project including:
+Choosing your Flask application's _instantiation_ & _invocation_ patterns is an essential first decision because it will have ramifications that ripple throughout the rest of the development project including:
 
 * The project structure
 * Makefile configuration
@@ -11,12 +11,12 @@ Choosing your Flask application's _instantiation_ & _invocation_ models is an es
 * Flask application database integration logic
 
 ### Selected Models
-The project will use the **Flask Application Factory Model** as its application instantiation model.
-The project will use **flask run** as its development server invocation model.
+The project will use the **Flask Application Factory Pattern** as its application instantiation pattern.
+The project will use **flask run** as its development server invocation pattern.
 
 
 #### Why use the Flask Application Factory Model?
-The Flask Application Factory Model is of interest because it offers:
+The Flask Application Factory Pattern is of interest because it offers:
 
 * A way to decouple application configuration from application instantiation (configuration values are passed in as parameters at runtime, thereby facilitating testing).
 * A modular structure that resolves the circular import problem
