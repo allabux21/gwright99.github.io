@@ -272,11 +272,57 @@ Earlier in this series, I devoted a full post to explaining [how and why I chose
 NOTE: GW TO TRY THE @app.before_first_request decorator to see if this solves the problem.
 Flask is built upon the Werkzeug library. When Flask is started in development mode, Werkzeug will spawn a child process in order to [restart the main process each time the application code changes](https://stackoverflow.com/questions/25504149/why-does-running-the-flask-dev-server-run-itself-twice). This behaviour, however, also expresses itself when the application is first initialized.
 
-Part of my `__init__.py: create_app()` function tries to seed the SQLite database with records. Given the double-execution behaviour of the Flask development server, this meant two processes were trying to connect to the database (each trying to write the same records). I was quite capable at opening database connections via the Session() object but I had neglected to write any code that _closed_ the database connection. This meant that the second process received a process conflict error (TO DO: GO FIND THE EXACT ERRRO), but SQLite was still waiting for the first process to close its connection. Oops.
+Part of my `__init__.py: create_app()` function tries to seed the SQLite database with records. Given the double-execution behaviour of the Flask development server, this meant two processes were trying to connect to the database (each trying to write the same records). I was quite capable at opening database connections via the Session() object but I had neglected to write any code that _closed_ the database connection. This meant that the second process received a process conflict error (TO DO: GO FIND THE EXACT ERROR), but SQLite was still waiting for the first process to close its connection. Oops.
+
+Before I figured out the root cause of the problem, I created a workaround procedure based on a StackOverflow post that discussed how to deal with a [locked database](https://stackoverflow.com/questions/26862809/operational-error-database-is-locked).
+
+```python
+# proj/db.py
+
+from sqlalchemy import create_engine
+from sqlalchemy import sessionmaker, scoped_session
+from sqlalchemy.ext.declarative import declarative_base
+
+import os
+import time
+
+Base = declarative_base()
+engine = create_engine('sqlite:////tmp/mysqlitedb.db')
+
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Session = scoped_session(session_factory)
+
+db = SQLAlchemy()
 
 
+def init_db():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 
+def commit_or_rollback(entry):
+    print(f'PID is: {os.getpid()}')
+    # Note: 'Finally' not used because we break on success. but need to retry if processes clash.
+
+    for attempt in range(3):
+        db = Session()
+        
+        try:
+            db.session.add_all(entry)
+            db.session.commit()
+            return
+        except exc.IntegrityError as e:
+            print(f'Record already exists in db.\n{e}')
+            db.session.rollback()
+            break
+        except exc.OperationalError as e:
+            print(f'PID {os.getpid()} encountered SQLALCH OperationalError(sqlite3.OperatioalError. sleeping')
+            print(e)
+            db.session.rollback()
+            time.sleep(random.randint(1, 3))
+```
+
+The workaround prevented the Flask
 
 * If you observe the Flask development server logs on startup, the same code is executed twice. 
 
