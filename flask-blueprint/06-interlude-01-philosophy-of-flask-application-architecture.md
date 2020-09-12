@@ -221,9 +221,49 @@ Not quite. Waycott's solution gives us an independent entrypoint to the database
 1. It made me dependent on the flask-sqlalchemy package (which wraps the underlying SQLAlchemy library).
 1. flask-sqlalchemy has a slightly different syntax for defining database objects than using SQLAlchemy directly.
 
-Even though the SQLAlchemy documentation itself suggests using a helper library like flask-sqlalchemy !ADD REFERENCE!, something felt not quite right. Furthermore, whenever I subsequently searched for database objection creation help, I would always need to check if the answer was written from a SQLAlchemy or flask-sqlalchemy perspective. My assumption was that - because flask-sqlalchemy wrapped SQLAlchemy - I was better off using the base package as this would give me a greater chance of finding answers to the problems I was trying to solve. This opinion was reinforced by the arguments made in Edward Krueger's [Use Flask and SQLAlchemy, not Flaks-SQLAlchemy!](https://towardsdatascience.com/use-flask-and-sqlalchemy-not-flask-sqlalchemy-5a64fafe22a4?gi=6c73d7f74e07) article.
+Even though the SQLAlchemy documentation itself suggests using a helper library like flask-sqlalchemy !ADD REFERENCE!, something felt not quite right. Furthermore, whenever I subsequently searched for database objection creation help, I would always need to check if the answer was written from a SQLAlchemy or flask-sqlalchemy perspective. My assumption was that - because flask-sqlalchemy wrapped SQLAlchemy - I was better off using the base package as this would give me a greater chance of finding answers to the problems I was trying to solve. This opinion was reinforced by the arguments made in Edward Krueger's [Use Flask and SQLAlchemy, not Flask-SQLAlchemy!](https://towardsdatascience.com/use-flask-and-sqlalchemy-not-flask-sqlalchemy-5a64fafe22a4?gi=6c73d7f74e07) article.
 
-As a result, I decided to abandon flask-sqlalchemy and rework the code to use SQLAlchemy directly.
+As a result, I decided to abandon flask-sqlalchemy and rework the code to use SQLAlchemy directly. The new `db.py` file looked like:
+```python
+# proj/db.py
+
+from sqlalchemy import create_engine
+from sqlalchemy import sessionmaker, scoped_session
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+engine = create_engine('sqlite:////tmp/mysqlitedb.db')
+
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Session = scoped_session(session_factory)
+
+db = SQLAlchemy()
+
+def init_db():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    
+```
+
+The redesigned `db.py` required changes in the `__init__.py` file too:
+```python
+# __init__.py
+
+from flask import Flask
+from proj.db import init_db, Session
+
+def create_app():
+    app = Flask(__name__)
+    init_db()  # This creates the database without needing to bind the db to the app
+    
+    with app.app_context():
+        # db = Session()  # The db object provides the Flask app with access to the db
+        ...
+```
+With this change implemented, the database logic was successfully split away from the Falsk application logic. I was finally done with all this annoying refactoring work and could get back to writing code! Or so I thought ...
+
+#### OMG why am I getting all these errors from the Flask Developement server?!
+
 
 
 Defining a proper design is crucial for me purposes.
