@@ -9,7 +9,9 @@ I specifically chose Flask over Django because:
 
 These are amazing benefits which work very well with Rapid Application Development (the development methodology that I favour). Being able to move quickly and deliver results promptly builds trust with your stakeholders and helps ensure you are actually building the solution that is needed rather than risk encountering a horrible surprise close to the end of a project.
 
-This flexibility and ease-of-entry, however, come at a great cost: the internet abounds with reams of badly-designed Flask tutorials which work for the simple needs of the tutorial article/series but cannot hope to scale appropriately should the developer ever want to move beyond a small-scale proof-of-concept stage. Many of the simplest Flask tutorials I've encountered look something like this:
+This flexibility and ease-of-entry, however, come at a great cost: the internet abounds with reams of badly-designed Flask tutorials which work for the simple needs of the tutorial article/series but cannot hope to scale appropriately should the developer ever want to move beyond a small-scale proof-of-concept stage. 
+
+Many of the simplest Flask tutorials I've encountered look something like this:
 
 ```python
 # app.py
