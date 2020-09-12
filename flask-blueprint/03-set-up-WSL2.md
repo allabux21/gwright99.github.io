@@ -12,5 +12,6 @@ With that said, I will note a few caveats that I encountered during my own upgra
 <br>I likely am paying a performance price for having multiple WSL2 consoles open at once, but it hasn't seemed to impact me yet. YMMV. 
 
 <br><br>
-Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)<br>
-Next: [Install and Configure Docker Desktop](./04-install-and-configure-docker.md)
+Next: [Install and Configure Docker Desktop](./04-install-and-configure-docker.md)<br>
+Previous: [Project Goals and Design Considerations](./02-project-goals-and-design-considerations.md)
+
