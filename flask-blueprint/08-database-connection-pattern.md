@@ -1,18 +1,34 @@
 ## Database Connection Pattern
+Choosing your database pattern is an early project decision that is critical to settle quickly. Making the wrong decision can result in costly and frustrating rework throughout the entire application should you ever need to change mid-stride. While I'm unable to comment on support issues that may come up in Production, I can comment on the process I had to go through to settle on the database connection pattern that I'll be using in the project
 
-### Choosing Your Database Integration Model
-I'll just come out and say it: I really don't like using an ORM.
+### Decision: Use the SQLAlchemy ORM ... Sort of
+As per my [technology component decisions](./02-project-goals-and-design-considerations.md) I said I would be using the SQLAlchemy ORM. How I reached that decision was an evolutionary process based on development efforts I conducted before I began to write this material. To be honest, I'm still not convinced it even makes sense to use SQLAlchemy (I'll explain why once I detail my steps), but at this point in time I don't want to have to retrofit yet again so ... I'll stick with the ORM for now.
 
-I understand that using an ORM is supposed to make my life easier by abstracting away the mechanics of interacting with a database and allowing me to retrieve/manipulate records using Pythonic syntax. I understand that an application that uses an ORM can be more easily forklifted to a different database solution, requiring only minor changes to the database connection settings. I also understand that the ORM offers coding shortcuts to access record data (e.g. relationship definitions and `Object.query.filter_by()...` rather than `db.session.query(Object).filter_by()...`. But I don't find these helpful enough to compensate for the headspace I need to devote to keeping track of what the ORM is doing for me and how I'm supposed to use it.
+### Caveat: Take what I say with a grain of salt
+Before I begin, I should make it clear that I'm not 100% in my mastery of this topic. I have tried to learn the SQLAlchemy ORM before and consistently found it to feel unnatural and confusing. With that said, I have not spent huge amounts of time reading through the large body of documentation and - when I did read portions of it - more often than not my reaction was "err, wut?". 
 
-#### Aside: Graham admits how little he knows about this topic (but will compensate for that with Truthiness)
-Before I continue, I need to make it very clear that this is a topic I'm not 100% about. There are tons of opinions on the web supporting the pro- and anti- ORM cause. Both sides appear to be well-informed and can back up their cases with plenty of technical facts. The comment sections are then filled with anecdotes like _"sure you can get away without using an ORM when you are building a small project, but GOOD LUCK trying to maintain a multi-million line entreprise code base without one!"_, _"We built our application using an ORM but now the ORM isn't doing what we need it to do and have spent the last six months struggling to rip it out of our codebase"_, and _"Won't somebody PLEASE think of performance!!"_ (this one is used by both sides).
+What I'm trying to say is: I *think* I don't like using an ORM.
+
+I understand that using an ORM is supposed to facilitate life by abstracting the mechanics of database interaction and allowing me to stay in a Pythonic syntax world. I understand that an application using an ORM can be more easily forklifted to a different database solution, requiring only minor changes to the database connection settings. I also understand that the ORM offers coding shortcuts to access record data (e.g. relationship definitions and `Object.query.filter_by()...` rather than `db.session.query(Object).filter_by()...`. 
+
+The problem is that I don't find these reasons to be good enough counterbalance the headspace I must devote to keeping track of what the ORM is doing for me and how I'm supposed to use it.
+
+There are tons of opinions on the web supporting the pro- and anti- ORM cause. Both sides appear to be well-informed and can back up their cases with plenty of technical facts. The comment sections are then filled with anecdotes like _"sure you can get away without using an ORM when you are building a small project, but GOOD LUCK trying to maintain a multi-million line entreprise code base without one!"_, _"We built our application using an ORM but now the ORM isn't doing what we need it to do and have spent the last six months struggling to rip it out of our codebase"_, and _"Won't somebody PLEASE think of performance!!"_ (this one is used by both sides).
 
 I don't know who the authors or commenting practitioners are. I don't know what solutions they built. I don't know how those who chose to use an ORM architected their integration. I don't know what solutions those who chose not to use an ORM used to avoid having to write bespoke SQL for every transaction. I don't know if it's realistic to expect to the availability of a complete, up-to-date Logical Data Model if one is brought in as a developer on a large legacy codebase. I don't know who or what to trust, and this makes it exceedingly hard to make an informed decision regarding my own project.
 
 I CAN comment on my own experience trying to get an ORM (`flask-sqlalchemy` and the `SQLAlchemy`) integrated my own small project, and the thoughts I had while observing myself trying to get the initial solution working as well as wondering "How would I get this to scale if this was more than a one-man operation?".
 
 With my digressing out of the way, onto the main points.
+
+### Choosing Your Database Integration Model
+I'll just come out and say it: I really don't like using an ORM.
+
+
+
+
+
+
 
 #### How about you stop digressing and get to the point?
 Ok ok, my beef with ORMs is centred around the following 4 points:
