@@ -1,24 +1,16 @@
-## Interlude 01 - The Philosophy of Flask Application Architecture
+## Interlude 01 - The Philosophy of Flask Tutorials
 So we've picked our technology components and configured our tooling - time to get coding, right!? Not quite.
 
-I specifically chose Flask over Django because: <br>
+I specifically chose Flask over Django because:
+
 1. Flask is an unopinionated framework that grants me a greater degree of control over my implementation, and <br>
-1. Flask's design makes it very easy to stand up a microservice with just a few lines of code in a single `.py` file.
 
-These are amazing features which work very well with Rapid Application Development, an application development methodology that I favour. Being able to move quickly and delivery results promptly builds trust with your stakeholders and helps ensure you are actually building the solution that is needed rather than risk encountering a horrible surprise close to the end of a project.
+1. Flask's design makes it very easy to stand up a microservice with just a few lines of code in a single `app.py` file.
 
-This flexibility and ease-of-entry, however, come at a great cost: the internet abounds with reams of badly-designed Flask tutorials which work for the simple needs of the tutorial article/series but cannot hope to scale appropriately should the developer ever want to move beyond a small-scale proof-of-concept stage. Given how easy it is to write a 'me-too' Introduction to Flask article in the pursuit of eyeballs and clicks, the proliferation of junk examples is not the least bit surprising due to Python's immense growth in popularity [ADD SOURCE].
+These are amazing benefits which work very well with Rapid Application Development (the development methodology that I favour). Being able to move quickly and deliver results promptly builds trust with your stakeholders and helps ensure you are actually building the solution that is needed rather than risk encountering a horrible surprise close to the end of a project.
 
-_"Way to be a hypocrite, Graham!"_ you may be saying. I'm writing my own series on Flask, have never deployed a Flask application into Production, and never had to keep application infrastructure running under heavy load; so what the hell do I know? 
+This flexibility and ease-of-entry, however, come at a great cost: the internet abounds with reams of badly-designed Flask tutorials which work for the simple needs of the tutorial article/series but cannot hope to scale appropriately should the developer ever want to move beyond a small-scale proof-of-concept stage. Many of the simplest Flask tutorials I've encountered look something like this:
 
-To that I say "_Dude, it's a free blog that I'm mostly writing for myself - if you dont like the ten minutes or so of content, just stop reading!_".
-
-I will be the first to admit that I don't have all the answers (to be fair, I dont think _anybody_ has all the answers). With that said, the output of this project is meant to help me quickly and easily spin up future projects, so I'm well-motivated to build something that is cohesive, scaleable, and adheres to defensible best practices. I'll share my opinions, provide links and background to the material I reviewed that led me to my conclusion, and let you decide for yourself. Eventually, once I figure out how to use GitHub Pages, I may even throw caution to the wind and enable  anonymous internet strangers to brutally comment on all the mistakes and philosophical decisions I've made (_but maybe not that soon!_). 
-
-With that said, onto my opinions ...
-
-### Choosing Your Flask Application Model
-Many of the simplest Flask tutorials I've encountered look something like this:
 ```python
 # app.py
 
@@ -34,7 +26,9 @@ def hello_world():
  
 app.run()
 ```
+
 If the tutorial is especially bold, it will also include a basic database connection as well:
+
 ```python
 # app.py
 
@@ -58,14 +52,50 @@ def connect_to_db():
 app.run()
 ```
 
-This makes perfect sense for teaching a beginner: it requires minimal code, will work immediately, and encourages the reader to continue their learning journey. 
+This makes perfect sense for teaching a beginner: it requires minimal code, will work immediately, and encourages the reader to continue their learning journey. Unfortunately, it also begins engraining [bad development habits](https://hackersandslackers.com/flask-application-factory/) from the outset, which the reader will need to unlearn later when/if they are exposed to more fulsome tutorials.
 
-Unfortunately, it also begins engraining [bad development habits](https://hackersandslackers.com/flask-application-factory/) immediately, which the reader will need to unlearn later as they are exposed to more fulsome tutorials like:
+I was/am equally guilty of these bad habits. Roughly a year ago, I built a Flask application for a job-related POC, and the end result was a single enormous `app.py` file. Granted, I built it quickly and proved my point, but the way the application was architected meant it could have never gone into Production without a complete overhaul (_thankfully my employer is a Java shop, so there was never any question that we would take the next bazillion years to rewrite it in a 'proper' language /s).  
+
+### Great, another noob - why should I listen to you?
+_"Way to be a hypocrite, Graham!"_ you may be saying. I've never deployed a Flask application into Production and never had to keep application infrastructure running under heavy load; so what the hell do I know? 
+
+First, I would say "_Dude, it's a free blog that I'm mostly writing for myself - just stop reading if you haven't found the content useful so far!_".
+
+For anyone remaining after the first response, I say this: I don't have all the answers. I will never claim to have all the answers. But I am motivated to build out my technical portfolio, and to do that I need to have a resuseable project nucleus that enables me quickly spin up future projects that I trust to be scaleable. I'll share my opinions, provide links and background to the material I reviewed that underpin my conclusions, and let you decide for yourself. Eventually, once I become more proficient at this blogging platform, I may even throw caution to the wind and enable anonymous internet strangers to brutally comment on all the mistakes and design decisions I've made (_but maybe not that soon!_). 
+
+With that said, onto my opinions ...
+
+<br><br>
+Previous: [Install and Configure VS Code](./05-install-and-configure-vscode.md)<br>
+Next:
+
+
+
+like:
 * Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
-* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
-* The official [Flask Tutorial](https://flask.palletsprojects.com/en/1.1.x/tutorial/) (_which i still have reservations about, more on this later in the database commentary_)
 
-I began my own learning journey with the official Flask tutorial series. I followed the steps but was constantly questioning WHY the application was being built in a manner that felt convoluted and unnatural. This prompted a search for dissenting opinions, whereupon I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). I found Birchard's writing style entertaining, but more importantly I found that his explanations made sense and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
+* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+
+
+
+
+
+
+### Choosing Your Flask Application Model
+
+
+
+
+
+
+Recognizing that I needed to do things better in order for this project to be of any use, I decided to go back to basics and assumed the most natural place to start was the official Flask tutorial series. As I followed the steps, however, I constantly questioning WHY the application was being built in a manner that felt either unexplained, or convoluted and unnatural. 
+
+It was only when I began searching for alternative sources that I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). The writing style was entertaining, but more importantly I found that his explanations made *sense* and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
+
+In terms of designing your Flask application, there are three fundamental decisions that must be made:
+1. How to structure your project
+1. How to initialize the Flask application object
+1. How to structure your database connection
 
 #### Decision: Use the Flask Application Factory Model
 The **Application Factory Model** was of particular interest to me because it offered:
