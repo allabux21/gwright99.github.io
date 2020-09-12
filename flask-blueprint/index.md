@@ -7,4 +7,6 @@ This is the main page for my Flask blueprint project.
 * [03 - Setting up WSL2 on Windows 10](./03-set-up-WSL2.md)
 * [04 - Install and Configure Docker Desktop](./04-install-and-configure-docker.md)
 * [05 - Install and Configure VS Code](./05-install-and-configure-vscode.md)
-* [Interlude #01 - The Philosophy of Flask Application Architecture](./06-interlude-01-philosophy-of-flask-application-architecture.md)
+* [06 - Interlude #01 - The Philosophy of Flask Tutorials](./06-interlude-01-philosophy-of-flask-tutorials.md)
+* [07 - Flask Application Instantiation & Invocation Pattterns](./07-flask-instantiation-and-invocation.md)
+* [08 - Database Connection Pattern](./08-database-connection-pattern.md)
