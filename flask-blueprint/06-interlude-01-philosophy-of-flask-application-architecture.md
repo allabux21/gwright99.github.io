@@ -262,7 +262,23 @@ def create_app():
 ```
 With this change implemented, the database logic was successfully split away from the Falsk application logic. I was finally done with all this annoying refactoring work and could get back to writing code! Or so I thought ...
 
-#### OMG why am I getting all these errors from the Flask Developement server?!
+#### OMG why am I getting all these errors from the Flask Development server?!
+Earlier in this series, I devoted a full post to explaining [how and why I chose my technology components](./02-project-goals-and-design-considerations.md). When discussing the database solution, I noted that I opted to use SQLite despite its limitations regarding concurrent connections. This "limitation" began to cause trouble for me almost immediately (_admittedly due to my own programming stupidity_), and was due to two reasons:
+
+1. The Flask development server initialization behaviour
+2. Neglecting to close my database connections
+
+##### Flask development server initialization behaviour
+NOTE: GW TO TRY THE @app.before_first_request decorator to see if this solves the problem.
+Flask is built upon the Werkzeug library. When Flask is started in development mode, Werkzeug will spawn a child process in order to [restart the main process each time the application code changes](https://stackoverflow.com/questions/25504149/why-does-running-the-flask-dev-server-run-itself-twice). This behaviour, however, also expresses itself when the application is first initialized.
+
+Part of my `__init__.py: create_app()` function tries to seed the SQLite database with records. Given the double-execution behaviour of the Flask development server, this meant two processes were trying to connect to the database (each trying to write the same records). I was quite capable at opening database connections via the Session() object but I had neglected to write any code that _closed_ the database connection. This meant that the second process received a process conflict error (TO DO: GO FIND THE EXACT ERRRO), but SQLite was still waiting for the first process to close its connection. Oops.
+
+
+
+
+
+* If you observe the Flask development server logs on startup, the same code is executed twice. 
 
 
 
