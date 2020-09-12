@@ -42,5 +42,6 @@ With Docker now available on the WSL2 CLI, it's time to integrate it with the Gi
     <br><br> If all goes well, GHCR will return a 'Login Successful' message and the integration is complete.
     
 <br><br>
-Previous: [Setting Up WSL2 on Windows 10](./03-set-up-WSL2.md)<br>
-Next: [Install and Configure VS Code](./05-install-and-configure-vscode.md)
+Next: [Install and Configure VS Code](./05-install-and-configure-vscode.md)<br>
+Previous: [Setting Up WSL2 on Windows 10](./03-set-up-WSL2.md)
+
