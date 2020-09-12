@@ -20,6 +20,8 @@ With that said, onto my opinions ...
 ### Choosing Your Flask Application Model
 Many of the simplest Flask tutorials I've encountered look something like this:
 ```python
+# app.py
+
 from flask import Flask
 
 app = Flask(__name__)
@@ -34,6 +36,8 @@ app.run()
 ```
 If the tutorial is especially bold, it will also include a basic database connection as well:
 ```python
+# app.py
+
 from flask import Flask
 import sqlite3
 
@@ -147,6 +151,8 @@ This is the most minor of the beefs, but important to call out due to its impact
 Consider the following application:
 
 ```python
+# __init__.py
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -160,13 +166,50 @@ def create_app():
     with app.app_context():
         db.create_all()  # Create sql tables for our data models
 ```
-Have a look at Todd Birchard's [Demystifying Flask's Application Factory](https://hackersandslackers.com/flask-application-factory/) article for a step-by-step breakdown of how the database is registered with the Flask application, and [Connect Flask to a Database with Flask-SQLAlchemy](https://hackersandslackers.com/flask-sqlalchemy-database-models/) understand how the database tables are created once the db is registered with the app. 
+Have a look at Todd Birchard's [Demystifying Flask's Application Factory](https://hackersandslackers.com/flask-application-factory/) article for a step-by-step breakdown of how the database is registered with the Flask application, and [Connect Flask to a Database with Flask-SQLAlchemy](https://hackersandslackers.com/flask-sqlalchemy-database-models/) to understand how the database tables are created once the db is registered with the app. 
 
 The two most crucial items to remember are:
-1. The database connection is not available for use until its been registered with the application (_at runtime_).
+1. The database connection is not available for use until it has been registered with the application (_at runtime_).
 1. The database is not created until the first time the application is executed.
 
+This design works fine for the immediate need of providing the application with stateful storage. We've done it, however, in a manner that tightly couples the application with its database and this precludes the reuse of our connection code should we wish to interact with the database independently (e.g. perhaps I want to pre-populate the table with records before i run the Flask application). 
 
+#### Split the database instantiation from the application instantiation
+I started searching for a way to split the database instantiation from the application instantiation and found a gem of an article in Bob Waycott's [Organizing Flask Models with Automatic Discovery](https://bobwaycott.com/blog/how-i-use-flask/organizing-flask-models-with-automatic-discovery/#sqlalchemy-database-setup) (I was actually looking for a way to define ORM table classes over multiple files, but more on that later).
+
+Waycott creates the database connection object in a separate `db.py`. He then provides a function that can be called by the Flask Application Factory in `__init__.py` that will bind the flask_sqlalchemy object to the Flask application. (_Note: I've omitted some of his code to streamline my example_):
+```python
+# proj/db.py
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+def init_db(app=None, db=None):
+    """Initializes the global database object used by the app."""
+    if isintance(app, Flask) and isinstance(db, SQLAlchemy):
+        db.init_app(app)
+    else:
+        raise ValueError('Cannot init DB without db and app objects.')
+```
+
+This design means that the `__init__.py` logic changes to:
+```python
+# __init__.py
+
+from flask import Flask
+from proj.db import db, init_db
+
+def create_app():
+    app = Flask(__name__)
+    init_db(app=app, db=db)
+    
+    with app.app_context():
+        db.create_all()  # Create sql tables for our data models
+```
+
+We can also independently interact the database from any other file in the project by including `fro proj.db import db`
 
 
 
