@@ -67,8 +67,9 @@ For anyone remaining after the first response, I say this: I don't have all the 
 IMHO, three major application design decisions needed to be made at the start of the project due to their impact on all the subsequent work:
 
 1. How to initialize the Flask application object
-1. How to structure your project
 1. How to structure the database connection
+1. How to structure your project
+
 
 To avoid things from getting overly long, I'll cover each item in its own separate page.
 
