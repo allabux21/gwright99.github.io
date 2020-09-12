@@ -74,5 +74,5 @@ The only thing I wasn't certain about was the impact to spinning up a testing in
 
  
 <br><br>
-Next: [Database Connection Pattern](./08-database-connection.md)
+Next: [Database Connection Pattern](./08-database-connection.md)<br>
 Previous: [Interlude 01 - The Philosophy of Flask Tutorials](./06-interlude-01-philosophy-of-flask-application-architecture.md)
