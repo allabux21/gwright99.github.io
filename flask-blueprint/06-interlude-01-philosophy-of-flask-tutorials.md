@@ -65,7 +65,7 @@ First, I would say "_Dude, it's a free blog that I'm mostly writing for myself -
 
 For anyone remaining after the first response, I say this: I don't have all the answers. I will never claim to have all the answers. But I am motivated to build out my technical portfolio, and to do that I need to have a resuseable project nucleus that enables me quickly spin up future projects that I trust to be scaleable. I'll share my opinions, provide links and background to the material I reviewed that underpin my conclusions, and let you decide for yourself. Eventually, once I become more proficient at this blogging platform, I may even throw caution to the wind and enable anonymous internet strangers to brutally comment on all the mistakes and design decisions I've made (_but maybe not that soon!_). 
 
-### Fine, I'll bite - shower us with your opinion
+### Fine, I'll bite - what should I be thinking about?
 IMHO, three major application design decisions needed to be made at the start of the project due to their impact on all the subsequent work:
 
 1. How to initialize the Flask application object
