@@ -1,85 +1,75 @@
+## Flask Application Instantiation & Invocation Models
 
-like:
-* Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
+Choosing your Flask application's _instantiation_ & _invocation_ models is an essential first decision because it will have ramifications that ripple throughout the rest of the development project including:
 
-* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+* The project structure
+* Makefile configuration
+* Dockerfile configuration
+* Dotenv configuration
+* Flask application start-up verification logic
+* Flask application plugin registration logic
+* Flask application database integration logic
 
-
-
-
-
-
-### Choosing Your Flask Application Model
-
-
-
-
+### Selected Models
+The project will use the **Flask Application Factory Model** as its application instantiation model.
+The project will use **flask run** as its development server invocation model.
 
 
-Recognizing that I needed to do things better in order for this project to be of any use, I decided to go back to basics and assumed the most natural place to start was the official Flask tutorial series. As I followed the steps, however, I constantly questioning WHY the application was being built in a manner that felt either unexplained, or convoluted and unnatural. 
+#### Why use the Flask Application Factory Model?
+The Flask Application Factory Model is of interest because it offers:
 
-It was only when I began searching for alternative sources that I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). The writing style was entertaining, but more importantly I found that his explanations made *sense* and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
-
-In terms of designing your Flask application, there are three fundamental decisions that must be made:
-1. How to structure your project
-1. How to initialize the Flask application object
-1. How to structure your database connection
-
-#### Decision: Use the Flask Application Factory Model
-The **Application Factory Model** was of particular interest to me because it offered:
-* A clean entrypoint for WSGI-based application servers
 * A way to decouple application configuration from application instantiation (configuration values are passed in as parameters at runtime, thereby facilitating testing).
-* A modular structure that mostly resolves the [circular import problem](https://itnext.io/flask-factory-pattern-to-setup-your-project-8fe7d6b23247) 
+* A modular structure that resolves the circular import problem
+* The capability to concurrently run multiple application instances.
 
-These capabilities meant I could:
-1. Implement Flask Blueprints to logically separate different functional areas.
-2. Build the application knowing that I could eventually drop-in an industrial-grade application server when I was ready to go to Production.
-3. Facilitate the integration of a testing framework.
+The downside of this approach is that the application instantiation logic becomes a bit more convoluted to compensate for the fact that the `app` object will not exist until runtime. This represents a one-time design and implementation cost, thereby making it a completely acceptable cost in order to access the benefits it provides.
 
-Plenty has been written about the Flask Application Factory Model so I will not spend more time parroting ideas already written more clearly by others. However, it is crucial to point out that the decision to implement this model then sparked two other design problems:
+To learn more about the mechanisms underlying the Flask Factory Application Model:
+* See the [offical Flask documentation](https://flask.palletsprojects.com/en/1.1.x/patterns/appfactories/) page for a basic explanation.
+* See Todd Birchard's [Demystifying Flask's Application Factory](https://hackersandslackers.com/flask-application-factory/) article for a better (IMHO) explanation.
+* See Felipe Florencio Garcia's [Flask Factory Pattern to set up your project](https://itnext.io/flask-factory-pattern-to-setup-your-project-8fe7d6b23247) article for deeper explanation of the circular import problem.
 
-1. How to invoke the Flask application via the `wsgi.py` entrypoint
-2. How to supply the Flask application with a database access solution
 
-### Choosing Your Flask Development Server Invocation Model
+#### Why use the `flask run` Invocation Model?
 Not gonna lie, i found this more challenging than it had any right to be. 
 
-Before you continue, go read [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application) by Miguel Grinberg. It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation to decide our own preferred invocation model. (The Production deployemnt model remains unchanged, with a dedicated application server [directly calling the Flask Application Factory](https://flask.palletsprojects.com/en/1.1.x/tutorial/deploy/)).
+It is vital to remember that what we are deciding is how to invoke the inbuilt Werkzeug **DEVELOPMENT** web server. This decision does not have any impact on the Production deployment model (which calls for a dedicated application server to [directly call the Flask Application Factory](https://flask.palletsprojects.com/en/1.1.x/tutorial/deploy/)). I've not yet tried it, but I assume this would also apply to any non-Production instance where the Flask application code is built on a dedicated WSGI application server (something I may experiment with in the future given that the project has a Docker component).
 
-TLDR:
-1. `flask run` is the newest invocation method and is recommended by the Flask project (_not surprising, they obviously created this functionality for reason_).
-<br><br>This method offers multiple ways to identify the target application and gives fine-grain control over your development server behaviour. It is essential to note, however, that you CANNOT control debug mode via this command - you must do it via the FLASK_ENV environment variable (e.g. `export FLASK_ENV=development`). 
-<br><br>This is also where we start to see knock-on effects: certain `flask run` options like `--reload` and `--debugger` draw their default values based on whether debug is enabled (with debug itself enabled via `FLASK_ENV=development`). To add to the fun, other settings like `--eager-loading` draw their default values from the `--reload` value.
-<br><br>Confused yet? Yep, I was too.
- 
-1. `app.run()` is less robust when it comes to reloading and has no CLI, but you also avoid spaghetti dependencies.
+Before you continue, go read Miguel Grinberg's [How to Run a Flask Application](https://www.twilio.com/blog/how-run-flask-application). It succinctly describes how the invocation of the Flask development web server has changed over time (`app.run()` vs. `flask run`), and provides the foundation upon which I decided my own preferred invocation model. 
 
-At the end of the article, Grinberg gives us an easy out: just use both! 
-* Set your environment variable `export FLASK_APP=main_application_file.py`, and
-* Make sure your main application file contains: 
-```python
-if __name__ == "__main__":
-    app.run()
+As per Grinberg, it basically boils down this:
+
+1. `flask run` is the newest invocation method and is recommended by the Flask project. It boasts several advanced capabilities, one of which is a method to invoke a Flask application factory pattern directly from the CLI.
+
+1. `app.run()` is less robust when it comes to reloading and has no CLI, but is less complex to implement.
+
+##### Seems simple enough, what's so challenging about it?
+For reasons I don't fully understand, the `flask run` method relies upon a combination of CLI options AND environment variable values. The only way to activate Flask's debug mode is by setting `FLASK_ENV=development` in the environment. Options like `--reload` and `--debugger` draw their default values based on whether debug is enabled. Other settings like `--eager-loading` draw their default values from the `--reload` value. Furthermore, the `FLASK_APP` environment variable needed to be set to identify the actual application to invoke. Confused yet? Yep, I was too.
+
+Despite Grinberg giving us an easy way out (just use both!), I declined because it felt hacky. The creation of the new method clearly indicated that the Flask team felt that the old way was insufficient, and I had a sneaking (unproven) suspicion that using both methods would eventually cause some bizarre bug. Given my desire to build a modern project, use the application factory pattern, and the fact that I would be Dockerizing the Production instance, I decided that the `flask run` method was more appropriate.
+
+This decision, however, rippled to other components of the project that demanded a reckoning:
+1. I had to ensure that my WSL2 environment had these values at all times.
+1. I had to ensure that the Makefile automation component was not impacted.
+1. I had to ensure that the Dockerfile components specified these environment variables and had the correct values.
+
+It was easy to hardcode the environment variables in the WSL2 instance, by adding them to my profile:
+```bash
+# ~./profile
+export FLASK_ENV=development
+export FLASK_APP=wsgi.py
 ```
 
-Seems pretty straightforward, so why am I claiming it's actually more complicated than this? The challenge is less about which invocation command to use and more about how to properly account for the decision when integrating it into other areas of the solution that we will be building, including:
-* `__init__.py` verification logic
-* dotenv configuration logic
-* Dockerfile command definition and sequencing (both development & production instances)
-* Makefile command invocation 
+The downside of this action is that I now have to remember that I hardcoded them and that they will always reset to this value when the terminal is restarted. I determined this was acceptable, however, because: 
 
-#### Decision: Use flask run AND app.run()
-To keep my life simple over the short term, I opted to:
-1. Add `export FLASK_ENV=development` to my WSL2 instances's `~/.profile`
-1. Modify the Makefile run command to use `flask run`
-1. Add `app.run()` to the `__main__` dunder of my `wsgi.py` file.
+* My local environment is meant for development, during which I assume I will always want debug and auto-reloader capabilities. 
+* I avoid process scope problems that I would encounter if I tried setting the variables as part of the Makefile-based invocation.
+* Given that the project is meant to be reusable, any subsequent application should also use `wsgi.py` as its entrypoint.
+* The Production instance of this application is generated via a Dockerfile, in which I can easily set the `FLASK_ENV=production`
 
-TO DOS: 
-(1) FIGURE OUT IF THE DEVELOPMENT DOCKER SHOULD BE BUILT WTIH A PROPER APPLICATION SERVER OR USE THE BUILT-IN WEB SERVER.
-(2) CONFIRM THAT SETTING development AS THE FLASK_ENV VALUE IN ~/.profile DOES NOT IMPACT INVOCATION OF TESTING INSTANCE.
+The only thing I wasn't certain about was the impact to spinning up a testing instance.
+* ?? TO DO: IMPLICATION TO TESTING INSTANCE?? TBD. 
 
-Don't worry if you aren't totally clear on the exact position of these files in the project hierarchy, I'll be sure to call these changes out again when we get to the 
-actual code.
 
 
 ### Choosing Your Database Integration Model
@@ -391,5 +381,15 @@ Circular import problem
 
     
 <br><br>
-Previous: [Install and Configure VS Code](./05-install-and-configure-vscode.md)<br>
+Previous: [Interlude 01 - The Philosophy of Flask Tutorials](./06-interlude-01-philosophy-of-flask-application-architecture.md)<br>
 Next:
+
+
+like:
+* Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
+* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+
+### Choosing Your Flask Application Model
+Recognizing that I needed to do things better in order for this project to be of any use, I decided to go back to basics and assumed the most natural place to start was the official Flask tutorial series. As I followed the steps, however, I constantly questioning WHY the application was being built in a manner that felt either unexplained, or convoluted and unnatural. 
+
+It was only when I began searching for alternative sources that I found Todd Birchard's excellent Flask series on [www.hackersandslackers.com](https://www.hackersandslackers.com). The writing style was entertaining, but more importantly I found that his explanations made *sense* and addressed many of the design questions I was struggling with in previous tutorials. If you are serious about learning Flask, I suggest you stop reading this and go read/implement his series first because I draw heavily upon his work.
