@@ -76,4 +76,4 @@ To avoid things from getting overly long, I'll cover each item in its own separa
 
 <br><br>
 Previous: [Install and Configure VS Code](./05-install-and-configure-vscode.md)<br>
-Next: [Flask Application Instantiation & Invocation Patterns](./07-flask-instantiation-and-invocation.md)
+Next: [Flask Application Instantiation & Invocation Patterns](./07-flask-instantiation-and-invocation-patterns.md)
