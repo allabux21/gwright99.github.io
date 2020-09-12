@@ -268,13 +268,13 @@ Earlier in this series, I devoted a full post to explaining [how and why I chose
 1. The Flask development server initialization behaviour
 2. Neglecting to close my database connections
 
-##### Flask development server initialization behaviour
+##### What was causing the problem? (Hint: mostly me)
 NOTE: GW TO TRY THE @app.before_first_request decorator to see if this solves the problem.
 Flask is built upon the Werkzeug library. When Flask is started in development mode, Werkzeug will spawn a child process in order to [restart the main process each time the application code changes](https://stackoverflow.com/questions/25504149/why-does-running-the-flask-dev-server-run-itself-twice). This behaviour, however, also expresses itself when the application is first initialized.
 
 Part of my `__init__.py: create_app()` function tries to seed the SQLite database with records. Given the double-execution behaviour of the Flask development server, this meant two processes were trying to connect to the database (each trying to write the same records). I was quite capable at opening database connections via the Session() object but I had neglected to write any code that _closed_ the database connection. This meant that the second process received a process conflict error (TO DO: GO FIND THE EXACT ERROR), but SQLite was still waiting for the first process to close its connection. Oops.
 
-Before I figured out the root cause of the problem, I created a workaround procedure based on a StackOverflow post that discussed how to deal with a [locked database](https://stackoverflow.com/questions/26862809/operational-error-database-is-locked).
+Before I figured out the root cause of the problem, I created a workaround procedure based on a StackOverflow post that discussed how to deal with a [locked database](https://stackoverflow.com/questions/26862809/operational-error-database-is-locked), and tied into my `__init__.py` file.
 
 ```python
 # proj/db.py
@@ -284,6 +284,7 @@ from sqlalchemy import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
 import os
+import random
 import time
 
 Base = declarative_base()
@@ -322,13 +323,112 @@ def commit_or_rollback(entry):
             time.sleep(random.randint(1, 3))
 ```
 
-The workaround prevented the Flask
+```python
+# __init__.py
 
-* If you observe the Flask development server logs on startup, the same code is executed twice. 
+from flask import Flask
+from proj.db import init_db, Session
+from proj.helpers import load_initial_data
+
+def create_app():
+    app = Flask(__name__)
+    init_db()  # This creates the database without needing to bind the db to the app
+    
+    with app.app_context():
+        # db = Session()  # The db object provides the Flask app with access to the db
+        load_initial_data()
+        ...
+```
+
+```python
+# proj/helpers.py
+
+from proj.db import commit_or_rollback
+from proj.models import User  # User was a SQLAlchemy class that I created elsewhere in the application
+
+u1 = User('user1')
+u2 = User('user2')
+users = [u1, u2]
+commit_or_rollback(users)
+...
+
+```
+The workaround prevented the Flask app from completely crashing on the initial double load, but was still causing chaos when I was trying to serve up dynamically populated Jinja2 templates (_not surprising given that I still hadn't bothered to close the database connection anywhere in the code!_).
+
+##### How did I solve the problem? (Hint: Context Manager)
+I know it comes as a shock, but closing a database connection is *kinda* important. I was also consistently forgetting to do so. Something had to change or else building out the project was going to be come a nightmare.
+ 
+TO DO: ADD CONTEXT MANAGER LINK
+I happily used Context Managers to facilitate file read/write operations, so could I do the same thing with my database connection? Article xxxxx said yes. I set out to refactor the code ... again.
+
+The database connection was moved from the global scope of `proj/db.py` into a custom `SQLAlchemyDBConnection` object that had defined `__enter__` and `__exit__` dunders (thereby allowing me to use it as a context manager via the `with` keyword). I also modified the `commit_or_rollback()` procedure to use the `SQLAlchemyDBConnection` class. 
+
+TO DO: MAKE IT MORE CLEAR WHAT THE IMPLICATIONS OF LOSING THE scoped_session DID. (NEED TO READ MORE).
+TO DO: MAKE IT MORE CLEAR THAT i DID NOT IMPLEMENT BOB'S query HELPER SINCE I WANTED A CONSISTENT DB INVOCATION TECHNIQUE
+
+```python
+# proj/db.py
+
+from sqlalchemy import create_engine
+from sqlalchemy import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+import os
+import random
+import time
+
+Base = declarative_base()
+engine = create_engine('sqlite:////tmp/mysqlitedb.db')
+
+
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
+
+    def __init__(self, connection_string='sqlite:////tmp/mysqlitedb.db'):
+        self.connection_string = connection_string
+        self.session = None
+
+    def __enter__(self):
+        engine = create_engine(self.connection_string)
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        self.session = Session()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+
+def init_db():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+
+def commit_or_rollback(entry):
+    print(f'PID is: {os.getpid()}')
+    # Note: 'Finally' not used because we break on success. but need to retry if processes clash.
+
+    for attempt in range(3):
+        with SQLAlchemyDBConnection() as db:
+        
+            try:
+                db.session.add_all(entry)
+                db.session.commit()
+                return
+            except exc.IntegrityError as e:
+                print(f'Record already exists in db.\n{e}')
+                db.session.rollback()
+                break
+            except exc.OperationalError as e:
+                print(f'PID {os.getpid()} encountered SQLALCH OperationalError(sqlite3.OperatioalError. sleeping')
+                print(e)
+                db.session.rollback()
+                time.sleep(random.randint(1, 3))
+```
+
+The `__init__.py` and `proj/helpers.py` files did not require any modifications, because I can encapsulated all the database logic within the `proj/db.py` class and procedures.
 
 
 
-Defining a proper design is crucial for me purposes.
 Circular import problem
 
     
