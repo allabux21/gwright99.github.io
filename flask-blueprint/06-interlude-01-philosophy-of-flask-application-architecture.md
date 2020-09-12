@@ -209,8 +209,21 @@ def create_app():
         db.create_all()  # Create sql tables for our data models
 ```
 
-We can also independently interact the database from any other file in the project by including `fro proj.db import db`
+We can also independently interact with the database from any other file in the project like so:
+```python
+# some_file.py
+from proj.db import db
+```
 
+#### Great! Problem solved, right?
+Not quite. Waycott's solution gives us an independent entrypoint to the database, but we still have to register the flask_sqlalchemy plugin with the Flask application. This probably isn't a deal-breaker but I didn't like this for a few reasons:
+1. I had to write an (albeit small) function to tie the objects together.
+1. It made me dependent on the flask-sqlalchemy package (which wraps the underlying SQLAlchemy library).
+1. flask-sqlalchemy has a slightly different syntax for defining database objects than using SQLAlchemy directly.
+
+Even though the SQLAlchemy documentation itself suggests using a helper library like flask-sqlalchemy !ADD REFERENCE!, something felt not quite right. Furthermore, whenever I subsequently searched for database objection creation help, I would always need to check if the answer was written from a SQLAlchemy or flask-sqlalchemy perspective. My assumption was that - because flask-sqlalchemy wrapped SQLAlchemy - I was better off using the base package as this would give me a greater chance of finding answers to the problems I was trying to solve. This opinion was reinforced by the arguments made in Edward Krueger's [Use Flask and SQLAlchemy, not Flaks-SQLAlchemy!](https://towardsdatascience.com/use-flask-and-sqlalchemy-not-flask-sqlalchemy-5a64fafe22a4?gi=6c73d7f74e07) article.
+
+As a result, I decided to abandon flask-sqlalchemy and rework the code to use SQLAlchemy directly.
 
 
 Defining a proper design is crucial for me purposes.
