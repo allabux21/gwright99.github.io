@@ -67,4 +67,4 @@ With that said, onto my opinions ...
 
 <br><br>
 Previous: [Install and Configure VS Code](./05-install-and-configure-vscode.md)<br>
-Next: [Flask Development Server Invocatino Model](./07-flask-dev-server-invocation-model.md)
+Next: [Flask Development Server Invocation Model](./07-flask-dev-server-invocation-model.md)
