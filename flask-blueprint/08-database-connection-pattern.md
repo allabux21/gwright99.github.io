@@ -321,5 +321,5 @@ So what Database Connection Pattern did I try next? Given my already-stated dist
 
 As a result, I made an executive decision to stick with the SQLALchemy Context Manager solution and get on with the real work.
 
-Next: [What's the beef with ORMs](./09-ORM-beef.md)<br>
+Next: [What's the beef with ORMs](./09-orm-beef.md)<br>
 Previous: [Flask Instantiation & Invocation Patterns](./07-flask-instantiation-and-invocation.md)
