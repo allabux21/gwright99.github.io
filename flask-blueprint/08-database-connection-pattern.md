@@ -317,7 +317,9 @@ def commit_or_rollback(entry):
 The `__init__.py` and `proj/helpers.py` files did not require any modifications, because I encapsulated all the database logic within the `proj/db.py` class and procedures.
 
 ### DB Connection Pattern #5: ???
-So what Database Connection Pattern did I try next? Given my already-stated distaste for ORM usage, it would have probably made sense to try using a SQL querybuilder instead of a full-fledged ORM. With that said, I was tired of analysis paralysis that was causing continually refactoring of existing code rather than building the rest of the project. 
+So what Database Connection Pattern did I try next? 
+
+Given my already-stated distaste for ORM usage, it would have probably made sense to try using a SQL querybuilder instead of a full-fledged ORM. With that said, I was tired of analysis paralysis that was causing continually refactoring of existing code rather than building the rest of the project. 
 
 As a result, I made an executive decision to stick with the SQLALchemy Context Manager solution and get on with the real work.
 
