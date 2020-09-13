@@ -2,7 +2,7 @@
 Choosing your database pattern is an early project decision that is critical to settle quickly. Making the wrong decision can result in costly and frustrating rework throughout the entire application should you ever need to change mid-stride. While I'm unable to comment on support issues that may come up in Production, I can comment on the process I had to go through to settle on the database connection pattern that I'll be using in the project
 
 ### Decision: Use the SQLAlchemy ORM ... Sort of
-As per my [technology component decisions](./02-project-goals-and-design-considerations.md) I said I would be using the SQLAlchemy ORM. How I reached that decision was an evolutionary process based on development efforts I conducted before I began to write this material. To be honest, I'm still not convinced it even makes sense to use SQLAlchemy (I'll explain why once I detail my steps), but at this point in time I don't want to have to retrofit yet again so ... I'll stick with the ORM for now.
+As per my [technology component decisions](./02-project-goals-and-design-considerations.md) I said I would be using the SQLAlchemy ORM. How I reached that decision was an evolutionary process based on development efforts I conducted before I began to write this material. To be honest, I'm still not convinced it even makes sense to use SQLAlchemy (_I'll explain why once I detail my steps_), but at this point in time I don't want to have to retrofit yet again so ... I'll stick with the ORM for now.
 
 ### Caveat: Take what I say with a grain of salt
 Before I begin, I should make it clear that I'm not 100% in my mastery of this topic. I have tried to learn the SQLAlchemy ORM before and consistently found it to feel unnatural and confusing. With that said, I have not spent huge amounts of time reading through the large body of documentation and - when I did read portions of it - more often than not my reaction was "err, wut?". 
@@ -17,31 +17,12 @@ There are tons of opinions on the web supporting the pro- and anti- ORM cause. B
 
 I don't know who the authors or commenting practitioners are. I don't know what solutions they built. I don't know how those who chose to use an ORM architected their integration. I don't know what solutions those who chose not to use an ORM used to avoid having to write bespoke SQL for every transaction. I don't know if it's realistic to expect to the availability of a complete, up-to-date Logical Data Model if one is brought in as a developer on a large legacy codebase. I don't know who or what to trust, and this makes it exceedingly hard to make an informed decision regarding my own project.
 
-I CAN comment on my own experience trying to get an ORM (`flask-sqlalchemy` and the `SQLAlchemy`) integrated my own small project, and the thoughts I had while observing myself trying to get the initial solution working as well as wondering "How would I get this to scale if this was more than a one-man operation?".
+I CAN comment on my own experience trying to get an ORM (`flask-sqlalchemy` and the `SQLAlchemy`) integrated my own small project, and the thoughts I had while I was struggling and cursing to get things working. This is my story.
 
-With my digressing out of the way, onto the main points.
+### DB Connection Pattern #1: flask-sqlalchemy instantiated directly within __init__.py
+I am a big fan of Todd Birchard's Flask article series on www.hackersandslackers.com. My first DB connection pattern attempt followed the example in his [Connect Flask to a Database with Flask-SQLAlchemy](https://hackersandslackers.com/flask-sqlalchemy-database-models/) article.
 
-### Choosing Your Database Integration Model
-I'll just come out and say it: I really don't like using an ORM.
-
-
-
-
-
-
-
-#### How about you stop digressing and get to the point?
-Ok ok, my beef with ORMs is centred around the following 4 points:
-1. Registering the ORM when using the Flask Application Factory (tight coupling)
-2. Intermingling SQL abstractions with object relationships
-3. Obfuscation of underlying database interactions
-4. Learning the ORM rather than learning SQL
-
-##### Beef #1: Registering the ORM with the Flask Application Factory Model
-This is the most minor of the beefs, but important to call out due to its impact on application architecture.
-
-Consider the following application:
-
+I've omitted a few lines for brevity, but it is basically:
 ```python
 # __init__.py
 
@@ -58,13 +39,27 @@ def create_app():
     with app.app_context():
         db.create_all()  # Create sql tables for our data models
 ```
-Have a look at Todd Birchard's [Demystifying Flask's Application Factory](https://hackersandslackers.com/flask-application-factory/) article for a step-by-step breakdown of how the database is registered with the Flask application, and [Connect Flask to a Database with Flask-SQLAlchemy](https://hackersandslackers.com/flask-sqlalchemy-database-models/) to understand how the database tables are created once the db is registered with the app. 
-
-The two most crucial items to remember are:
+The article provides a clear step-by-step breakdown of how the database is registered with the Flask application, so I won't rehash the details here. I'll take a moment, however, to reiterate the two most crucial items to remember:
 1. The database connection is not available for use until it has been registered with the application (_at runtime_).
 1. The database is not created until the first time the application is executed.
 
-This design works fine for the immediate need of providing the application with stateful storage. We've done it, however, in a manner that tightly couples the application with its database and this precludes the reuse of our connection code should we wish to interact with the database independently (e.g. perhaps I want to pre-populate the table with records before i run the Flask application). 
+This design meets the immediate need of providing the application with stateful storage. Unfortunately, it tightly couples database instantiation with application instantiation and this precludes the reuse of our connection code should we wish to interact with the database independently of the application. 
+
+
+#### How about you stop digressing and get to the point?
+Ok ok, my beef with ORMs is centred around the following 4 points:
+1. Registering the ORM when using the Flask Application Factory (tight coupling)
+2. Intermingling SQL abstractions with object relationships
+3. Obfuscation of underlying database interactions
+4. Learning the ORM rather than learning SQL
+
+##### Beef #1: Registering the ORM with the Flask Application Factory Model
+This is the most minor of the beefs, but important to call out due to its impact on application architecture.
+
+Consider the following application:
+
+
+
 
 #### Split the database instantiation from the application instantiation
 I started searching for a way to split the database instantiation from the application instantiation and found a gem of an article in Bob Waycott's [Organizing Flask Models with Automatic Discovery](https://bobwaycott.com/blog/how-i-use-flask/organizing-flask-models-with-automatic-discovery/#sqlalchemy-database-setup) (I was actually looking for a way to define ORM table classes over multiple files, but more on that later).
