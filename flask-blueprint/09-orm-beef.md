@@ -1,6 +1,5 @@
-like:
-* Todd Birchard's [Building a Python App in Flask](https://hackersandslackers.com/series/build-flask-apps/)
-* Miguel Grinberg's [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world)
+## Why the Beef with ORMs?
+
 
 #### How about you stop digressing and get to the point?
 Ok ok, my beef with ORMs is centred around the following 4 points:
