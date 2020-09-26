@@ -3,4 +3,4 @@ I was recently sent on Openshift 4 (OCP4) training by my employer. To entrench a
 steps, gotchas, and notes on why things work a certain way.
 
 ### Articles
-* [01 - Setting up Podman on WSL2](./01-podman-on-WSL2.md)
+* [01 - Setting up Podman on WSL2](./01-install-podman-and-skopeo-on-WSL2.md)
