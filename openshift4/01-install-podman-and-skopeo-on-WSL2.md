@@ -4,12 +4,9 @@
 1. Docker requires root to run containers (_a big security risk_)
 1. Docker has been extended with management layers that are better implemented through a Kubernetes implementation
 
-I'm not going to spend any time on the pros/cons of this solution (_see [here](https://linux.slashdot.org/story/20/01/18/0236253/why-did-red-hat-drop-its-support-for-dockers-runtime-engine)  if you want to see what hardcore computer nerds think_). 
+I'm not going to spend any time on the pros/cons of this solution (_see [here](https://linux.slashdot.org/story/20/01/18/0236253/why-did-red-hat-drop-its-support-for-dockers-runtime-engine)  if you want to see what hardcore computer nerds think_). The training course taught us the `podman` & `skopeo` tools, and these have tight integration with the Openshift container environment (which my day job requires), so ... I'm using `podman` and `skopeo`.
 
-The training course taught us the `podman` & `skopeo` tools, and these have tight integration with the Openshift container
-environment (which my day job requires), so ... I'm using `podman` and `skopeo`.
-
-If you followed my other on-going [Flask Blueprint Project](http://https://gwright99.github.io/flask-blueprint/index.html) series, you'll know that I'm running an Ubuntu 20.04 WSL2 implementation. Given that my personal machine is so much better than my work-provisioned potato, I'll be trying to do the exercises from the personal machine. This means some tool installation will is a necessary first step.
+If you followed my other on-going [Flask Blueprint Project](http://https://gwright99.github.io/flask-blueprint/index.html) series, you'll know that I'm running an Ubuntu 20.04 WSL2 implementation. I'll be using this same implementation to install the tooling.
 
 ### Install Podman
 As of September 26, 2020 I followed the Ubuntu instructions from [https://podman.io/getting-started/installation](https://podman.io/getting-started/installation), with one slight modification.
