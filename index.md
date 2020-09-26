@@ -1,5 +1,5 @@
 ## Graham Wright
-#### Personal Website & BLog
+#### Personal Website & Blog
 
 My name is Graham Wright and I am a Solution Architect based out of Toronto, Canada.
 
