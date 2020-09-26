@@ -8,5 +8,5 @@ I've created this site to serve as a platform to (1) organize my thoughts and fi
 ### Projects
 These are the projects I'm working on:
 
-[Flask blueprint project](/flask-blueprint/index.md)
-[Openshift4 training](/openshift4/index.md)
+* [Flask blueprint project](/flask-blueprint/index.md)
+* [Openshift4 training](/openshift4/index.md)
