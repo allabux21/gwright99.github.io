@@ -5,5 +5,7 @@ I was recently sent on two Openshift 4 (OCP4) training courses by my employer:
 
 To entrench and solidify my understanding of the material that was covered during the courses, I'll be going over the exercises again and documenting steps, gotchas, and notes on why things work a certain way.
 
+I won't be covering the underlying theories or explanation of why one should use containers, but I will make notes on aspects of container implementations because these can require specific actions in some container deployment exercises.
+
 ### Articles
 * [01 - Installing Podman & Skopeo on WSL2](./01-install-podman-and-skopeo-on-WSL2.md)
