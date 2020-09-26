@@ -4,7 +4,7 @@
 1. Docker requires root to run containers (_a big security risk_)
 1. Docker has been extended with management layers that are better implemented through a Kubernetes implementation
 
-I'm not going to spend any time on the pros/cons of this solution (see [here](https://linux.slashdot.org/story/20/01/18/0236253/why-did-red-hat-drop-its-support-for-dockers-runtime-engine)  if you want to see what hardcore computer nerds think). 
+I'm not going to spend any time on the pros/cons of this solution (_see [here](https://linux.slashdot.org/story/20/01/18/0236253/why-did-red-hat-drop-its-support-for-dockers-runtime-engine)  if you want to see what hardcore computer nerds think_). 
 
 The training course taught us the `podman` & `skopeo` tools, and these have tight integration with the Openshift container
 environment (which my day job requires), so ... I'm using `podman` and `skopeo`.
