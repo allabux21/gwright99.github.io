@@ -9,7 +9,7 @@ I'm not going to spend any time on the pros/cons of this solution (see [here](ht
 The training course taught us the `podman` & `skopeo` tools, and these have tight integration with the Openshift container
 environment (which my day job requires), so ... I'm using `podman` and `skopeo`.
 
-If you followed my other on-going [Flask Blueprint Project](http://https://gwright99.github.io/flask-blueprint/) series, you'll know that I'm running an Ubuntu 20.04 WSL2 implementation. Given that my personal machine is so much better than my work-provisioned potato, I'll be trying to do the exercises from the personal machine. This means some tool installation will is a necessary first step.
+If you followed my other on-going [Flask Blueprint Project](http://https://gwright99.github.io/flask-blueprint/index.html) series, you'll know that I'm running an Ubuntu 20.04 WSL2 implementation. Given that my personal machine is so much better than my work-provisioned potato, I'll be trying to do the exercises from the personal machine. This means some tool installation will is a necessary first step.
 
 ### Install Podman
 As of September 26, 2020 I followed the Ubuntu instructions from [https://podman.io/getting-started/installation](https://podman.io/getting-started/installation), with one slight modification.
