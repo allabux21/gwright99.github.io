@@ -44,8 +44,7 @@ Several of the articles I consulted suggested creating an alias between Podman a
 ### Update the Podman Configuration for WSL2 quality of life gains
 A January 30, 2020 [article](https://www.redhat.com/sysadmin/podman-windows-wsl2) by RedHat software engineer Brent Baude provides some configuration suggestions for WSL2-based podman installations. I began to implement his changes but immediately encountered problems.
 
-#### Problem 1: Systemd
-Baude suggests creating a Podman configuration `$HOME/.config/containers/libpod.conf` by executing this command:
+Baude suggests creating (and then editing) a Podman configuration file for a rootless user, `$HOME/.config/containers/libpod.conf`, by executing this command:
 ```bash
 podman info
 ```
@@ -57,4 +56,53 @@ A subsequent Google searchs revealed answers to both problems:
 1. As per [this GitHub thread](https://github.com/containers/podman/issues/4325), the error occured due to the lack of a systemd journal in WSL2. 
 1. As of at least April 2020, podman [no longer generates config files](https://github.com/containers/podman/issues/5722)  in the user's home directory automatically.
 
+#### Solving the systemd problem
+I solved the systemd error by following this Sept 10, 2020 [article](https://dev.to/bowmanjd/using-podman-on-windows-subsystem-for-linux-wsl-58ji) by Jonathan Bowman. 
 
+Due to the lack of systemd, we need to provide a folder for podman to use for temporary files. Following Bowman's advice, I added the following to my `~/.bashrc`:
+```bash
+if [[ -z "$XDG_RUNTIME_DIR" ]]; then
+  export XDG_RUNTIME_DIR=/run/user/$UID
+  if [[ ! -d "$XDG_RUNTIME_DIR" ]]; then
+    export XDG_RUNTIME_DIR=/tmp/$USER-runtime
+    if [[ ! -d "$XDG_RUNTIME_DIR" ]]; then
+      mkdir -m 0700 "$XDG_RUNTIME_DIR"
+    fi
+  fi
+fi
+```
+As per Bowman, _"This script checks if the $XDG_RUNTIME_DIR is set, and, if not, sets it to the default systemd location (/run/user/$UID). If that does not exist, then set and create a temporary directory for the current user."_ 
+
+With the change added, I reloaded the environment variables via `source ~/.bashrc` and retried the `podman info` command. Success - no more error!
+
+#### Solving the missing config file problem
+Despite fixing the systemd error, the `$HOME/.config/containers/libpod.conf` podman configuration file that Bauman says I should be editing was still missing. Jonathan Bowman's artice comes to the rescue again. 
+
+I didn't have a `$HOME/.config/` folder, but I did have two other podman-related folders:
+* `/etc/containers/`
+* `/usr/share/containers/`
+
+Things got a bit confusing once I looked at the contents of each folder: there was no sign of a `libpod.conf` file, but both folders had an instance of `containers.conf`.
+
+I ran the following command to ensure these two files contained the same content (they did):
+```bash
+diff /etc/containers/containers.conf /usr/share/containers/containers.conf
+```
+
+At this point, I had to decide who I trusted more: Brent Baude or Jonathan Bowman? 
+Event though Baude's article is linked to in the official steps of [podman.io](https://podman.io), Bowman's was newer and had already fixed my systemd problem. I decided to trust Bowman.
+
+Following Bowman's instructions, I created the config file for a rootless user:
+```bash
+mkdir ~/.config/containers
+sudo cp /etc/containers/containers.conf ~/.config/containers/containers.conf`
+```
+
+I then modified the new file, making the following two changes:
+* `cgroup_manager = "cgroupfs"`
+* `events_logger = "file"`
+
+Once these changes were implemented I was able to successful pull and run an Alpine Linux image via:
+```bash
+podman run -it docker.io/library/alpine:latest
+```
