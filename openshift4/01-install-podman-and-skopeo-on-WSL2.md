@@ -90,7 +90,7 @@ diff /etc/containers/containers.conf /usr/share/containers/containers.conf
 ```
 
 At this point, I had to decide who I trusted more: Brent Baude or Jonathan Bowman? 
-Event though Baude's article is linked to in the official steps of [podman.io](https://podman.io), Bowman's was newer and had already fixed my systemd problem. I decided to trust Bowman.
+Even though Baude's article is linked to in the official steps of [podman.io](https://podman.io), Bowman's was newer and had already fixed my systemd problem. I decided to trust Bowman.
 
 Following Bowman's instructions, I created the config file for a rootless user:
 ```bash
