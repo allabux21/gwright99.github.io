@@ -98,7 +98,7 @@ mkdir ~/.config/containers
 sudo cp /etc/containers/containers.conf ~/.config/containers/containers.conf`
 ```
 
-I then modified the new file, making the following two changes:
+I then modified `~/.config/containers/containers.conf`, making the following two changes:
 * `cgroup_manager = "cgroupfs"`
 * `events_logger = "file"`
 
