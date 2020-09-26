@@ -4,9 +4,12 @@ Although I won't be explaining basic container details/concepts, there are a few
 
 ### Linux Kernel
 The Linux kernel uses several technologies to isolate a process inside a server including:
-| Technology | Description |
-| ---------- | ----------- |
-| Namespaces | ipsem | 
+| Technology | Description | Implication |
+| :--------- | :---------- | :---------- |
+| Namespaces 
+| Used to ipsem
+| blah |
+
 * Control groups (cgroups)
 * Seccomp
 * SELinux (Security-Enhanced Linux)
