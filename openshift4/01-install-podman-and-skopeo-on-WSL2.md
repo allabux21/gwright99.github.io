@@ -141,7 +141,7 @@ unauthorized: authentication required
 
 Now I needed to figure out what the problem was? Local system permissions? Registry problem? Time to start experimenting.
 
-The first thing I did was try to pull from a different registry. As per the [Getting Started instructions at podman.io](http://podman.io/getting-started/), I tried ```bash podman pull registry.fedoraproject.org/f29/httpd```. This worked!
+The first thing I did was try to pull from a different registry. As per the [Getting Started instructions at podman.io](http://podman.io/getting-started/), I tried ` podman pull registry.fedoraproject.org/f29/httpd`. This worked!
 ```bash
 Trying to pull registry.fedoraproject.org/f29/httpd...
 Getting image source signatures
@@ -161,15 +161,20 @@ docker.io/library/alpine              latest  a24bb4013296  4 months ago   5.85 
 registry.fedoraproject.org/f29/httpd  latest  25c76f9dcdb5  17 months ago  482 MB
 ```
 
-You'll notice that I didn't use `sudo` in the above commands, so I started to wonder if this was the problem. I removed the image via ```bash podman rmi registry.fedoraproject.org/f29/httpd``` and then tried pulling the image again with ```sudo podman pull registry.fedoraproject.org/f29/httpd```.
+You'll notice that I didn't use `sudo` in the above commands, so I started to wonder if this was the problem. I removed the image via `podman rmi registry.fedoraproject.org/f29/httpd` and then tried pulling the image again with `sudo podman pull registry.fedoraproject.org/f29/httpd`.
 
-I was still able to pull the image down, but got two errors when I tried ```sudo podman run -it registry.fedoraproject.org/f29/httpd```:
+I was still able to pull the image down, but got two errors when I tried `sudo podman run -it registry.fedoraproject.org/f29/httpd`:
 ```bash
 ERRO[0000] unable to write pod event: "write unixgram @00014->/run/systemd/journal/socket: sendmsg: no such file or directory"
 Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error
 ```
 
-It looks like the systemd problems had returned. More on that later. First I needed to see if I could run the image without sudo, so I tried ```bash podman run -it registry.fedoraproject.org/f29/httpd```. This got a different result:
+It looks like the systemd problems had returned. More on that later. First I needed to see if I could run the image without sudo, so I tried 
+```bash 
+podman run -it registry.fedoraproject.org/f29/httpd
+``` 
+
+This got a different result:
 ```bash
 Trying to pull registry.fedoraproject.org/f29/httpd...
 Getting image source signatures
