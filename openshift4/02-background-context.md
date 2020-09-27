@@ -19,6 +19,7 @@ Podman is primarily used to interact with container images and the resulting con
 * It stores images in a local file-system.
 * It shadows the Docker CLI command syntax
 * It is Kubernetes-compatible
+* Can run as rootless (_requiring the use of sudo on all CLI commands_)
 
 ### Kubernetes Features
 | Feature | Description | Implication |
@@ -31,6 +32,14 @@ Podman is primarily used to interact with container images and the resulting con
 | Operators | Kubernetes applications that use the Kubernetes API to update the cluster's state in response to application state. | tbd | 
 
 
-# Openshift Features
+### Openshift Features
 The Openshift Container Platform extends a base Kubernetes implementation with additional features such as:
 ADD LATER
+
+
+### Source Code
+The source code I'll be using is publicly available at [https://github.com/RedHatTraining/DO180-apps](https://github.com/RedHatTraining/DO180-apps). I forked the project into my own Github account and then cloned the source code onto my local machine via:
+```bash
+git clone https://github.com/gwright99/DO180-apps
+```
+
