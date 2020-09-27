@@ -15,7 +15,7 @@ From a Linux kernel perspective, a container is simply a process with some restr
 
 ### Podman Features
 Podman is primarily used to interact with container images and the resulting container processes. Some salient key points:
-* It implements the [Openshift Container Initiative](https://www.opencontainers.org) image specification.
+* It implements the [Openshift Container Initiative](https://www.opencontainers.org) (OCI) image specification.
 * It stores images in a local file-system.
 * It shadows the Docker CLI command syntax
 * It is Kubernetes-compatible
