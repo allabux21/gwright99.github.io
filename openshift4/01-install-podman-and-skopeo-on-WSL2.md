@@ -222,3 +222,121 @@ Thankfully the documentation offers another way to change the runtime via the Po
 1. ~/.config/containers/containers.conf
 
 This gets a bit messier, as it appears `/usr/share/containers/containers.conf` is the base file for BOTH the root user (with overrides coming from `/etc/containers/containers.conf`) and rootless user (with overrides coming from `$HOME/.config/containers/containers.conf`).
+
+First, I need to reconfirm that my WSL2 account is a user and NOT root. Running `id` returns a `uid=1000` and `gid=1000`. Since these are not 0, this means I'm not running as root.
+
+Since I'm trying to get rootless working, I need to go edit `$HOME/.config/containers/containers.conf`. I then navigated to the 'engine.runtimes' portion of the file, commenting out the `runc` array and uncommenting the `crun` array.
+```bash
+# Paths to look for a valid OCI runtime (runc, runv, kata, etc)
+[engine.runtimes]
+#runc = [
+#        "/usr/lib/cri-o-runc/sbin/runc",
+#        "/usr/sbin/runc",
+#        "/usr/bin/runc",
+#        "/usr/local/bin/runc",
+#        "/usr/local/sbin/runc",
+#        "/sbin/runc",
+#        "/bin/runc",
+#]
+
+ crun = [
+            "/usr/bin/crun",
+            "/usr/sbin/crun",
+            "/usr/local/bin/crun",
+            "/usr/local/sbin/crun",
+            "/sbin/crun",
+            "/bin/crun",
+            "/run/current-system/sw/bin/crun",
+ ]
+```
+
+This still didn't work. I needed to confirm that my changes had actually taken effect so I ran `podman system info` and got:
+```bash
+host:
+  arch: amd64
+  buildahVersion: 1.16.1
+  cgroupVersion: v1
+  conmon:
+    package: 'conmon: /usr/libexec/podman/conmon'
+    path: /usr/libexec/podman/conmon
+    version: 'conmon version 2.0.20, commit: '
+  cpus: 4
+  distribution:
+    distribution: ubuntu
+    version: "20.04"
+  eventLogger: file
+  hostname: <redacted>
+  idMappings:
+    gidmap:
+    - container_id: 0
+      host_id: 1000
+      size: 1
+    - container_id: 1
+      host_id: 100000
+      size: 65536
+    uidmap:
+    - container_id: 0
+      host_id: 1000
+      size: 1
+    - container_id: 1
+      host_id: 100000
+      size: 65536
+  kernel: 4.19.104-microsoft-standard
+  linkmode: dynamic
+  memFree: 15036280832
+  memTotal: 20042506240
+  ociRuntime:
+    name: runc
+    package: 'runc: /usr/sbin/runc'
+    path: /usr/sbin/runc
+    version: 'runc version spec: 1.0.1-dev'
+  os: linux
+  remoteSocket:
+    path: /tmp/<redacted>-runtime/podman/podman.sock
+  rootless: true
+  slirp4netns:
+    executable: /usr/bin/slirp4netns
+    package: 'slirp4netns: /usr/bin/slirp4netns'
+    version: |-
+      slirp4netns version 1.1.4
+      commit: unknown
+      libslirp: 4.3.1-git
+      SLIRP_CONFIG_VERSION_MAX: 3
+  swapFree: 5368709120
+  swapTotal: 5368709120
+  uptime: 2h 22m 38.06s (Approximately 0.08 days)
+registries:
+  search:
+  - docker.io
+  - quay.io
+store:
+  configFile: /home/<redacted>/.config/containers/storage.conf
+  containerStore:
+    number: 6
+    paused: 0
+    running: 0
+    stopped: 6
+  graphDriverName: vfs
+  graphOptions: {}
+  graphRoot: /home/<redacted>/.local/share/containers/storage
+  graphStatus: {}
+  imageStore:
+    number: 2
+  runRoot: /tmp/run-1000/containers
+  volumePath: /home/<redacted>/.local/share/containers/storage/volumes
+version:
+  APIVersion: 2.0.0
+  Built: 0
+  BuiltTime: Wed Dec 31 19:00:00 1969
+  GitCommit: ""
+  GoVersion: go1.15.2
+  OsArch: linux/amd64
+  Version: 2.1.0
+```
+
+I could see 2 potential problems:
+1. It appeared that my cgroup was set to version 1
+1. It appeared that the the runc to crun change had not taken effect. 
+
+I did notice that `eventLogger: file` was present though, so it made me think some of my earlier changes had stuck. To test this, I edited the `~/.config/containers/containers.conf` and commented out the `events_logger = "file"` line. My expectation was that, when I ran `podman system info` again, I should now see `eventLogger: journald`. I ran the podman system info command again and found the 'journald' entry. This proved that changes I made in the user-level config file WAS being reflected in the podman system info.
+
