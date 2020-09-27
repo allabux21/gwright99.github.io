@@ -390,5 +390,16 @@ sudo apt-get install slirp4netns was already installed
 sudo apt-cache search fuse-overlayfs
 sudo apt-cache show fuse-overlayfs (Version: 1.1.2~1)
 
-Check ~/.config/containers/storage.conf
+Check ~/.config/containers/storage.conf (missing), copy it in from /etc/containers/storage.conf.
+set 'driver = "overlay"'
+set 'mount_program = "/usr/bin/fuse-overlayfs'
+
+
+Issue with ~/.config/container/* files belonging to root instead of deep learning? chownd -R to deeplearning
+
+
+Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md)
+
+Copied /etc/containers/registries.conf back to ~/.config/containers/registries.conf
+
 
