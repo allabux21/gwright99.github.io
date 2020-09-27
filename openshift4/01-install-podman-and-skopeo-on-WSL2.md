@@ -53,7 +53,7 @@ A subsequent Google searchs revealed answers to both problems:
 1. As per [this GitHub thread](https://github.com/containers/podman/issues/4325), the error occured due to the lack of a systemd journal in WSL2. 
 1. As of at least April 2020, podman [no longer generates config files](https://github.com/containers/podman/issues/5722)  in the user's home directory automatically.
 
-#### Solving the systemd problem
+#### Problem 1: Solving the systemd problem
 I solved the systemd error by following this Sept 10, 2020 [article](https://dev.to/bowmanjd/using-podman-on-windows-subsystem-for-linux-wsl-58ji) by Jonathan Bowman. 
 
 Due to the lack of systemd, we need to provide a folder for podman to use for temporary files. Following Bowman's advice, I added the following to my `~/.bashrc`:
@@ -72,7 +72,7 @@ As per Bowman, _"This script checks if the $XDG_RUNTIME_DIR is set, and, if not,
 
 With the change added, I reloaded the environment variables via `source ~/.bashrc` and retried the `podman info` command. Success - no more error!
 
-#### Solving the missing config file problem
+#### Problem 2: Solving the missing config file problem
 Despite fixing the systemd error, the `$HOME/.config/containers/libpod.conf` podman configuration file that Bauman says I should be editing was still missing. Jonathan Bowman's artice comes to the rescue again. 
 
 I didn't have a `$HOME/.config/` folder, but I did have two other podman-related folders:
@@ -102,4 +102,39 @@ I then modified `~/.config/containers/containers.conf`, making the following two
 Once these changes were implemented I was able to successful pull and run an Alpine Linux image via:
 ```bash
 podman run -it docker.io/library/alpine:latest
+```
+
+I could also successfully search the `docker.io` and `quay.io` registries for a desired image. `sudo podman search rhel` returned:
+```bash
+INDEX       NAME                                             DESCRIPTION                                       STARS   OFFICIAL   AUTOMATED
+docker.io   docker.io/richxsl/rhel7                          RHEL 7 image with minimal installation            28
+docker.io   docker.io/xplenty/rhel7-pod-infrastructure       registry.access.redhat.com/rhel7/pod-infrast...   1
+docker.io   docker.io/bluedata/rhel7                         RHEL-7.x base container images                    1
+docker.io   docker.io/sotax/rhel7.3                          base rhel_7.3 image with g++                      0
+docker.io   docker.io/kdiraviam/rhel6-ruby-chef              This repo contains a rhel6 image with ruby a...   1
+
+....
+
+quay.io     quay.io/thoth-station/solver-rhel-8-py36         solver-rhel-8-py36                                0
+quay.io     quay.io/distributedci/dci-rhel-agent             # DCI RHEL Agent `dci-rhel-agent` provides R...   0
+quay.io     quay.io/zorondevops/java-rhel-7-base                                                               0
+quay.io     quay.io/bluecat/gateway                          Official release repository for BlueCat Gate...   0
+quay.io     quay.io/sdase/nginx                              # nginx OCI image  [nginx](https://nginx.org...   0
+quay.io     quay.io/gravisbulgaria/solr                      Solr:8.1.1 based ot RHEL 8                        0
+quay.io     quay.io/crw/plugin-java8-rhel8                   OpenJDK 8 + Maven 3.6, Node + npm, python3 +...   0
+```
+
+#### Problem 3: Solving the failed docker pull
+The run command was working but I got the following error when I tried `sudo podman pull rhel`:
+```bash
+Trying to pull docker.io/library/rhel...
+  denied: requested access to the resource is denied
+Trying to pull quay.io/rhel...
+  StatusCode: 404, <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final/...
+Error: unable to pull rhel: 2 errors occurred:
+        * Error initializing source docker://rhel:latest: Error reading manifest latest in docker.io/library/rhel: errors:
+denied: requested access to the resource is denied
+unauthorized: authentication required
+
+        * Error initializing source docker://quay.io/rhel:latest: Error reading manifest latest in quay.io/rhel: StatusCode: 404, <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final/...
 ```
