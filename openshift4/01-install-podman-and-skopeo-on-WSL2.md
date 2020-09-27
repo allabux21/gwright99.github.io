@@ -366,10 +366,29 @@ cgroup_manager = "cgroupfs"
 # runtime_supports_nocgroups = ["crun"]
 ```
 
+sudo podman --cgroup-manager=cgroupfs run -it --runtime=/usr/local/sbin/crun docker.io/library/alpine
+Trying to pull docker.io/library/alpine...
+Getting image source signatures
+Copying blob df20fa9351a1 done
+Copying config a24bb40132 done
+Writing manifest to image destination
+Storing signatures
+ERRO[0015] unable to write pod event: "write unixgram @0003d->/run/systemd/journal/socket: sendmsg: no such file or directory"
+Error: mount `/sys/fs/cgroup/systemd` to '/sys/fs/cgroup/systemd': No such file or directory: OCI runtime command not found error
 
-If I'm on cgroupsv1 did I need to make the v2 changes I did earlier?
 
 
-whereis crun
 
-missing fuse-overlayfs
+
+If I'm on cgroupsv1 did I need to make the v2 changes I did earlier? Dont think so, went back to runc instead of crun.
+
+confirmed I am not root by using `cat /etc/password`. User account has UID 1000, where there is also a root account with UID 0.cat
+Changed /usr/share/containers/backup-containers.conf back to containers.conf
+Deleted /etc/containers/containers.conf (since I'm running as non-privileged and this is meant for root)
+sudo apt-get install slirp4netns was already installed
+
+sudo apt-cache search fuse-overlayfs
+sudo apt-cache show fuse-overlayfs (Version: 1.1.2~1)
+
+Check ~/.config/containers/storage.conf
+
