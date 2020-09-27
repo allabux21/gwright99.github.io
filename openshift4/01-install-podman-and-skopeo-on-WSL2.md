@@ -448,4 +448,8 @@ runroot will end up being /tmp/deeplearning-runtime/containers (based on .bashrc
 While updating also made driver = "overlay" and mount_program = "/usr/bin/fuse-overlayfs"
 
 
-Ended up installing an Ubuntu18.04 instance, reinstalling Podman and then copying /usr/share/containers/*.* and /etc/containers/*.* from the 18.04 instance to the 20.04 instance through windows. Seems to have got me back to stabled.
+Ended up installing an Ubuntu18.04 instance, reinstalling Podman and then copying /usr/share/containers/*.* and /etc/containers/*.* from the 18.04 instance to the 20.04 instance through windows. Seems to have got me back to stable.
+
+didn't change runc.
+changed storage to use overlay, new graphroot and runroot, and mount_program.
+changed ~/containers to set 'events_logger = "file"'
