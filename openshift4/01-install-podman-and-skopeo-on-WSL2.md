@@ -347,6 +347,12 @@ So how the hell do I change my cgroup version? This was starting to turn into a 
 
 1. This [GitHub Gist](https://gist.github.com/trevorwhitney/d83353ff59cc0b7d8ae58116d1fe98f0) said that - to enable cgroups v2 on a Google Cloud instance, you need to edit /etc/default/grub.d/50-cloudimg-settings.cfg and add `cgroup_no_v1=all` to the end of the GRUB_CMDLINE_LINUX_DEFAULT, so it looks something like `GRUB_CMDLINE_LINUX_DEFAULT="console=tty50 cgroup_no_v1=all".
 
+I had a decision to make did I even need cgroups v2? I only made the changes earlier because of the installation steps saying you had to make changes to accommodate cgroups v2. But if podman thought it was using cgroups v1, was I ok? I had no idea.
+
+I started thinking about the actual error I received again: `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error`. Even though it didn't show up in the `podman system info` output, I had added an uncommented `cgroup_manager="cgroupfs"` into the file (meant to supplant the default `cgroup_manager="systemd"`. So why was podman complaining about the systemd cgroup flag?!
+
+
+
 
 If I'm on cgroupsv1 did I need to make the v2 changes I did earlier?
 
