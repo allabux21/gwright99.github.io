@@ -351,7 +351,20 @@ I had a decision to make did I even need cgroups v2? I only made the changes ear
 
 I started thinking about the actual error I received again: `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error`. Even though it didn't show up in the `podman system info` output, I had added an uncommented `cgroup_manager="cgroupfs"` into the file (meant to supplant the default `cgroup_manager="systemd"`. So why was podman complaining about the systemd cgroup flag?!
 
-
+I took another look at the ~/.config/containers/containers.conf file, via `less ~/.config/containers/containers.conf | grep cgroup`. This resulted in the following hits:
+```bash
+# Default way to to create a cgroup namespace for the container
+# cgroupns = "private"
+# Control container cgroup configuration
+# `enabled`   Enable cgroup support within container
+# `disabled`  Disable cgroup support, will inherit cgroups from parent
+# cgroups = "enabled"
+# Valid options “systemd” or “cgroupfs”
+# cgroup_manager = "systemd"
+cgroup_manager = "cgroupfs"
+# List of the OCI runtimes that supports running containers without cgroups.
+# runtime_supports_nocgroups = ["crun"]
+```
 
 
 If I'm on cgroupsv1 did I need to make the v2 changes I did earlier?
