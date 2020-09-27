@@ -70,6 +70,8 @@ fi
 ```
 As per Bowman, _"This script checks if the $XDG_RUNTIME_DIR is set, and, if not, sets it to the default systemd location (/run/user/$UID). If that does not exist, then set and create a temporary directory for the current user."_ 
 
+basically '\[\[ -z "$XDG_RUNTIME_DIR" \]\]' checks to see if the XDG_RUNTIME_DIR has a length equal to zero. If yes, we set it. 
+
 With the change added, I reloaded the environment variables via `source ~/.bashrc` and retried the `podman info` command. Success - no more error!
 
 #### Problem 2: Solving the missing config file problem
@@ -403,3 +405,47 @@ Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blo
 Copied /etc/containers/registries.conf back to ~/.config/containers/registries.conf
 
 
+
+
+podman run -v ~/OCP4/podmanvolumes:/container/volume docker.io/alpine /bin/bash
+Error: error creating runtime static files directory /var/lib/containers/storage/libpod: mkdir /var/lib/containers/storage/libpod: permission denied
+
+storage.conf's 'graphroot' key has the value of /var/lib/containers/storage/libpod.
+
+in ~/.config/containers/storage.conf, made the following changes:
+graphroot="$HOME/.local/share/containers/storage"
+runroot="$XDG_RUNTIME_DIR/containers"
+
+
+ERRO[0000] User-selected graph driver "overlay" overwritten by graph driver "vfs" from database - delete libpod local files to resolve
+had to delete ~./local/share/containers/
+
+~/.local/share/containers/storage/ had lots of files like libpod vfs etc.
+
+
+Screwed up, deleted system folders /usr/share/containers/ and /etc/containers/ . Repopulated by recreating by hand and copying in file content from Github.
+First copied containers.conf to /usr/ ...
+Second copies registries.conf and storage.conf to /etc/containers
+Copied all three files to ~/.config/containers/
+chown -R deeplearning:deeplearning -R ~/.config/containers/
+
+realized was missing stuff
+did forced reinstall of packages (sudo apt-get --reinstall install <pkgname>). Used conmon, containers-common containers-golang containers-image libgpgme11 (as per https://computingforgeeks.com/install-cri-o-container-runtime-on-ubuntu-linux/), poddman skopeo
+
+Had to grab policy.json too
+https://github.com/containers/image/blob/3149c1a414eb131a61397efdebf765853b76972b/signature/fixtures/policy.json
+https://github.com/cri-o/cri-o/issues/901
+
+Tried running `podman run -it docker.io/alpine:latest`. Got error: Error: error creating runtime static files directory /var/lib/containers/storage/libpod: mkdir /var/lib/containers/storage/libpod: permission denied
+
+Edited ~/.config/containers/storage.conf
+Using paths given by https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md
+graphroot="$HOME/.local/share/containers/storage"
+runroot="$XDG_RUNTIME_DIR/containers"
+
+runroot will end up being /tmp/deeplearning-runtime/containers (based on .bashrc entry)
+
+While updating also made driver = "overlay" and mount_program = "/usr/bin/fuse-overlayfs"
+
+
+Ended up installing an Ubuntu18.04 instance, reinstalling Podman and then copying /usr/share/containers/*.* and /etc/containers/*.* from the 18.04 instance to the 20.04 instance through windows. Seems to have got me back to stabled.
