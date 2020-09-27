@@ -138,3 +138,60 @@ unauthorized: authentication required
 
         * Error initializing source docker://quay.io/rhel:latest: Error reading manifest latest in quay.io/rhel: StatusCode: 404, <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final/...
 ```
+
+Now I needed to figure out what the problem was? Local system permissions? Registry problem? Time to start experimenting.
+
+The first thing I did was try to pull from a different registry. As per the [Getting Started instructions at podman.io](http://podman.io/getting-started/), I tried ```bash podman pull registry.fedoraproject.org/f29/httpd```. This worked!
+```bash
+Trying to pull registry.fedoraproject.org/f29/httpd...
+Getting image source signatures
+Copying blob d77ff9f653ce done
+Copying blob 7692efc5f81c done
+Copying blob aaf5ad2e1aa3 done
+Copying config 25c76f9dcd done
+Writing manifest to image destination
+Storing signatures
+...
+```
+
+I confirmed the image was in my local repository via ```bash podman images```:
+```bash
+REPOSITORY                            TAG     IMAGE ID      CREATED        SIZE
+docker.io/library/alpine              latest  a24bb4013296  4 months ago   5.85 MB
+registry.fedoraproject.org/f29/httpd  latest  25c76f9dcdb5  17 months ago  482 MB
+```
+
+You'll notice that I didn't use `sudo` in the above commands, so I started to wonder if this was the problem. I removed the image via ```bash podman rmi registry.fedoraproject.org/f29/httpd``` and then tried pulling the image again with ```sudo podman pull registry.fedoraproject.org/f29/httpd```.
+
+I was still able to pull the image down, but got two errors when I tried ```sudo podman run -it registry.fedoraproject.org/f29/httpd```:
+```bash
+ERRO[0000] unable to write pod event: "write unixgram @00014->/run/systemd/journal/socket: sendmsg: no such file or directory"
+Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error
+```
+
+It looks like the systemd problems had returned. More on that later. First I needed to see if I could run the image without sudo, so I tried ```bash podman run -it registry.fedoraproject.org/f29/httpd```. This got a different result:
+```bash
+Trying to pull registry.fedoraproject.org/f29/httpd...
+Getting image source signatures
+Copying blob 7692efc5f81c done
+Copying blob d77ff9f653ce done
+Copying blob aaf5ad2e1aa3 done
+Copying config 25c76f9dcd done
+Writing manifest to image destination
+Storing signatures
+=> sourcing 10-set-mpm.sh ...
+=> sourcing 20-copy-config.sh ...
+=> sourcing 40-ssl-certs.sh ...
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 10.0.2.100. Set the 'ServerName' directive globally to suppress this message
+[Sun Sep 27 14:03:18.700163 2020] [ssl:warn] [pid 1:tid 140363836153216] AH01882: Init: this version of mod_ssl was compiled against a newer library (OpenSSL 1.1.1b FIPS  26 Feb 2019, version currently loaded is OpenSSL 1.1.1 FIPS  11 Sep 2018) - may result in undefined or erroneous behavior
+[Sun Sep 27 14:03:18.701415 2020] [ssl:warn] [pid 1:tid 140363836153216] AH01909: 10.0.2.100:8443:0 server certificate does NOT include an ID which matches the server name
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 10.0.2.100. Set the 'ServerName' directive globally to suppress this message
+[Sun Sep 27 14:03:18.767182 2020] [ssl:warn] [pid 1:tid 140363836153216] AH01882: Init: this version of mod_ssl was compiled against a newer library (OpenSSL 1.1.1b FIPS  26 Feb 2019, version currently loaded is OpenSSL 1.1.1 FIPS  11 Sep 2018) - may result in undefined or erroneous behavior
+[Sun Sep 27 14:03:18.768234 2020] [ssl:warn] [pid 1:tid 140363836153216] AH01909: 10.0.2.100:8443:0 server certificate does NOT include an ID which matches the server name
+[Sun Sep 27 14:03:18.768592 2020] [lbmethod_heartbeat:notice] [pid 1:tid 140363836153216] AH02282: No slotmem from mod_heartmonitor
+[Sun Sep 27 14:03:18.772186 2020] [mpm_event:notice] [pid 1:tid 140363836153216] AH00489: Apache/2.4.39 (Fedora) OpenSSL/1.1.1 configured -- resuming normal operations
+[Sun Sep 27 14:03:18.772257 2020] [core:notice] [pid 1:tid 140363836153216] AH00094: Command line: 'httpd -D FOREGROUND'
+
+(GW: CLI hung at this point and I had to Ctrl-c to break out)
+```
+
