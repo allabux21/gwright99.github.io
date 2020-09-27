@@ -340,3 +340,17 @@ I could see 2 potential problems:
 
 I did notice that `eventLogger: file` was present though, so it made me think some of my earlier changes had stuck. To test this, I edited the `~/.config/containers/containers.conf` and commented out the `events_logger = "file"` line. My expectation was that, when I ran `podman system info` again, I should now see `eventLogger: journald`. I ran the podman system info command again and found the 'journald' entry. This proved that changes I made in the user-level config file WAS being reflected in the podman system info.
 
+The first thing I found was that I had missed a runtime entry. I found the line `# runtime = "runc"` and added a new line below `runtime = "crun"`. This change was confirmed when I checked the podman system info again.
+
+So how the hell do I change my cgroup version? This was starting to turn into a goosechase:
+1. This [stackoverflow post](https://stackoverflow.com/questions/61140609/how-do-i-change-the-cgroup-version-for-podman) asked the exact same question. The single answer mentioned 'systemd' (which clearly wasn't going to help me since WSL2 doesnt have it, or OpenRC (I had no idea what this was). A response to the answer mentioned that for Ubuntu20.04, the poster ended up editing /etc/default/grub.d/50-cloudimg-settings.cfg, followed by update-grub, followed by a reboot, to get podman to show cgroups v2. But the poster didnt say what they had actually added.
+
+1. This [GitHub Gist](https://gist.github.com/trevorwhitney/d83353ff59cc0b7d8ae58116d1fe98f0) said that - to enable cgroups v2 on a Google Cloud instance, you need to edit /etc/default/grub.d/50-cloudimg-settings.cfg and add `cgroup_no_v1=all` to the end of the GRUB_CMDLINE_LINUX_DEFAULT, so it looks something like `GRUB_CMDLINE_LINUX_DEFAULT="console=tty50 cgroup_no_v1=all".
+
+
+If I'm on cgroupsv1 did I need to make the v2 changes I did earlier?
+
+
+whereis crun
+
+missing fuse-overlayfs
