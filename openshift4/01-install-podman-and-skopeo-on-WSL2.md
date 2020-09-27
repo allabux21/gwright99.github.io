@@ -200,3 +200,25 @@ AH00558: httpd: Could not reliably determine the server's fully qualified domain
 (GW: CLI hung at this point and I had to Ctrl-c to break out)
 ```
 
+Let's [figure out if cgroup v2 is running in my WSL2 instance](https://unix.stackexchange.com/questions/471476/how-do-i-check-cgroup-v2-is-installed-on-my-machine) or not.
+```bash
+grep cgroup /proc/filesystem
+```
+This returned:
+```bash
+nodev   cgroup
+nodev   cgroup2
+```
+So this means that `cgroup v2` is available, but I don't know if this is the version that I'm actually using. This becomes more important because the [Podman documentation for Basic Setup and Use of Podman in a rootless environment](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) says that you may need to change your default OCI runtime from `runc` to `crun` if your system is enabled cgroup v2.
+
+I tried to change the runtime as per the provided command but couldn't get it to work:
+* When I tried `sudo podman --runtime /usr/bin/crun`, I got an `Error: missing command 'podman COMMAND'` error.
+* When I tried `podman --runtime /usr/bin/crun`, I got an `Error: missing command 'podman COMMAND'` error.
+* When I tried `sudo podman run -it registry.fedoraproject.org/f29/httpd --runtime /usr/bin/crun`, I got the `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error` again.
+
+Thankfully the documentation offers another way to change the runtime via the Podman configuration files. This then lead to me to this [page](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md#user-configuration-files) and proves the value of READING THE DOCUMENTATION! Turns out Podman is configured to check file system folders in a particular order:
+1. /usr/share/containers/containers.conf
+1. /etc/containers/containers.conf
+1. ~/.config/containers/containers.conf
+
+This gets a bit messier, as it appears `/usr/share/containers/containers.conf` is the base file for BOTH the root user (with overrides coming from `/etc/containers/containers.conf`) and rootless user (with overrides coming from `$HOME/.config/containers/containers.conf`).
