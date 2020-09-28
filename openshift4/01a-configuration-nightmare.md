@@ -378,7 +378,7 @@ I began to re-examine my earlier steps to see if I had messed something up earli
 
 I confirmed slirp4netns was installed:
 ```bash
-apt list --installed | grep slirpnetns
+apt list --installed | grep slirp4netns
 ```
 
 I found and installed `fuse-overlayfs` (version 1.1.2~1):
@@ -442,56 +442,43 @@ Then I started wondering if these were system packages instead, so I changed gea
 I did another round of configuration and now podman seems to work. Hallejuah!
 
 
+### <a name="what-worked">Steps that Worked</a>
+Here are the steps I suggest for getting your podman configured to run rootless on a WSL2 Ubuntu 20.04 instance:
+
+*Acquiring the configuration files*
+1. Install podman (following [this article](https://podman.io/getting-started/installation), culminating in `sudo apt-get install podman`.
+1. Create a folder to store rootless config files, `sudo mkdir -p ~/.config/containers`.
+1. Copy the containers.conf file into your rootless config folder, `sudo cp /usr/share/containers/containers.conf ~/.config/containers/containers.conf` 
+1. Copy the registries.conf file into your rootless config folder, `sudo cp /etc/containers/registries.conf ~/.config/containers/registries.conf`
+1. Copy the storage.conf file into your rootless config folder, `sudo cp /etc/containers/storage.conf ~/.config/containers/storage.conf`
+1. Set ownership of the rootless config folder to your account, `sudo chown -R <user>:<group> ~/.config/containers/`
+
+*Install necessary packages*
+1. Install sudo apt-get install slirp4netns
+1. Install sudo apt-get install fuse-overlayfs
+
+*Configuring the files*
+1. Confirm your podman is using cgroup v1, `podman system info | grep cgroup` (if your response says 'v2', the rest of these steps are unlikely to work for you).
+1. Modify the `~/.config/containers/container.conf` file:
+    1.1. Replace `events_logger = "journald"` with `events_logger = "file"`
+1. Modify the `~/.config/containers/storage.conf` file:
+    1.1. Replace `driver = ""` with `driver ="overlay"`
+    1.1. Replace `runroot = "/var/run/containers/storage"` with `runroot = "$XDG_RUNTIME_DIR/containers"`
+    1.1. Replace `graphroot = "/var/lib/containers/storage"` with `graphroot = "$HOME/.local/share/containers/storage"`
+    1.1. Set `mount_program = "/usr/bin/fuse-overlayfs"`
 
 
-Check ~/.config/containers/storage.conf (missing), copy it in from /etc/containers/storage.conf.
-set 'driver = "overlay"'
-set 'mount_program = "/usr/bin/fuse-overlayfs'
-chownd -R to deeplearning
+
+
 Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md)
-Copied /etc/containers/registries.conf back to ~/.config/containers/registries.conf
 
 
-
-storage.conf's 'graphroot' key has the value of /var/lib/containers/storage/libpod.
-
-in ~/.config/containers/storage.conf, made the following changes:
-graphroot="$HOME/.local/share/containers/storage"
-runroot="$XDG_RUNTIME_DIR/containers"
-
-~/.local/share/containers/storage/ had lots of files like libpod vfs etc.
-
-
-Screwed up, deleted system folders /usr/share/containers/ and /etc/containers/ . Repopulated by recreating by hand and copying in file content from Github.
-First copied containers.conf to /usr/ ...
-Second copies registries.conf and storage.conf to /etc/containers
-Copied all three files to ~/.config/containers/
-chown -R deeplearning:deeplearning -R ~/.config/containers/
-
-realized was missing stuff
 did forced reinstall of packages (sudo apt-get --reinstall install <pkgname>). Used conmon, containers-common containers-golang containers-image libgpgme11 (as per https://computingforgeeks.com/install-cri-o-container-runtime-on-ubuntu-linux/), poddman skopeo
 
 Had to grab policy.json too
 https://github.com/containers/image/blob/3149c1a414eb131a61397efdebf765853b76972b/signature/fixtures/policy.json
 https://github.com/cri-o/cri-o/issues/901
 
-Tried running `podman run -it docker.io/alpine:latest`. Got error: Error: error creating runtime static files directory /var/lib/containers/storage/libpod: mkdir /var/lib/containers/storage/libpod: permission denied
-
-Edited ~/.config/containers/storage.conf
-Using paths given by https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md
-graphroot="$HOME/.local/share/containers/storage"
-runroot="$XDG_RUNTIME_DIR/containers"
-
-runroot will end up being /tmp/deeplearning-runtime/containers (based on .bashrc entry)
-
-While updating also made driver = "overlay" and mount_program = "/usr/bin/fuse-overlayfs"
 
 
-Ended up installing an Ubuntu18.04 instance, reinstalling Podman and then copying /usr/share/containers/*.* and /etc/containers/*.* from the 18.04 instance to the 20.04 instance through windows. Seems to have got me back to stable.
 
-didn't change runc.
-changed storage to use overlay, new graphroot and runroot, and mount_program.
-changed ~/containers to set 'events_logger = "file"'
-
-
-### <a name="what-worked">The painful path to figure out the solution</a>
