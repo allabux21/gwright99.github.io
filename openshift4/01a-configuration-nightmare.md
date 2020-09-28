@@ -1,28 +1,34 @@
 ## The Nightmare Non-Root Configuration Effort
 
-This was *really* painful, particularly since I don't have deep mastery of core Linux systems like `systemd` and `cgroups`. If you don't want to read about my ordeal, just read the
+This was *really* painful, particularly since I don't have deep mastery of core Linux systems like `systemd` and `cgroups`. If you don't want to read about my ordeal, skip to [what worked](#what-worked). If you want to vicariously share my suffering, let me take you on a journey ...
 
+*NOTE:* Regardless of your reading choice __DO NOT__ run Podman without first reading this section and making sure you've got the right configuration.
 
+### Root versus Non-Root (reminder: just READ this, dont' actually do the steps)
+One of Podman's selling points is the ability to run containers without requiring root permissions. This arguably results in a safer security posture, and I felt it was worth using the tool as Non-Root given that I could just use Docker if I wanted a tool with root privileges.
 
-### Update the Podman configuration for WSL2 quality of life gains
-A January 30, 2020 [article](https://www.redhat.com/sysadmin/podman-windows-wsl2) by RedHat software engineer Brent Baude provides some configuration suggestions for WSL2-based podman installations. I began to implement his changes but immediately encountered problems.
+My journey started with a January 30, 2020 [article](https://www.redhat.com/sysadmin/podman-windows-wsl2) by RedHat software engineer Brent Baude provides some configuration suggestions for WSL2-based podman installations. I began to implement his changes but immediately encountered problems.
 
 Baude suggests creating (and then editing) a Podman configuration file for a rootless user, `$HOME/.config/containers/libpod.conf`, by executing this command:
 ```bash
 podman info
 ```
+
 I ran the command and it resulted in two problems:
 1. I received a `ERRO[0000] unable to write system event: "write unixgram @0000d->/run/systemd/journal/socket: sendmsg: no such file or directory"` error
 1. The config file was not generated. 
 
-A subsequent Google searchs revealed answers to both problems:
+Subsequent Google searches provided insight into both problems:
 1. As per [this GitHub thread](https://github.com/containers/podman/issues/4325), the error occured due to the lack of a systemd journal in WSL2. 
 1. As of at least April 2020, podman [no longer generates config files](https://github.com/containers/podman/issues/5722)  in the user's home directory automatically.
 
-#### Problem 1: Solving the systemd problem
-I solved the systemd error by following this Sept 10, 2020 [article](https://dev.to/bowmanjd/using-podman-on-windows-subsystem-for-linux-wsl-58ji) by Jonathan Bowman. 
+I found a Sept 10, 2020 [article](https://dev.to/bowmanjd/using-podman-on-windows-subsystem-for-linux-wsl-58ji) by Jonathan Bowman that seemed to have some promising solutions, so I began implementing. (A reminder for the readers now since the authors' names are close enough that I even started to forget who was who when I was writing: Baude == older article that didn't seem accurate anymore, Bowman == newer blog that seemed to have fixes).  
 
-Due to the lack of systemd, we need to provide a folder for podman to use for temporary files. Following Bowman's advice, I added the following to my `~/.bashrc`:
+#### Problem 1: Missing runtime storage folder
+Ironically, the first problem I fixed was one I didn't even know that I had: a missing runtime folder due to the lack of systemd on WSL2. 
+Since systemd won't auotmatically create the folder and set the XDG_RUNTIME_DIR, we need to check and provide a folder for temporary files ourselves. 
+
+Following Bowman's advice, I added the following to my `~/.bashrc`:
 ```bash
 if [[ -z "$XDG_RUNTIME_DIR" ]]; then
   export XDG_RUNTIME_DIR=/run/user/$UID
@@ -34,28 +40,24 @@ if [[ -z "$XDG_RUNTIME_DIR" ]]; then
   fi
 fi
 ```
-As per Bowman, _"This script checks if the $XDG_RUNTIME_DIR is set, and, if not, sets it to the default systemd location (/run/user/$UID). If that does not exist, then set and create a temporary directory for the current user."_ 
+As per Bowman, _"This script checks if the $XDG_RUNTIME_DIR is set (by checking the length of the value). If it is 0, the script sets it to the default systemd location (/run/user/$UID). If that does not exist, then set and create a temporary directory for the current user."_ 
 
-basically '\[\[ -z "$XDG_RUNTIME_DIR" \]\]' checks to see if the XDG_RUNTIME_DIR has a length equal to zero. If yes, we set it. 
+With the change implemented, reload the your shell via `source ~/.bashrc` and there's one less proble to worry about.
 
-With the change added, I reloaded the environment variables via `source ~/.bashrc` and retried the `podman info` command. Success - no more error!
 
-#### Problem 2: Solving the missing config file problem
-Despite fixing the systemd error, the `$HOME/.config/containers/libpod.conf` podman configuration file that Bauman says I should be editing was still missing. Jonathan Bowman's artice comes to the rescue again. 
+#### Problem 2: Where are the missing configuration files?
+The next problem was trying to figure out where the podman configuration files where and which one I should be using:
+* The `$HOME/.config/containers/libpod.conf` configuration file that Bauman says I should be editing was nowhere to be found. 
+* Bowman's article mentioned I should see `/etc/containers/containers.conf` and/or `~/.config/containers/containers.conf. 
+* My system didn't have `$HOME/.config/` but it did have an `/etc/containers/` and `/usr/share/containers`. 
+* Even better, both of the folders I found on my system each had a copy of `containers.conf` and NO copies of `libpod.conf`. Greaaaaaaaat ...
 
-I didn't have a `$HOME/.config/` folder, but I did have two other podman-related folders:
-* `/etc/containers/`
-* `/usr/share/containers/`
-
-Things got a bit confusing once I looked at the contents of each folder: there was no sign of a `libpod.conf` file, but both folders had an instance of `containers.conf`.
-
-I ran the following command to ensure these two files contained the same content (they did):
+The first thing to do was figure out if both instances of `containers.conf` were the same. I did this by diffing the two files (they matched):
 ```bash
 diff /etc/containers/containers.conf /usr/share/containers/containers.conf
 ```
 
-At this point, I had to decide who I trusted more: Brent Baude or Jonathan Bowman? 
-Even though Baude's article is linked to in the official steps of [podman.io](https://podman.io), Bowman's was newer and had already fixed my systemd problem. I decided to trust Bowman.
+Now I had to figure out which configuration file was the correct one to use `libpod.conf` or `containers.conf` (i.e. a proxy for "who do I trust more, Baude or Bowman?"). Even though Baude's article is referred to by the official steps of [podman.io](https://podman.io), Bowman's was newer and had already fixed my folder problem. I decided to trust Bowman.
 
 Following Bowman's instructions, I created the config file for a rootless user:
 ```bash
@@ -78,19 +80,13 @@ INDEX       NAME                                             DESCRIPTION        
 docker.io   docker.io/richxsl/rhel7                          RHEL 7 image with minimal installation            28
 docker.io   docker.io/xplenty/rhel7-pod-infrastructure       registry.access.redhat.com/rhel7/pod-infrast...   1
 docker.io   docker.io/bluedata/rhel7                         RHEL-7.x base container images                    1
-docker.io   docker.io/sotax/rhel7.3                          base rhel_7.3 image with g++                      0
-docker.io   docker.io/kdiraviam/rhel6-ruby-chef              This repo contains a rhel6 image with ruby a...   1
-
 ....
-
 quay.io     quay.io/thoth-station/solver-rhel-8-py36         solver-rhel-8-py36                                0
 quay.io     quay.io/distributedci/dci-rhel-agent             # DCI RHEL Agent `dci-rhel-agent` provides R...   0
 quay.io     quay.io/zorondevops/java-rhel-7-base                                                               0
-quay.io     quay.io/bluecat/gateway                          Official release repository for BlueCat Gate...   0
-quay.io     quay.io/sdase/nginx                              # nginx OCI image  [nginx](https://nginx.org...   0
-quay.io     quay.io/gravisbulgaria/solr                      Solr:8.1.1 based ot RHEL 8                        0
-quay.io     quay.io/crw/plugin-java8-rhel8                   OpenJDK 8 + Maven 3.6, Node + npm, python3 +...   0
+...
 ```
+
 
 #### Problem 3: Solving the failed docker pull
 The run command was working but I got the following error when I tried `sudo podman pull rhel`:
@@ -419,3 +415,6 @@ Ended up installing an Ubuntu18.04 instance, reinstalling Podman and then copyin
 didn't change runc.
 changed storage to use overlay, new graphroot and runroot, and mount_program.
 changed ~/containers to set 'events_logger = "file"'
+
+
+### <a name="what-worked">The painful path to figure out the solution</a>
