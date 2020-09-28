@@ -330,7 +330,7 @@ I had managed to make other changes in the config file but was still stumped as 
 
 1. This [GitHub Gist](https://gist.github.com/trevorwhitney/d83353ff59cc0b7d8ae58116d1fe98f0) said that - to enable cgroups v2 on a Google Cloud instance, you need to edit /etc/default/grub.d/50-cloudimg-settings.cfg and add `cgroup_no_v1=all` to the end of the GRUB_CMDLINE_LINUX_DEFAULT, so it looks something like `GRUB_CMDLINE_LINUX_DEFAULT="console=tty50 cgroup_no_v1=all"`. Now we were quickly veering into exotic bootloader territory and a whole other realm of system knowledge I was going to have to learn.
 
-1. I found other podman bug reports that mentioned the same errors I was encountering, but it was mostly the package developers discussing the inner workings of Linux OS implementations amongst themselves and I had no idea what on earth they were talking about.
+1. I found other [podman bug reports](https://github.com/containers/podman/issues/6982) that mentioned the [same errors I was encountering](https://github.com/containers/podman/issues/1534), but it was mostly the package [developers discussing the inner workings of Linux OS](https://github.com/containers/podman/issues/5443) implementations amongst themselves and I had no idea what on earth they were talking about.
 
 I was starting to lose hope. I just wanted to spin up some 'hello world'-type containers - why was I stuck drowning in Linux configuration hell?! Then I had an epiphany: _Maybe I didn't need to change my cgroups version at all_? Did I even need cgroups v2? I only made the changes earlier because of the installation steps saying you had to make changes to accommodate cgroups v2 (_and my assumption that that was what I was running_). But if podman thought it was using cgroups v1, was I ok?
 
@@ -420,7 +420,7 @@ So I deleted some folders in a fit of rage and now I needed to figure out how to
 
 I remembered some of the folder/file paths and was able to find some templates in a Github repistory. But I wasn't able to find all the files and wasnt' sure by the accuracy of the ones I had found. This was paricularly concerning as some of the files appeared to be related to security:
 * `/etc/containers/policy.json` sets default communications postures.
-* `/etc/containers/registries.d/default.yaml` sets rules for how image signing should behave.
+* `/etc/containers/registries.d/default.yaml` sets [rules for how image signing should behave](https://medium.com/@luis.ariz/container-image-signatures-in-openshift-4-a62b9e1c1b5a).
 
 I wasn't 100% sure about how necessary these files were, so I didn't want to fail to retrieve them (and then forget about it and get burned by their absence later).
 
@@ -431,6 +431,7 @@ Here's how I approached the problem:
 1. I then tried reinstalling dependencies (`sudo apt-get --reinstall install <package>`) [which were likely candidates](https://computingforgeeks.com/install-cri-o-container-runtime-on-ubuntu-linux/) like: conmon, containers-common containers-golang containers-image libgpgme11. This did not work.
 1. I tried reinstalling podman with dependencies. This did not work.
 1. I tried reinstall skopeo. This did not work.
+1. I tried installing from Github repositories. I found some links like: [containers.conf](https://github.com/containers/common/blob/master/pkg/config/containers.conf), [policy.json](https://github.com/cri-o/cri-o/issues/901), and higher level [repos](https://github.com/containers) but context was missing and some references were broken.
 
 Then I started wondering if these were system packages instead, so I changed gears:
 1. I installed a Debian 10 instance into WSL2. <br>I confirmed that the base install did not have `/etc/containers/` or `/usr/share/containers/`. I began following the podman.io instructions to install podman on Debian, but was immediately hit with permissions problems when trying to add the necessary repository to my apt lists. I had had enough problems at this point and was not about to start solving Debian bullshit too, so the image was immediately deleted after a long profanity-filled tirade.
@@ -468,14 +469,10 @@ Here are the steps I suggest for getting your podman configured to run rootless 
     1.1. Replace `graphroot = "/var/lib/containers/storage"` with `graphroot = "$HOME/.local/share/containers/storage"`
     1.1. Set `mount_program = "/usr/bin/fuse-overlayfs"`
 
+With these steps complete, you should be able to run a container successfully.
+(Note: Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md))
 
 
-
-Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md)
-
-Had to grab policy.json too
-https://github.com/containers/image/blob/3149c1a414eb131a61397efdebf765853b76972b/signature/fixtures/policy.json
-https://github.com/cri-o/cri-o/issues/901
 
 
 
