@@ -336,7 +336,7 @@ I was starting to lose hope. I just wanted to spin up some 'hello world'-type co
 
 I started thinking about the actual error I received again: `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error`. Even though it didn't show up in the `podman system info` output, I had added an uncommented `cgroup_manager="cgroupfs"` into the file (meant to supplant the default `cgroup_manager="systemd"`. So why was podman complaining about the systemd cgroup flag?!
 
-I took another look at the ~/.config/containers/containers.conf file, via `less ~/.config/containers/containers.conf | grep cgroup`. This resulted in the following hits:
+I took another look at the containers.conf file via `less ~/.config/containers/containers.conf | grep cgroup` and got back the following:
 ```bash
 # Default way to to create a cgroup namespace for the container
 # cgroupns = "private"
@@ -350,8 +350,14 @@ cgroup_manager = "cgroupfs"
 # List of the OCI runtimes that supports running containers without cgroups.
 # runtime_supports_nocgroups = ["crun"]
 ```
+I didn't see any missed systemd entries, so I assumed something else had to be the problem.
 
+I then ran a command that I found during one of my searches.
+```bash
 sudo podman --cgroup-manager=cgroupfs run -it --runtime=/usr/local/sbin/crun docker.io/library/alpine
+```
+This resulted in:
+```bash
 Trying to pull docker.io/library/alpine...
 Getting image source signatures
 Copying blob df20fa9351a1 done
@@ -360,38 +366,52 @@ Writing manifest to image destination
 Storing signatures
 ERRO[0015] unable to write pod event: "write unixgram @0003d->/run/systemd/journal/socket: sendmsg: no such file or directory"
 Error: mount `/sys/fs/cgroup/systemd` to '/sys/fs/cgroup/systemd': No such file or directory: OCI runtime command not found error
+```
+Something was still messed up.
 
 
+#### Problem 8: Maybe I missed something else?
+I began to re-examine my earlier steps to see if I had messed something up earlier in the process? Reviewing [this podman.io page](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) made me these possibilities came to mind:
+* Resetting the `crun` changes back to `runc`
+* Ensuring other dependencies like `slirp4netns` and `fuse-overlayfs` were installed on my system
+* Updating the `storage.conf` file with new values
 
+I confirmed slirp4netns was installed:
+```bash
+apt list --installed | grep slirpnetns
+```
 
-
-If I'm on cgroupsv1 did I need to make the v2 changes I did earlier? Dont think so, went back to runc instead of crun.
-
-confirmed I am not root by using `cat /etc/password`. User account has UID 1000, where there is also a root account with UID 0.cat
-Changed /usr/share/containers/backup-containers.conf back to containers.conf
-Deleted /etc/containers/containers.conf (since I'm running as non-privileged and this is meant for root)
-sudo apt-get install slirp4netns was already installed
-
+I found and installed `fuse-overlayfs` (version 1.1.2~1):
+```bash
 sudo apt-cache search fuse-overlayfs
-sudo apt-cache show fuse-overlayfs (Version: 1.1.2~1)
+sudo apt-cache show fuse-overlayfs
+sudo apt-get install fuse-overlayfs
+```
+
+I ensured that both the `containers.conf`, `storage.conf`, and `registries.conf` were populated in the `~/.config/containers/` folder, and changed the ownership from `root` to my own account. Would this finally work? 
+
+With trepidation, I tried running another container with an attached volume:
+```bash
+> podman run -v ~/OCP4/podmanvolumes:/container/volume docker.io/alpine /bin/bash
+
+Error: error creating runtime static files directory /var/lib/containers/storage/libpod: mkdir /var/lib/containers/storage/libpod: permission denied
+ERRO[0000] User-selected graph driver "overlay" overwritten by graph driver "vfs" from database - delete libpod local files to resolve
+had to delete ~./local/share/containers/
+```
+F****.
+
+#### Problem 9: Where on earth are the libpod local files? (A.k.a Graham deletes a few system folders he really shouldn't have)
+
+
 
 Check ~/.config/containers/storage.conf (missing), copy it in from /etc/containers/storage.conf.
 set 'driver = "overlay"'
 set 'mount_program = "/usr/bin/fuse-overlayfs'
-
-
-Issue with ~/.config/container/* files belonging to root instead of deep learning? chownd -R to deeplearning
-
-
+chownd -R to deeplearning
 Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md)
-
 Copied /etc/containers/registries.conf back to ~/.config/containers/registries.conf
 
 
-
-
-podman run -v ~/OCP4/podmanvolumes:/container/volume docker.io/alpine /bin/bash
-Error: error creating runtime static files directory /var/lib/containers/storage/libpod: mkdir /var/lib/containers/storage/libpod: permission denied
 
 storage.conf's 'graphroot' key has the value of /var/lib/containers/storage/libpod.
 
@@ -400,8 +420,7 @@ graphroot="$HOME/.local/share/containers/storage"
 runroot="$XDG_RUNTIME_DIR/containers"
 
 
-ERRO[0000] User-selected graph driver "overlay" overwritten by graph driver "vfs" from database - delete libpod local files to resolve
-had to delete ~./local/share/containers/
+
 
 ~/.local/share/containers/storage/ had lots of files like libpod vfs etc.
 
