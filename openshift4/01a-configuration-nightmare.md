@@ -401,6 +401,21 @@ had to delete ~./local/share/containers/
 F****.
 
 #### Problem 9: Where on earth are the libpod local files? (A.k.a Graham deletes a few system folders he really shouldn't have)
+It turns out that the fact I had run podman BEFORE I did all the configuration meant there was now a system conflict. As per the error message, I could solve it by deleting some local libpod files, but I had no idea where they were! I thought the files might have been the ones I was dealing with in the following locations:
+* `/usr/share/containers/`
+* `/etc/containers/`
+* `~/.config/containers/`
+
+Going full cowboy, I deleted all three folders (without backing up) and ran podman again. 
+```bash
+ERRO[0000] User-selected graph driver "overlay" overwritten by graph driver "vfs" from database - delete libpod local files to resolve
+had to delete ~./local/share/containers/
+```
+Uhoh - Was I being cursed by configuration files from beyond the grave!?! More Googling ensued, resulting in the discovery that podman stored more artefacts in `~/.local/share/containers/storage/`. This was the folder I should have obliterated. It was quickly hit by `rm -rf` with extreme rage-filled prejudice.
+
+I felt like I was finally nearly a solution. But wait a sec, some of those folders I deleted weren't created by me. Oh crap, did I just delete system folders?!
+
+#### Problem 10: Stupid cowboy, how are we supposed to get those system files back?!
 
 
 
@@ -418,9 +433,6 @@ storage.conf's 'graphroot' key has the value of /var/lib/containers/storage/libp
 in ~/.config/containers/storage.conf, made the following changes:
 graphroot="$HOME/.local/share/containers/storage"
 runroot="$XDG_RUNTIME_DIR/containers"
-
-
-
 
 ~/.local/share/containers/storage/ had lots of files like libpod vfs etc.
 
