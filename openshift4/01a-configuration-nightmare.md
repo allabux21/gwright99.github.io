@@ -442,6 +442,7 @@ Then I started wondering if these were system packages instead, so I changed gea
 I did another round of configuration and now podman seems to work. Hallejuah!
 
 <hr>
+
 ### <a name="what-worked">Steps that Worked</a>
 Here are the steps I suggest for getting your podman configured to run rootless on a WSL2 Ubuntu 20.04 instance:
 
