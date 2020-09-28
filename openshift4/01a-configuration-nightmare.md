@@ -127,7 +127,7 @@ registry.fedoraproject.org/f29/httpd  latest  25c76f9dcdb5  17 months ago  482 M
 
 You'll notice that I didn't use `sudo` in the above commands, so I started to wonder if this was the problem. I removed the image via `podman rmi registry.fedoraproject.org/f29/httpd` and then tried pulling the image again with `sudo podman pull registry.fedoraproject.org/f29/httpd`.
 
-I was still able to pull the image down, but got two errors when I tried `sudo podman run -it registry.fedoraproject.org/f29/httpd`:
+I was still able to pull the image, but got two errors when I tried `sudo podman run -it registry.fedoraproject.org/f29/httpd`:
 ```bash
 ERRO[0000] unable to write pod event: "write unixgram @00014->/run/systemd/journal/socket: sendmsg: no such file or directory"
 Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error
@@ -138,7 +138,7 @@ It looks like the systemd problems had returned. More on that later. First I nee
 podman run -it registry.fedoraproject.org/f29/httpd
 ``` 
 
-This got a different result:
+This worked, with the web server spinning up (despite some initial complaints):
 ```bash
 Trying to pull registry.fedoraproject.org/f29/httpd...
 Getting image source signatures
@@ -161,33 +161,49 @@ AH00558: httpd: Could not reliably determine the server's fully qualified domain
 [Sun Sep 27 14:03:18.772186 2020] [mpm_event:notice] [pid 1:tid 140363836153216] AH00489: Apache/2.4.39 (Fedora) OpenSSL/1.1.1 configured -- resuming normal operations
 [Sun Sep 27 14:03:18.772257 2020] [core:notice] [pid 1:tid 140363836153216] AH00094: Command line: 'httpd -D FOREGROUND'
 
-(GW: CLI hung at this point and I had to Ctrl-c to break out)
 ```
 
-Let's [figure out if cgroup v2 is running in my WSL2 instance](https://unix.stackexchange.com/questions/471476/how-do-i-check-cgroup-v2-is-installed-on-my-machine) or not.
-```bash
-grep cgroup /proc/filesystem
-```
-This returned:
+At this point, I was getting confused and frustrated. Some things worked, some things did not, and I could really explain either set of results. Time to step back and check on some fundamentals.
+
+
+#### Problem 4: What cgroup version is my WSL2 Ubuntu instance running?
+The `Error: systemd cgroup flag ...` error was making me suspicious: I had changed my `~/.config/containers/containers.conf` configuration to use cgroupfs instead of systemd, and to log events to file instead of journald. Why was it still complaining?
+
+The [Podman documentation for Basic Setup and Use of Podman in a rootless environment](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) says you needed to change your runtime from `runc` to `crun` depending on whether your system was using cgroups v2 or not. This made me wonder if the cgroupfs change may have also been dependent on the cgroup version?
+
+I needed to figure out how to find this information in my WSL2 Ubuntu instance, and found a solution [here](https://unix.stackexchange.com/questions/471476/how-do-i-check-cgroup-v2-is-installed-on-my-machine). Running `grep cgroup /proc/filesystem` returned:
 ```bash
 nodev   cgroup
 nodev   cgroup2
 ```
-So this means that `cgroup v2` is available, but I don't know if this is the version that I'm actually using. This becomes more important because the [Podman documentation for Basic Setup and Use of Podman in a rootless environment](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) says that you may need to change your default OCI runtime from `runc` to `crun` if your system is enabled cgroup v2.
+
+This meant that `cgroup v2` was at least available on my system, but I don't know if it was the version I was actually using. 
 
 I tried to change the runtime as per the provided command but couldn't get it to work:
 * When I tried `sudo podman --runtime /usr/bin/crun`, I got an `Error: missing command 'podman COMMAND'` error.
 * When I tried `podman --runtime /usr/bin/crun`, I got an `Error: missing command 'podman COMMAND'` error.
 * When I tried `sudo podman run -it registry.fedoraproject.org/f29/httpd --runtime /usr/bin/crun`, I got the `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error` again.
 
-Thankfully the documentation offers another way to change the runtime via the Podman configuration files. This then lead to me to this [page](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md#user-configuration-files) and proves the value of READING THE DOCUMENTATION! Turns out Podman is configured to check file system folders in a particular order:
+Thankfully the documentation offers another way to change the runtime via the Podman configuration files. This then led to me to this [page](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md#user-configuration-files) and proves the value of READING THE DOCUMENTATION! 
+
+
+#### Problem 4: I temporarily put aside my cgroups version question to figure Podman configuration file override flows
+Turns out Podman is configured to check for configuration files in a particular order:
 1. /usr/share/containers/containers.conf
 1. /etc/containers/containers.conf
 1. ~/.config/containers/containers.conf
 
 This gets a bit messier, as it appears `/usr/share/containers/containers.conf` is the base file for BOTH the root user (with overrides coming from `/etc/containers/containers.conf`) and rootless user (with overrides coming from `$HOME/.config/containers/containers.conf`).
 
-First, I need to reconfirm that my WSL2 account is a user and NOT root. Running `id` returns a `uid=1000` and `gid=1000`. Since these are not 0, this means I'm not running as root.
+At this point, I had spent hours looking for material on the web and was quickly losing confidence that my previous successes were actually successes at all. Had I even been running podman as rootless like I thought I was?
+
+
+#### Problem 5: Figuring out if I was executing as root or non-root
+I needed to be confident that WSL2 account was a user-type and not root-type. 
+
+I ran `whoami` to confirm that my user account was active, and then ran `id` to retrieve my UID & GID. The sytem returned `uid=1000` and `gid=1000`. I double-checked this running `cat /etc/passwd/` and confirmed there was a root account with UID/GID 0, whereas my user account was another discrete entry with UID/GID 1000. I was confident I was not the root user (_although I was still a bit suspcious if the use of 'sudo' to invoke podman commands was having some unintended effect_).
+
+
 
 Since I'm trying to get rootless working, I need to go edit `$HOME/.config/containers/containers.conf`. I then navigated to the 'engine.runtimes' portion of the file, commenting out the `runc` array and uncommenting the `crun` array.
 ```bash
