@@ -428,7 +428,7 @@ Here's the problem: I couldn't figure out where the `/etc/containers/` and `/usr
 
 Here's how I approached the problem:
 1. I tried to reinstall podman `sudo apt-get install podman`. <br> The command was back, and some of the files had returned but it was not the full list (_and to be honest, I couldnt' remember if those were ones I had personally rebuilt or were installed by the package_).
-1. I then tried reinstalling dependencies (`sudo apt-get --reinstall install <package>`) which were likely candidates like: . This did not work.
+1. I then tried reinstalling dependencies (`sudo apt-get --reinstall install <package>`) [which were likely candidates](https://computingforgeeks.com/install-cri-o-container-runtime-on-ubuntu-linux/) like: conmon, containers-common containers-golang containers-image libgpgme11. This did not work.
 1. I tried reinstalling podman with dependencies. This did not work.
 1. I tried reinstall skopeo. This did not work.
 
@@ -441,7 +441,7 @@ Then I started wondering if these were system packages instead, so I changed gea
 
 I did another round of configuration and now podman seems to work. Hallejuah!
 
-
+<hr>
 ### <a name="what-worked">Steps that Worked</a>
 Here are the steps I suggest for getting your podman configured to run rootless on a WSL2 Ubuntu 20.04 instance:
 
@@ -471,9 +471,6 @@ Here are the steps I suggest for getting your podman configured to run rootless 
 
 
 Didn't fix the unprivileged ping issue (https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md)
-
-
-did forced reinstall of packages (sudo apt-get --reinstall install <pkgname>). Used conmon, containers-common containers-golang containers-image libgpgme11 (as per https://computingforgeeks.com/install-cri-o-container-runtime-on-ubuntu-linux/), poddman skopeo
 
 Had to grab policy.json too
 https://github.com/containers/image/blob/3149c1a414eb131a61397efdebf765853b76972b/signature/fixtures/policy.json
