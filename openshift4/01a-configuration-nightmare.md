@@ -187,7 +187,7 @@ I tried to change the runtime as per the provided command but couldn't get it to
 Thankfully the documentation offers another way to change the runtime via the Podman configuration files. This then led to me to this [page](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md#user-configuration-files) and proves the value of READING THE DOCUMENTATION! 
 
 
-#### Problem 4: I temporarily put aside my cgroups version question to figure Podman configuration file override flows
+#### Problem 5: I temporarily put aside my cgroups version question to figure Podman configuration file override flows
 Turns out Podman is configured to check for configuration files in a particular order:
 1. /usr/share/containers/containers.conf
 1. /etc/containers/containers.conf
@@ -198,14 +198,14 @@ This gets a bit messier, as it appears `/usr/share/containers/containers.conf` i
 At this point, I had spent hours looking for material on the web and was quickly losing confidence that my previous successes were actually successes at all. Had I even been running podman as rootless like I thought I was?
 
 
-#### Problem 5: Figuring out if I was executing as root or non-root
-I needed to be confident that WSL2 account was a user-type and not root-type. 
+#### Problem 6: Have I been executing as root or non-root?
+I needed to be confident that WSL2 account was a user-type and not root-type since this was going to affect which files I had to update. 
 
-I ran `whoami` to confirm that my user account was active, and then ran `id` to retrieve my UID & GID. The sytem returned `uid=1000` and `gid=1000`. I double-checked this running `cat /etc/passwd/` and confirmed there was a root account with UID/GID 0, whereas my user account was another discrete entry with UID/GID 1000. I was confident I was not the root user (_although I was still a bit suspcious if the use of 'sudo' to invoke podman commands was having some unintended effect_).
+I ran `whoami` to confirm that my user account was active, and then ran `id` to retrieve my UID & GID. The sytem returned `uid=1000` and `gid=1000`. I double-checked this by running `cat /etc/passwd/` and confirmed there was a root account with UID/GID 0, whereas my user account was another discrete entry with UID/GID 1000. I was confident I was not the root user (_although I was still a bit suspcious if the use of 'sudo' to invoke podman commands was having some unintended effect_).
 
+Now that I had confirmed I needed to follow the rootless implementation path, it meant I could ignore the files in `/etc/containers/` (because these were mean for the root user) and focus on edits in the `~/.config/containers/containers.conf`. Since I had seen the `cgroup2` entry when I checked my cgroups, I assumed this meant I was running v2 and should configure accordingly (_I happened to be wrong. More on that later_).
 
-
-Since I'm trying to get rootless working, I need to go edit `$HOME/.config/containers/containers.conf`. I then navigated to the 'engine.runtimes' portion of the file, commenting out the `runc` array and uncommenting the `crun` array.
+ I commented out the `runc` array and uncommented the `crun` array.
 ```bash
 # Paths to look for a valid OCI runtime (runc, runv, kata, etc)
 [engine.runtimes]
@@ -230,7 +230,7 @@ Since I'm trying to get rootless working, I need to go edit `$HOME/.config/conta
  ]
 ```
 
-This still didn't work. I needed to confirm that my changes had actually taken effect so I ran `podman system info` and got:
+I wanted to confirm that my changes had actually taken effect so I ran `podman system info`, which resulted in the following:
 ```bash
 host:
   arch: amd64
@@ -318,16 +318,21 @@ I could see 2 potential problems:
 1. It appeared that my cgroup was set to version 1
 1. It appeared that the the runc to crun change had not taken effect. 
 
-I did notice that `eventLogger: file` was present though, so it made me think some of my earlier changes had stuck. To test this, I edited the `~/.config/containers/containers.conf` and commented out the `events_logger = "file"` line. My expectation was that, when I ran `podman system info` again, I should now see `eventLogger: journald`. I ran the podman system info command again and found the 'journald' entry. This proved that changes I made in the user-level config file WAS being reflected in the podman system info.
+I did notice that `eventLogger: file` was present though, so it made me think some of my earlier changes had stuck. To test this, I edited the `~/.config/containers/containers.conf` and commented out the `events_logger = "file"` line. My expectation was that, when I ran `podman system info` again, I should now see the default `eventLogger: journald`. 
 
-The first thing I found was that I had missed a runtime entry. I found the line `# runtime = "runc"` and added a new line below `runtime = "crun"`. This change was confirmed when I checked the podman system info again.
+I ran `podman system info` again and found the 'journald' entry in the new output. This proved that changes I made in the user-level config file was being reflected in the podman system info, so I must have missed something when I was changing `runc` to `crun`. Turns out that - although I had uncommented the crun paths - I had forgotten to change the actual runtime entry. I found the line `# runtime = "runc"` and added a new line below `runtime = "crun"`. This change was confirmed when I checked the podman system info again.
 
-So how the hell do I change my cgroup version? This was starting to turn into a goosechase:
-1. This [stackoverflow post](https://stackoverflow.com/questions/61140609/how-do-i-change-the-cgroup-version-for-podman) asked the exact same question. The single answer mentioned 'systemd' (which clearly wasn't going to help me since WSL2 doesnt have it, or OpenRC (I had no idea what this was). A response to the answer mentioned that for Ubuntu20.04, the poster ended up editing /etc/default/grub.d/50-cloudimg-settings.cfg, followed by update-grub, followed by a reboot, to get podman to show cgroups v2. But the poster didnt say what they had actually added.
 
-1. This [GitHub Gist](https://gist.github.com/trevorwhitney/d83353ff59cc0b7d8ae58116d1fe98f0) said that - to enable cgroups v2 on a Google Cloud instance, you need to edit /etc/default/grub.d/50-cloudimg-settings.cfg and add `cgroup_no_v1=all` to the end of the GRUB_CMDLINE_LINUX_DEFAULT, so it looks something like `GRUB_CMDLINE_LINUX_DEFAULT="console=tty50 cgroup_no_v1=all".
+#### Problem 7: How the heck do I change my cgroup version!?
+I had managed to make other changes in the config file but was still stumped as to how to change the cgroup version. I continued searching but this was quickly devolving into a wild goosechase: 
 
-I had a decision to make did I even need cgroups v2? I only made the changes earlier because of the installation steps saying you had to make changes to accommodate cgroups v2. But if podman thought it was using cgroups v1, was I ok? I had no idea.
+1. This [stackoverflow post](https://stackoverflow.com/questions/61140609/how-do-i-change-the-cgroup-version-for-podman) asked the exact same question. The single answer mentioned 'systemd' (which clearly wasn't going to help me since WSL2 doesnt have it), or OpenRC (I had no idea what this was). A response to the answer mentioned that for Ubuntu 20.04, the poster ended up editing `/etc/default/grub.d/50-cloudimg-settings.cfg`, followed by update-grub, followed by a reboot, to get podman to show cgroups v2. But the poster didnt say what they had actually added.
+
+1. This [GitHub Gist](https://gist.github.com/trevorwhitney/d83353ff59cc0b7d8ae58116d1fe98f0) said that - to enable cgroups v2 on a Google Cloud instance, you need to edit /etc/default/grub.d/50-cloudimg-settings.cfg and add `cgroup_no_v1=all` to the end of the GRUB_CMDLINE_LINUX_DEFAULT, so it looks something like `GRUB_CMDLINE_LINUX_DEFAULT="console=tty50 cgroup_no_v1=all"`. Now we were quickly veering into exotic bootloader territory and a whole other realm of system knowledge I was going to have to learn.
+
+1. I found other podman bug reports that mentioned the same errors I was encountering, but it was mostly the package developers discussing the inner workings of Linux OS implementations amongst themselves and I had no idea what on earth they were talking about.
+
+I was starting to lose hope. I just wanted to spin up some 'hello world'-type containers - why was I stuck drowning in Linux configuration hell?! Then I had an epiphany: _Maybe I didn't need to change my cgroups version at all_? Did I even need cgroups v2? I only made the changes earlier because of the installation steps saying you had to make changes to accommodate cgroups v2 (_and my assumption that that was what I was running_). But if podman thought it was using cgroups v1, was I ok?
 
 I started thinking about the actual error I received again: `Error: systemd cgroup flag passed, but systemd support for managing cgroups is not available: OCI runtime error`. Even though it didn't show up in the `podman system info` output, I had added an uncommented `cgroup_manager="cgroupfs"` into the file (meant to supplant the default `cgroup_manager="systemd"`. So why was podman complaining about the systemd cgroup flag?!
 
