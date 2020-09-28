@@ -416,6 +416,31 @@ Uhoh - Was I being cursed by configuration files from beyond the grave!?! More G
 I felt like I was finally nearly a solution. But wait a sec, some of those folders I deleted weren't created by me. Oh crap, did I just delete system folders?!
 
 #### Problem 10: Stupid cowboy, how are we supposed to get those system files back?!
+So I deleted some folders in a fit of rage and now I needed to figure out how to get them back. How was I going to do that?
+
+I remembered some of the folder/file paths and was able to find some templates in a Github repistory. But I wasn't able to find all the files and wasnt' sure by the accuracy of the ones I had found. This was paricularly concerning as some of the files appeared to be related to security:
+* `/etc/containers/policy.json` sets default communications postures.
+* `/etc/containers/registries.d/default.yaml` sets rules for how image signing should behave.
+
+I wasn't 100% sure about how necessary these files were, so I didn't want to fail to retrieve them (and then forget about it and get burned by their absence later).
+
+Here's the problem: I couldn't figure out where the `/etc/containers/` and `/usr/share/containers/` folder had come from in the first place. Were they shipped by the OS? Installed by podman or skopeo? Installed by an underlying dependency? How could I figure this out?
+
+Here's how I approached the problem:
+1. I tried to reinstall podman `sudo apt-get install podman`. <br> The command was back, and some of the files had returned but it was not the full list (_and to be honest, I couldnt' remember if those were ones I had personally rebuilt or were installed by the package_).
+1. I then tried reinstalling dependencies (`sudo apt-get --reinstall install <package>`) which were likely candidates like: . This did not work.
+1. I tried reinstalling podman with dependencies. This did not work.
+1. I tried reinstall skopeo. This did not work.
+
+Then I started wondering if these were system packages instead, so I changed gears:
+1. I installed a Debian 10 instance into WSL2. <br>I confirmed that the base install did not have `/etc/containers/` or `/usr/share/containers/`. I began following the podman.io instructions to install podman on Debian, but was immediately hit with permissions problems when trying to add the necessary repository to my apt lists. I had had enough problems at this point and was not about to start solving Debian bullshit too, so the image was immediately deleted after a long profanity-filled tirade.
+
+1. I then installed an Ubuntu 18.04 instance on WSL2. I confirmed that the base OS was missing the two folders (just like Debian). This was good. I did an apt-get update and upgrade, confirming that the folders were still absent (they were). I then immediately installed podman and LOW AND BEHOLD - the two folders were now present and fully populated!
+
+"But, Graham", you may ask, "why did the 18.04 install cause all the files to be installed, whereas your 20.04 reinstall did not?!". I haven't the slighty freaking clue (if you know, please feel free to tell me). Nevertheless, the files I needed to remediate were present (albeit in a different Linux instance). I used a hack and moved the files out of the 18.04 instance into a folder on the Windows host, and then moved those files to the appropriate targets on the 20.04 instance. Problem solved.
+
+I did another round of configuration and now podman seems to work. Hallejuah!
+
 
 
 
