@@ -11,3 +11,4 @@ I won't be covering the underlying theories or explanation of why one should use
 * [01 - Installing Podman & Skopeo on WSL2](./01-install-podman-and-skopeo-on-WSL2.md)
 * [01A - The Configuration Nightmare](./01a-configuration-nightmare.md)
 * [02 - Background Context](./02-background-context.md)
+* [03 - Command Basics](./03-command-basics.md)
