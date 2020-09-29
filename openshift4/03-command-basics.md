@@ -409,3 +409,175 @@ I assume once you are done with the container you need to unmount & exit. I did 
 ```
 
 To be honest, I don't really understand why all of this actually works. I'll try expanding on namespaces, UIDs, GIDs in the [Background](./02-background-context.md) over time.
+
+Update: Turns out the `~/.local/share/containers/storage/overlay/` folder is important! 
+
+Picking up from my `unmount` and `exit` step, I decided I didn't like having all these long-named folders in my overlay folder so ... I `rm -rf`ed them. I then tried to create a new ubuntu container and got an error:
+```bash
+# podman run -d -t ubuntu
+Error: stat /home/deeplearning/.local/share/containers/storage/overlay/cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b: no such file or directory
+```
+
+My system reported that it still had the ubuntu image, so clearly something was up:
+```bash
+# podman images
+REPOSITORY                TAG     IMAGE ID      CREATED       SIZE
+docker.io/library/ubuntu  latest  9140108b62dc  3 days ago    75.3 MB
+docker.io/library/alpine  latest  a24bb4013296  4 months ago  5.85 MB
+```
+
+I assumed I had deleted a folder(s) in the `~/.local/share/containers/storage/overlay/` folder that belonged to the base image rather than the running container I had mounted in my previous efforts. To test this, I purged the local image registry and pulled down a new copy of ubuntu, and then checked the contents of the previously empty `overlay` folder:
+```bash
+# podman pull docker.io/library/ubuntu
+Trying to pull docker.io/library/ubuntu...
+Getting image source signatures
+Copying blob d72e567cc804 done
+Copying blob b6a83d81d1f4 done
+Copying blob 0f3630e5ff08 done
+Copying config 9140108b62 done
+Writing manifest to image destination
+Storing signatures
+9140108b62dc87d9b278bb0d4fd6a3e44c2959646eb966b86531306faa81b09b
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 24
+drwx------ 6 root root 4096 Sep 29 12:04 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 2 root root 4096 Sep 29 12:04 l
+```
+
+I then created a running detached instance of the ubuntu image and checked again:
+```bash
+# podman run -d -t docker.io/library/ubuntu
+8c4b2e29c8e6bb68fadf1f218221e29b77db8b9be01c48c7762cc1219c803c36
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 28
+drwx------ 7 root root 4096 Sep 29 12:04 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 root root 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 root root 4096 Sep 29 12:04 l
+```
+
+There was a new entry! But ... the container id reported by the `run` command didnt' match the layer? Hrm. Let's attach it and see what happens:
+```bash
+# podman mount 8c4b2e29c8e6
+/home/deeplearning/.local/share/containers/storage/overlay/f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993/merged
+```
+
+Ok, so I can conclude the `f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993` folder is tied to the ubuntu container image I instantiated, while the other three folders are related to the base ubuntu image itself. I checked the base ubuntu image with the `podman inspect docker.io/library/ubuntu` command and looked at the $.RootFS entry. The `d42a4fd...` entry matched, but the other two did not. Maybe the others are different because I'm using the overlayfs configuration? No idea.
+```bash
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92",
+                "sha256:90ac32a0d9ab11e7745283f3051e990054616d631812ac63e324c1a36d2677f5",
+                "sha256:782f5f011ddaf2a0bfd38cc2ccabd634095d6e35c8034302d788423f486bb177"
+            ]
+        },
+```
+
+I didn't feel like going much further down this rabbithole, but I wanted to make sure I was on the right track so I repeated the process with an alpine instance.
+```bash
+# podman pull docker.io/library/alpine
+Trying to pull docker.io/library/alpine...
+Getting image source signatures
+Copying blob df20fa9351a1 done
+Copying config a24bb40132 done
+Writing manifest to image destination
+Storing signatures
+a24bb4013296f61e89ba57005a7b3e52274d8edd3ae2077d04395f806b63d83e
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 32
+drwx------ 8 root root 4096 Sep 29 12:16 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 6 root root 4096 Sep 29 12:16 50644c29ef5a27c9a40c393a73ece2479de78325cae7d762ef3cdc19bf42dd0a
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 root root 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 root root 4096 Sep 29 12:16 l
+```
+
+There was a new `50644c29...` entry. When I instantiated the alpine container, another folder appeared `2c3c214...`.
+```bash
+# podman run -d -t docker.io/library/alpine
+8a399101835b8f6a5a797c4221fa0c93f2b27142e87d596faa8394750a3cbeca
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 36
+drwx------ 9 deeplearning deeplearning 4096 Sep 29 12:18 .
+drwx------ 9 deeplearning deeplearning 4096 Sep 27 15:15 ..
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:18 2c3c21491f951807f323ddf34f8de29cc20ccceb3365cd91d0401c36f8e78d11
+drwx------ 6 deeplearning deeplearning 4096 Sep 29 12:16 50644c29ef5a27c9a40c393a73ece2479de78325cae7d762ef3cdc19bf42dd0a
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 deeplearning deeplearning 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 deeplearning deeplearning 4096 Sep 29 12:18 l
+```
+
+Mounting the alpine instance resulted in the system using the ``2c3c214...`:
+```bash
+# podman ps
+CONTAINER ID  IMAGE                            COMMAND    CREATED         STATUS             PORTS   NAMES
+8a399101835b  docker.io/library/alpine:latest  /bin/sh    2 minutes ago   Up 2 minutes ago           pedantic_mirzakhani
+8c4b2e29c8e6  docker.io/library/ubuntu:latest  /bin/bash  16 minutes ago  Up 16 minutes ago          cool_bartik
+
+# podman mount 8a399101835b
+/home/deeplearning/.local/share/containers/storage/overlay/2c3c21491f951807f323ddf34f8de29cc20ccceb3365cd91d0401c36f8e78d11/merged
+```
+
+But what happens if I delete the container instance?
+```bash
+# podman stop 8a399101835b
+8a399101835b8f6a5a797c4221fa0c93f2b27142e87d596faa8394750a3cbeca
+
+# podman ps -a
+CONTAINER ID  IMAGE                            COMMAND    CREATED         STATUS                       PORTS   NAMES
+8a399101835b  docker.io/library/alpine:latest  /bin/sh    5 minutes ago   Exited (137) 11 seconds ago          pedantic_mirzakhani
+8c4b2e29c8e6  docker.io/library/ubuntu:latest  /bin/bash  19 minutes ago  Up 19 minutes ago                    cool_bartik
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 36
+drwx------ 9 root root 4096 Sep 29 12:18 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 5 root root 4096 Sep 29 12:18 2c3c21491f951807f323ddf34f8de29cc20ccceb3365cd91d0401c36f8e78d11
+drwx------ 6 root root 4096 Sep 29 12:16 50644c29ef5a27c9a40c393a73ece2479de78325cae7d762ef3cdc19bf42dd0a
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 root root 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 root root 4096 Sep 29 12:18 l
+
+# podman rm 8a399101835b
+8a399101835b8f6a5a797c4221fa0c93f2b27142e87d596faa8394750a3cbeca
+
+# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 32
+drwx------ 8 root root 4096 Sep 29 12:24 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 6 root root 4096 Sep 29 12:16 50644c29ef5a27c9a40c393a73ece2479de78325cae7d762ef3cdc19bf42dd0a
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 root root 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 root root 4096 Sep 29 12:24 l
+```
+
+Ok, so here's what I can conclude:
+* Podman stores base image layers in `$/.local/share/container/storage/overlay/`
+* This storage path coincides with the `graphroot` and `rootless_storage_path` settings I specified in my `~/.config/containers/storage.conf` file during initial setup.
+* Instantiated containers will also be written to this same folder.
+* The instantiated container folder will disappear when I `podman rm <container>` the container
+* The image folder(s) will be removed when I `podman rmi <image>` the image
+
+_Note to self: cease deleting folders in ~/.local/share/containers/storage/overlay/ !!_
+
