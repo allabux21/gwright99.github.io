@@ -43,14 +43,27 @@ The source code I'll be using is publicly available at [https://github.com/RedHa
 git clone https://github.com/gwright99/DO180-apps
 ```
 
+
+### cGroups
+I'm not even going to attempt to explain this with my current level of Linux knowledge. Go read the [WSL2 Linux kernel authoritative definition](https://github.com/microsoft/WSL2-Linux-Kernel/blob/master/Documentation/admin-guide/cgroup-v2.rst) (and good luck!).
+
+
 ### Linux Namespaces
 Running podman rootless means you need to start tinkering in custom user namespaces. What the heck are these?
 
-The `namespaces` [man page](https://www.mankier.com/7/namespaces) describes them as _"A namespace wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. Changes to the global resource are visible to other processes that are members of the namespace, but are invisible to other processes. One use of namespaces is to implement containers."_. 
+The [namespaces man page](https://www.mankier.com/7/namespaces) describes them as _"A namespace wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. Changes to the global resource are visible to other processes that are members of the namespace, but are invisible to other processes. One use of namespaces is to implement containers."_. 
 
 It further describes the `unshare` command like so _"The unshare(2) system call moves the calling process to a new namespace. If the flags argument of the call specifies one or more of the CLONE_NEW* flags listed below, then new namespaces are created for each flag, and the calling process is made a member of those namespaces. (This system call also implements a number of features unrelated to namespaces.)"_.
 
-This sounds alot like a virtual environment one might use for a Python project (to keep local project packages separate from the main system implementation). By calling `podman unshare`, we are essentially telling Linux to take the podman process and run it in an encapsulated environment where the `deeplearning` user is converted to root. Let's compare a `top` command executed in my ubuntu shell as user `deeplearning`, versus one I've executed after I've run the `podman unshare` command.
+The [user namespaces man page](https://www.mankier.com/7/user_namespaces) describes them as _"~User namespaces isolate security-related identifiers and attributes, in particular, user IDs and group IDs, the root directory, keys, and capabilities. A process's user and group IDs can be different inside and outside a user namespace. In particular, a process can have a normal unprivileged user ID outside a user namespace while at the same time having a user ID of 0 inside the namespace; in other words, the process has full privileges for operations inside the user namespace, but is unprivileged for operations outside the namespace."_
+
+This sounds alot like a virtual environment one might use for a Python project (to keep local project packages separate from the main system implementation). By calling [`podman unshare`](https://www.mankier.com/1/podman-unshare), we are essentially telling Linux to take the podman process and run it in an encapsulated environment where the `deeplearning` user is converted to root and has all the powers of root but ONLY WITHIN that name space. Were a process within the pod manage to break out of the container and gain access to the wider system, that process we be treated as a `deeplearning` process rather than a far more dangerous `root` process. 
+
+For a more in-depth description of podman and user namespaces, see this ['Podman and user namespaces: A marriage made in heaven](https://opensource.com/article/18/12/podman-and-user-namespaces) article by Daniel J. Walsh. It provides a better overview than what I've provided above and further details on:
+* Why podman can use different user namespaces on the same image (_hint: automatic chowning_).
+* How podman removes the user namespace influence when using `podman build` or `podman commit` to push an image to a container registry (where it needs to be root).
+
+Now that you've got a bit of background, let's compare a `top` command executed in my ubuntu shell as user `deeplearning`, versus one I've executed after I've run the `podman unshare` command.
 
 The results of `top` when run as deeplearning.
 
@@ -95,7 +108,8 @@ uid=1000(deeplearning) gid=1000(deeplearning) groups=1000(deeplearning),4(adm),2
 16043 deeplea+  20   0    4112   3268   2852 S   0.0   0.0   0:00.04 bash
 ```
 
-The results of `top` when run as root within the user namespace. Note that the processes that used to belong to `deeplearning` now show as belonging to `root`, and the processes that belonged to `root` now appear to belong to `nobody`.
+The results of `top` when run as root within the user namespace. 
+Note that the processes that used to belong to `deeplearning` now show as belonging to `root`, and the processes that belonged to `root` now appear to belong to `nobody`.
 
 ```bash
 # podman unshare
