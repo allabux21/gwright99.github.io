@@ -43,3 +43,104 @@ The source code I'll be using is publicly available at [https://github.com/RedHa
 git clone https://github.com/gwright99/DO180-apps
 ```
 
+### Linux Namespaces
+Running podman rootless means you need to start tinkering in custom user namespaces. What the heck are these?
+
+The `namespaces` [man page](https://www.mankier.com/7/namespaces) describes them as _"A namespace wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource. Changes to the global resource are visible to other processes that are members of the namespace, but are invisible to other processes. One use of namespaces is to implement containers."_. 
+
+It further describes the `unshare` command like so _"The unshare(2) system call moves the calling process to a new namespace. If the flags argument of the call specifies one or more of the CLONE_NEW* flags listed below, then new namespaces are created for each flag, and the calling process is made a member of those namespaces. (This system call also implements a number of features unrelated to namespaces.)"_.
+
+This sounds alot like a virtual environment one might use for a Python project (to keep local project packages separate from the main system implementation). By calling `podman unshare`, we are essentially telling Linux to take the podman process and run it in an encapsulated environment where the `deeplearning` user is converted to root. Let's compare a `top` command executed in my ubuntu shell as user `deeplearning`, versus one I've executed after I've run the `podman unshare` command.
+
+The results of `top` when run as deeplearning.
+
+```bash
+# whomai
+deeplearning
+
+# id
+uid=1000(deeplearning) gid=1000(deeplearning) groups=1000(deeplearning),4(adm),20(dialout),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),117(netdev),1001(docker)
+
+# top
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+16395 deeplea+  20   0   10888   3716   3140 R   0.3   0.0   0:00.05 top
+    1 root      20   0     900    576    520 S   0.0   0.0   0:00.04 init
+   77 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+   78 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+   79 deeplea+  20   0  742296  27316  17556 S   0.0   0.1   0:07.96 docker
+   80 root      20   0       0      0      0 Z   0.0   0.0   0:00.01 init
+   82 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 init
+  176 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  177 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  178 deeplea+  20   0  742296  29592  18016 S   0.0   0.2   0:07.63 docker
+  179 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 init
+  195 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  196 root      20   0  639152  26624  10420 S   0.0   0.1   0:05.08 docker-desktop-
+  208 root      20   0     892     80     16 S   0.0   0.0   0:04.60 init
+  311 deeplea+  20   0   41204   1300   1052 S   0.0   0.0   0:00.00 podman pause
+  374 deeplea+  20   0    7096   2464   2104 S   0.0   0.0   0:00.00 dbus-daemon
+ 7101 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+ 7102 root      20   0     892     80     16 S   0.0   0.0   0:06.12 init
+ 7103 deeplea+  20   0   11804   7000   3544 S   0.0   0.0   0:20.04 bash
+ 7447 root      20   0     892     80     16 S   0.0   0.0   0:00.00 init
+ 7448 root      20   0     892     80     16 S   0.0   0.0   0:00.46 init
+ 7449 deeplea+  20   0   10292   5412   3516 S   0.0   0.0   0:00.64 bash
+ 7514 deeplea+  20   0   41204   1168    920 S   0.0   0.0   0:00.00 podman pause
+14875 root      20   0     900     88     16 S   0.0   0.0   0:00.00 init
+14876 root      20   0     900     88     16 S   0.0   0.0   0:01.52 init
+14877 deeplea+  20   0   11088   6116   3412 S   0.0   0.0   0:00.96 bash
+16026 deeplea+  20   0    4672   1916   1308 S   0.0   0.0   0:00.03 fuse-overlayfs
+16029 deeplea+  20   0    2584   1680   1556 S   0.0   0.0   0:00.75 slirp4netns
+16032 deeplea+  20   0   80448   1956   1688 S   0.0   0.0   0:00.00 conmon
+16043 deeplea+  20   0    4112   3268   2852 S   0.0   0.0   0:00.04 bash
+```
+
+The results of `top` when run as root within the user namespace. Note that the processes that used to belong to `deeplearning` now show as belonging to `root`, and the processes that belonged to `root` now appear to belong to `nobody`.
+
+```bash
+# podman unshare
+   (prompt switches to root@DESKTOP-MC34QIL)
+   
+# whomai
+root
+
+# id
+uid=0(root) gid=0(root) groups=0(root),65534(nogroup)
+
+# top
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+    1 nobody    20   0     900    576    520 S   0.0   0.0   0:00.04 init
+   77 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+   78 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+   79 root      20   0  742296  27316  17556 S   0.0   0.1   0:07.98 docker
+   80 nobody    20   0       0      0      0 Z   0.0   0.0   0:00.01 init
+   82 nobody    20   0       0      0      0 Z   0.0   0.0   0:00.00 init
+  176 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  177 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  178 root      20   0  742296  29592  18016 S   0.0   0.2   0:07.64 docker
+  179 nobody    20   0       0      0      0 Z   0.0   0.0   0:00.00 init
+  195 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+  196 nobody    20   0  639152  26624  10420 S   0.0   0.1   0:05.12 docker-desktop-
+  208 nobody    20   0     892     80     16 S   0.0   0.0   0:04.60 init
+  311 root      20   0   41204   1300   1052 S   0.0   0.0   0:00.00 podman pause
+  374 root      20   0    7096   2464   2104 S   0.0   0.0   0:00.00 dbus-daemon
+ 7101 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+ 7102 nobody    20   0     892     80     16 S   0.0   0.0   0:06.12 init
+ 7103 root      20   0   11804   7000   3544 S   0.0   0.0   0:20.04 bash
+ 7447 nobody    20   0     892     80     16 S   0.0   0.0   0:00.00 init
+ 7448 nobody    20   0     892     80     16 S   0.0   0.0   0:00.46 init
+ 7449 root      20   0   10292   5412   3516 S   0.0   0.0   0:00.64 bash
+ 7514 root      20   0   41204   1168    920 S   0.0   0.0   0:00.00 podman pause
+14875 nobody    20   0     900     88     16 S   0.0   0.0   0:00.00 init
+14876 nobody    20   0     900     88     16 S   0.0   0.0   0:01.56 init
+14877 root      20   0   11088   6116   3412 S   0.0   0.0   0:00.98 bash
+16026 root      20   0    4672   1916   1308 S   0.0   0.0   0:00.03 fuse-overlayfs
+16029 root      20   0    2584   1680   1556 S   0.0   0.0   0:00.77 slirp4netns
+16032 root      20   0   80448   1956   1688 S   0.0   0.0   0:00.00 conmon
+16043 root      20   0    4112   3268   2852 S   0.0   0.0   0:00.04 bash
+16405 root      20   0 1335804  42764  26240 S   0.0   0.2   0:00.31 podman
+16415 root      20   0   10008   5008   3308 S   0.0   0.0   0:00.01 bash
+16422 root      20   0   10888   3684   3112 R   0.0   0.0   0:00.00 top
+```
+
+
