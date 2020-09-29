@@ -15,6 +15,18 @@ The Linux kernel uses several technologies to isolate a process inside a server,
 From a Linux kernel perspective, a container is simply a process with some restrictions. A container process is not a binary file, however, but rather a file-system bundle that contains all the dependencies needed to execute the process (including files in the file system, necessary packages, resources, and kernel modules).
 
 
+## Docker, Open Container Initiative (OCI), and CRI-O
+Have a look at Avijit Sarkar's [Docker and OCI Runtimes](https://medium.com/@avijitsarkar123/docker-and-oci-runtimes-a9c23a5646d6) and Computing For Geek's [Docker vs CRI-O vs Containerd](https://computingforgeeks.com/docker-vs-cri-o-vs-containerd/) posts and follow the links depending on what you want to learn.
+
+In a nutshell:
+* The Docker engine (supposedly pre-v1.11.0) was responsible for all aspects of container management (i.e. image management, lifecycle, creation, resources, etc). 
+* The industry decided it wanted open standards around container implementations (namely formats and runtime), and somehow convinced Docker to let the [Open Container Initiative](https://opencontainers.org/about/overview/) guide standards, while Docker reengineered its monolith into smaller componnents that comply with OCI standards.
+* Early Kubernetes implementations were bound to a specific container runtime, prompting the creation of the _Container Runtime Interface_ which allows kubelets to use different OCI-compliant runtimes without needing to recompile Kubernetes.
+* [CRI-O](https://cri-o.io/) does ... something. Honestly, it just seems like a Docker competitor not controlled by Docker, that is well optimized for K8s. 
+
+How is CRI-O different than podman? Dunno, and not gonna waste brainpower on it right now - I'll come back and figure this out once I can stand up multicontainer services on Openshift in my sleep.
+
+
 ### Podman Features
 Podman is primarily used to interact with container images and the resulting container processes. Some salient key points:
 * It implements the [Openshift Container Initiative](https://www.opencontainers.org) (OCI) image specification.
