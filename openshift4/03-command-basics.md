@@ -269,32 +269,141 @@ The Skopeo output looks different than what we saw when we inspected through pod
 #### Mount a volume to your container
 
 #### Mount a running container to your local file system
-This was something I didn't learn about during the training but saw during subsequent reading of the Red Hat docs. Apparently you can invoke a container in detached mode and then mount it your filesystem to explore it without having to connect to it via an `exec` command.
+This was something I didn't learn about during the training but saw during subsequent reading of the Red Hat docs. Apparently you can invoke a container in detached mode and then mount it your filesystem to explore it without having to connect to it via an `exec` command. Cool!
 
-The Red Hat example:
+The problem is that this doesn't quite work out-of-the-box when you are running a rootless podman. I was able to get this working with some minor modifications (specifically the `unshare` command):
 ```bash
-# podman run -d registry.redhat.io/rhel8/rsyslog
+# podman images
+REPOSITORY                TAG     IMAGE ID      CREATED       SIZE
+docker.io/library/ubuntu  latest  9140108b62dc  3 days ago    75.3 MB
+docker.io/library/alpine  latest  a24bb4013296  4 months ago  5.85 MB
 
 # podman ps
-CONTAINER ID IMAGE             COMMAND         CREATED        STATUS      PORTS NAMES
-1cc92aea398d ...rsyslog:latest /bin/rsyslog.sh 37 minutes ago Up 1 day ago      myrsyslog
+CONTAINER ID  IMAGE                            COMMAND    CREATED       STATUS           PORTS   NAMES
+654d90bbf6a7  docker.io/library/ubuntu:latest  /bin/bash  13 hours ago  Up 13 hours ago          epic_bose
 
-# podman mount 1cc92aea398d
-/var/lib/containers/storage/overlay/65881e78.../merged
+# podman unmount
+   (this put my shell into a user namespace where I was treated as root, with the prompt showing "root@HOST")
+   
+# podman mount 654d90bbf6a7
+/home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
 
-# ls /var/lib/containers/storage/overlay/65881e78*/merged
-bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+# ls /home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
+bin  boot  dev  etc  home  lib  lib32  lib64  libx32  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+
+# exit 
+    (this exits the user namespace and returns to my normal shell)
+    
+# ls /home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
+    (nothing)
 ```
 
-It looks like you can even check the installed packages once the container is mounted!
+The Red Hat example also had a way to check the packages installed on the mounted rhel image via `# rpm -qa --root=/var/lib/containers/storage/overlay/65881e78.../merged`. Since Ubuntu doesn't have rpm, I had to modify the command to work with `apt`:
 ```bash
-# rpm -qa --root=/var/lib/containers/storage/overlay/65881e78.../merged
+# apt list --installed -o Dir=/home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
 
-redhat-release-server-7.6-4.el7.x86_64
-filesystem-3.2-25.el7.x86_64
-basesystem-10.0-7.el7.noarch
-ncurses-base-5.9-14.20130511.el7_4.noarch
-glibc-common-2.17-260.el7.x86_64
-nspr-4.19.0-1.el7_5.x86_64
-libstdc++-4.8.5-36.el7.x86_64
+Listing... Done
+adduser/now 3.118ubuntu2 all [installed,local]
+apt/now 2.0.2ubuntu0.1 amd64 [installed,local]
+base-files/now 11ubuntu5.2 amd64 [installed,local]
+base-passwd/now 3.5.47 amd64 [installed,local]
+bash/now 5.0-6ubuntu1.1 amd64 [installed,local]
+bsdutils/now 1:2.34-0.1ubuntu9.1 amd64 [installed,local]
+bzip2/now 1.0.8-2 amd64 [installed,local]
+coreutils/now 8.30-3ubuntu2 amd64 [installed,local]
+dash/now 0.5.10.2-6 amd64 [installed,local]
+debconf/now 1.5.73 all [installed,local]
+debianutils/now 4.9.1 amd64 [installed,local]
+diffutils/now 1:3.7-3 amd64 [installed,local]
+dpkg/now 1.19.7ubuntu3 amd64 [installed,local]
+e2fsprogs/now 1.45.5-2ubuntu1 amd64 [installed,local]
+fdisk/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+findutils/now 4.7.0-1ubuntu1 amd64 [installed,local]
+gcc-10-base/now 10-20200411-0ubuntu1 amd64 [installed,local]
+gpgv/now 2.2.19-3ubuntu2 amd64 [installed,local]
+grep/now 3.4-1 amd64 [installed,local]
+gzip/now 1.10-0ubuntu4 amd64 [installed,local]
+hostname/now 3.23 amd64 [installed,local]
+init-system-helpers/now 1.57 all [installed,local]
+libacl1/now 2.2.53-6 amd64 [installed,local]
+libapt-pkg6.0/now 2.0.2ubuntu0.1 amd64 [installed,local]
+libattr1/now 1:2.4.48-5 amd64 [installed,local]
+libaudit-common/now 1:2.8.5-2ubuntu6 all [installed,local]
+libaudit1/now 1:2.8.5-2ubuntu6 amd64 [installed,local]
+libblkid1/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+libbz2-1.0/now 1.0.8-2 amd64 [installed,local]
+libc-bin/now 2.31-0ubuntu9.1 amd64 [installed,local]
+libc6/now 2.31-0ubuntu9.1 amd64 [installed,local]
+libcap-ng0/now 0.7.9-2.1build1 amd64 [installed,local]
+libcom-err2/now 1.45.5-2ubuntu1 amd64 [installed,local]
+libcrypt1/now 1:4.4.10-10ubuntu4 amd64 [installed,local]
+libdb5.3/now 5.3.28+dfsg1-0.6ubuntu2 amd64 [installed,local]
+libdebconfclient0/now 0.251ubuntu1 amd64 [installed,local]
+libext2fs2/now 1.45.5-2ubuntu1 amd64 [installed,local]
+libfdisk1/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+libffi7/now 3.3-4 amd64 [installed,local]
+libgcc-s1/now 10-20200411-0ubuntu1 amd64 [installed,local]
+libgcrypt20/now 1.8.5-5ubuntu1 amd64 [installed,local]
+libgmp10/now 2:6.2.0+dfsg-4 amd64 [installed,local]
+libgnutls30/now 3.6.13-2ubuntu1.3 amd64 [installed,local]
+libgpg-error0/now 1.37-1 amd64 [installed,local]
+libhogweed5/now 3.5.1+really3.5.1-2 amd64 [installed,local]
+libidn2-0/now 2.2.0-2 amd64 [installed,local]
+liblz4-1/now 1.9.2-2 amd64 [installed,local]
+liblzma5/now 5.2.4-1ubuntu1 amd64 [installed,local]
+libmount1/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+libncurses6/now 6.2-0ubuntu2 amd64 [installed,local]
+libncursesw6/now 6.2-0ubuntu2 amd64 [installed,local]
+libnettle7/now 3.5.1+really3.5.1-2 amd64 [installed,local]
+libp11-kit0/now 0.23.20-1build1 amd64 [installed,local]
+libpam-modules-bin/now 1.3.1-5ubuntu4.1 amd64 [installed,local]
+libpam-modules/now 1.3.1-5ubuntu4.1 amd64 [installed,local]
+libpam-runtime/now 1.3.1-5ubuntu4.1 all [installed,local]
+libpam0g/now 1.3.1-5ubuntu4.1 amd64 [installed,local]
+libpcre2-8-0/now 10.34-7 amd64 [installed,local]
+libpcre3/now 2:8.39-12build1 amd64 [installed,local]
+libprocps8/now 2:3.3.16-1ubuntu2 amd64 [installed,local]
+libseccomp2/now 2.4.3-1ubuntu3.20.04.3 amd64 [installed,local]
+libselinux1/now 3.0-1build2 amd64 [installed,local]
+libsemanage-common/now 3.0-1build2 all [installed,local]
+libsemanage1/now 3.0-1build2 amd64 [installed,local]
+libsepol1/now 3.0-1 amd64 [installed,local]
+libsmartcols1/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+libss2/now 1.45.5-2ubuntu1 amd64 [installed,local]
+libstdc++6/now 10-20200411-0ubuntu1 amd64 [installed,local]
+libsystemd0/now 245.4-4ubuntu3.2 amd64 [installed,local]
+libtasn1-6/now 4.16.0-2 amd64 [installed,local]
+libtinfo6/now 6.2-0ubuntu2 amd64 [installed,local]
+libudev1/now 245.4-4ubuntu3.2 amd64 [installed,local]
+libunistring2/now 0.9.10-2 amd64 [installed,local]
+libuuid1/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+libzstd1/now 1.4.4+dfsg-3 amd64 [installed,local]
+login/now 1:4.8.1-1ubuntu5.20.04 amd64 [installed,local]
+logsave/now 1.45.5-2ubuntu1 amd64 [installed,local]
+lsb-base/now 11.1.0ubuntu2 all [installed,local]
+mawk/now 1.3.4.20200120-2 amd64 [installed,local]
+mount/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+ncurses-base/now 6.2-0ubuntu2 all [installed,local]
+ncurses-bin/now 6.2-0ubuntu2 amd64 [installed,local]
+passwd/now 1:4.8.1-1ubuntu5.20.04 amd64 [installed,local]
+perl-base/now 5.30.0-9build1 amd64 [installed,local]
+procps/now 2:3.3.16-1ubuntu2 amd64 [installed,local]
+sed/now 4.7-1 amd64 [installed,local]
+sensible-utils/now 0.0.12+nmu1 all [installed,local]
+sysvinit-utils/now 2.96-2.1ubuntu1 amd64 [installed,local]
+tar/now 1.30+dfsg-7 amd64 [installed,local]
+ubuntu-keyring/now 2020.02.11.2 all [installed,local]
+util-linux/now 2.34-0.1ubuntu9.1 amd64 [installed,local]
+zlib1g/now 1:1.2.11.dfsg-2ubuntu1 amd64 [installed,local]
+```
+
+I assume once you are done with the container you need to unmount & exit. I did the following and didn't get any errors, but the mount path remained on the host system (albeit without any of the container files). Not sure if I'm missing a step here, I'll come back when I know more:
+```bash
+# podman unmount 654d90bbf6a7
+
+# podman exit
+    (this drops you back into the normal shell)
+    
+# root@HOST:~$ ls /home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
+    (nothing)
 ```
