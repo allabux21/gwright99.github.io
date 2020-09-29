@@ -61,7 +61,7 @@ quay.io     quay.io/beyond/alpine                                               
 quay.io     quay.io/eschen42/alpine-cbuilder                 # A build environment for musl to target Alp...   0
 ```
 
-In most cases, I want to use an official base image released by the maintaining organization. In such cases, I can use the `--filter=is-official` flag to only return 'official' images. Executing `podman search --filter=-is-official alpine` cuts the previous list of 50 results down to one:
+In most cases, I want to use an official base image released by the maintaining organization. In such cases, I can use the `--filter=is-official` flag to only return 'official' images. Executing `podman search --filter=is-official alpine` cuts the previous list of 50 results down to one:
 ```bash
 INDEX       NAME                       DESCRIPTION                                       STARS   OFFICIAL   AUTOMATED
 docker.io   docker.io/library/alpine   A minimal Docker image based on Alpine Linux...   6793    [OK]     
