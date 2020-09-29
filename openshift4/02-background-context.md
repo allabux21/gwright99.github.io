@@ -2,6 +2,7 @@
 
 Although I won't be explaining basic container details/concepts, there are a few facets of Podman/Openshift implementation that should be called out due to their impact on implementation efforts.
 
+
 ### Linux Kernel Security Features
 The Linux kernel uses several technologies to isolate a process inside a server, while still allowing that process access to necessary system resources. These technologies include:
 | Technology | Description | Implication |
@@ -13,6 +14,7 @@ The Linux kernel uses several technologies to isolate a process inside a server,
 
 From a Linux kernel perspective, a container is simply a process with some restrictions. A container process is not a binary file, however, but rather a file-system bundle that contains all the dependencies needed to execute the process (including files in the file system, necessary packages, resources, and kernel modules).
 
+
 ### Podman Features
 Podman is primarily used to interact with container images and the resulting container processes. Some salient key points:
 * It implements the [Openshift Container Initiative](https://www.opencontainers.org) (OCI) image specification.
@@ -20,6 +22,7 @@ Podman is primarily used to interact with container images and the resulting con
 * It shadows the Docker CLI command syntax
 * It is Kubernetes-compatible
 * Can run as rootless (_requiring the use of sudo on all CLI commands_)
+
 
 ### Kubernetes Features
 | Feature | Description | Implication |
@@ -62,6 +65,8 @@ This sounds alot like a virtual environment one might use for a Python project (
 For a more in-depth description of podman and user namespaces, see this ['Podman and user namespaces: A marriage made in heaven](https://opensource.com/article/18/12/podman-and-user-namespaces) article by Daniel J. Walsh. It provides a better overview than what I've provided above and further details on:
 * Why podman can use different user namespaces on the same image (_hint: automatic chowning_).
 * How podman removes the user namespace influence when using `podman build` or `podman commit` to push an image to a container registry (where it needs to be root).
+
+If you are trying to [run a rootless podman with an NFS share](https://www.redhat.com/sysadmin/rootless-podman-nfs), Walsh has a different article. I'm not running NFS and I already have enough problems to deal with, so I'm ignoring it for now but mention it just in case it's needed for later reference (_hint: It seems to be related to UID/GID clashes which is harder to do since you've got to account for the decisions of a local kernel AND remote kernel_).
 
 Now that you've got a bit of background, let's compare a `top` command executed in my ubuntu shell as user `deeplearning`, versus one I've executed after I've run the `podman unshare` command.
 
