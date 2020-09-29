@@ -407,3 +407,5 @@ I assume once you are done with the container you need to unmount & exit. I did 
 # root@HOST:~$ ls /home/deeplearning/.local/share/containers/storage/overlay/4731890665c7c418c04ffdf57b6f3d963cf82f3f889511753db2b916169377f0/merged
     (nothing)
 ```
+
+To be honest, I don't really understand why all of this actually works. I'll try expanding on namespaces, UIDs, GIDs in the [Background](./02-background-context.md) over time.
