@@ -581,3 +581,29 @@ Ok, so here's what I can conclude:
 
 _Note to self: cease deleting folders in ~/.local/share/containers/storage/overlay/ !!_
 
+As a follow-up, I was reviewing the entries and wondered why I saw that the image folders belonged to root - hadn't I been doing this rootless?! I haven't included the CLI prompt in my system outpot, but most of this material was taken AFTER I had executed `podman unshare` (which put me into a custom user namespace where I was treated as root). Once I exited the custom name space (reverting back to my normal shell where I'm user `deeplearning`), permissions began showing as belonging to the `deeplearning` UID and GID:
+```bash
+root@DESKTOP-MC34QIL:~# ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 28
+drwx------ 7 root root 4096 Sep 29 12:30 .
+drwx------ 9 root root 4096 Sep 27 15:15 ..
+drwx------ 5 root root 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 root root 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 root root 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 root root 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 root root 4096 Sep 29 12:30 l
+
+root@DESKTOP-MC34QIL:~# exit
+exit
+
+deeplearning@DESKTOP-MC34QIL:~$ ls -al /home/deeplearning/.local/share/containers/storage/overlay/
+total 28
+drwx------ 7 deeplearning deeplearning 4096 Sep 29 12:30 .
+drwx------ 9 deeplearning deeplearning 4096 Sep 27 15:15 ..
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 69ea2c30b91fcfb00060eac2734467275f0e3549858a877a92efad72c7cc21ea
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 cbca8e9eddab4a2a6f403394c59c0be317a50c5ee826c24cfbc7f7519686148b
+drwx------ 6 deeplearning deeplearning 4096 Sep 29 12:04 d42a4fdf4b2ae8662ff2ca1b695eae571c652a62973c1beb81a296a4f4263d92
+drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 f7cf6801755e051f1ca5d0111572d432a332fdebbdefe46dd64d6883961c7993
+drwx------ 2 deeplearning deeplearning 4096 Sep 29 12:30 l
+```
+
