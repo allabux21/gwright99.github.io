@@ -28,11 +28,12 @@ I'm dumping various commands at the top for reference, with additional commentar
 # podman mount <CONTAINER ID FROM podman ps>
 # podman unmount <CONTAINER ID FROM podman ps>
 
-THIS DID NOT STORE DATA IN VOLUME
-# podman run -d -v /home/deeplearning/PodmanVolumes/mariadb-data:/var/lib/mysql/data:Z -e MYSQL_USER=user1 -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=t00r -p 3306:3306 docker.io/library/mariadb
+THIS DID NOT STORE DATA IN VOLUME (had to remove '/data:Z' from /var/lib/mysql/data
+# podman run -d -v /home/deeplearning/PodmanVolumes/mariadb-data:/var/lib/mysql -e MYSQL_USER=user1 -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=t00r -p 3306:3306 docker.io/library/mariadb
 #     mysql --user=user1 --password=pass -h 127.0.0.1 -P 3306 -t db
 #     CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
 #     INSERT INTO pet (name, owner) VALUES ('graham', 'fulgencio');
+
 
 ```
 
