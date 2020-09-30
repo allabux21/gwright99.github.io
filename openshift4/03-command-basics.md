@@ -768,3 +768,52 @@ CONTAINER ID  IMAGE                             COMMAND  CREATED        STATUS  
 
 As you can see, Podman automatically invoked a `chown` on the /home/deepleearning/PodmanVolumes/mariadb-test/ folder, setting it to another UID. The newly-instantiated MariaDB database was then able to save its initial state and the additional record I later added to the database. When I deleted the first container and replaced it with another, the new MariaDB container was able to verify my user identity and return the data I had saved via the first container. Success!
 
+### Limiting Container Resources
+While this focused on the `docker` tool, [MariaDB and Docker use cases, Part 1](https://mariadb.com/resources/blog/mariadb-and-docker-use-cases-part-1/) has two interesting ideas that I'll take a second to note:
+1. Running instances concurrently on the same host.<br>The article mentions that solutions like MySQL Sandbox do exist to facilitate this, but it's much easier to just spin up three containers, with each pulling a different image based on the iamge tage (e.g. docker.io/library/mariadb:10.0) and mapping a different host port.
+1. Resource limiting like:
+    1.1. CPU percentage sharing (via `--cpu-shares`)
+    1.1. CPU assignemtn (via `--cpuset-cpus`)
+    1.1. Block IO sharing (via `--blkio-weight`)
+    1.1. Memory limitation (via `--memory`)
+    
+### Running Pods Rather than Containers
+While Kubernetes is the likely pod-wrangling solution for Production systems, I don't particularly have to run it locally if I can avoid it. As on might have figured out from its name, podman ("pod manager") can do this too!
+
+If running multiple containers locally, using pods starts to make sense to facilitate networking between containers. [Podman: Managing pods and containers in a local container runtime](https://developers.redhat.com/blog/2019/01/15/podman-managing-containers-pods/), an early 2019 article by Brent Baude, describes how it works:
+* Each pod contains an "Infra Container" that is responsible for:
+    * Reserving the namespace associated with the pod, other vital attributes like port bindings, cgroup values, etc.
+    * Used by Podman to connect other containers to the pod.
+    * Is used to control the state of the POD (whereas you can still turn individual container on/off without impacting the overall pod state).
+
+The Baude article is a little out-of-date: the results returned by `podman pod create --help` are a bit different for Podman v2.1.0 (which I'm using) versus whatever version Baude was using at the start of 2019, but it's close enough to still be worth reading. I followed Baude's material, re-executing the commands against my own version to see what still worked (I left in my previous MariaDB singleton container to see the differences when running `ps`:
+
+```bash
+# podman create pod
+e94689355ac7c6954e2d86335cba190230f7144112ef6f207c156be0a73274c7
+
+# podman pod list
+POD ID        NAME         STATUS   CREATED         # OF CONTAINERS  INFRA ID
+e94689355ac7  bold_banach  Created  48 seconds ago  1                a4fa2fc0619d
+
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND  CREATED         STATUS          PORTS                   NAMES               POD ID        PODNAME
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                       11 minutes ago  Created                                 e94689355ac7-infra  e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld   2 hours ago     Up 2 hours ago  0.0.0.0:3306->3306/tcp  flamboyant_ellis  
+
+# podman run -d -t --pod bold_banach docker.io/library/alpine top
+a700757aca10259f9ef1ebfb1dd484e76c53dec03ab92a4324bb955770262740
+
+# podman pod ps
+POD ID        NAME         STATUS   CREATED         # OF CONTAINERS  INFRA ID
+e94689355ac7  bold_banach  Running  13 minutes ago  2                a4fa2fc0619d
+
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND  CREATED         STATUS            PORTS                   NAMES               POD ID        PODNAME
+a700757aca10  docker.io/library/alpine:latest   top      2 minutes ago   Up 2 minutes ago                          crazy_shtern        e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                       15 minutes ago  Up 2 minutes ago                          e94689355ac7-infra  e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld   2 hours ago     Up 2 hours ago    0.0.0.0:3306->3306/tcp  flamboyant_ellis 
+```
+
+Looks like all the commands are still working at this point. We've created a pod (instantiated with its own infra pof), and then added an alpine instance. But how do I make the pod DO something?
+
