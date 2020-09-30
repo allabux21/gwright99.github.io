@@ -1,6 +1,6 @@
 ## Background Context
 
-Although I won't be explaining basic container details/concepts, there are a few facets of Podman/Openshift implementation that should be called out due to their impact on implementation efforts.
+Although I won't be explaining the basics of containers (e.g. "this is your OS with a VM vs. your OS with containers"), I do need to cover certain container-related concepts due to their impact on my podman implementation efforts.
 
 
 ### Linux Kernel Security Features
@@ -22,7 +22,7 @@ In a nutshell:
 * The Docker engine (supposedly pre-v1.11.0) was responsible for all aspects of container management (i.e. image management, lifecycle, creation, resources, etc). 
 * The industry decided it wanted open standards around container implementations (namely formats and runtime), and somehow convinced Docker to let the [Open Container Initiative](https://opencontainers.org/about/overview/) guide standards, while Docker reengineered its monolith into smaller componnents that comply with OCI standards.
 * Early Kubernetes implementations were bound to a specific container runtime, prompting the creation of the _Container Runtime Interface_ which allows kubelets to use different OCI-compliant runtimes without needing to recompile Kubernetes.
-* [CRI-O](https://cri-o.io/) does ... something. Honestly, it just seems like a Docker competitor not controlled by Docker, that is well optimized for K8s. 
+* [CRI-O](https://cri-o.io/) does ... something. Honestly, it just seems like a Docker competitor not controlled by Docker. It also happensto be well-optimized for K8s. 
 
 How is CRI-O different than podman? Dunno, and not gonna waste brainpower on it right now - I'll come back and figure this out once I can stand up multicontainer services on Openshift in my sleep.
 
@@ -174,4 +174,15 @@ uid=0(root) gid=0(root) groups=0(root),65534(nogroup)
 16422 root      20   0   10888   3684   3112 R   0.0   0.0   0:00.00 top
 ```
 
+### Linux Namespaces Part 2
+I found another Dan Walsh article that requires mentioning: [Running rootless Podman as a non-root user](https://www.redhat.com/sysadmin/rootless-podman-makes-sense). 
 
+I had to read this a few times to make sure I really grokked it. A reader had asked for help figuring out how to run in container where:
+* Their podman instance was running rootless.
+* The process running inside the container was `postgres` instead of `root`.
+* There was UID mismatch when trying to mount a folder in the user's /home/ directory into the container, where `podman unshare` was changing the ownership of the folder to `root` (UID 0) within the user namespace, but the container process was `postgres` (UID 26). This meant that the container process could not write data to the mounted directory. 
+* Walsh ultimately solves the proble with `podman unshare chown 26:26 ...` 
+
+I'm not 100% on why this works. I'm not even sure I need this (I plan to let my the processes inside my containers run as root). I'm making a note about this solution though just in case I run into problem later on that could be attributable to this situation.
+
+Update: A newer (June 18, 2020) article by Walsh, [Should you use the --user flag in rootless containers?](https://www.redhat.com/sysadmin/user-flag-rootless-containers) identifies the `--userns=keep-id` flag that tells Podman to create a user namespace where the current rootless use's UID:GID map to the same values in the container (_which results in the loss of root capabilities, but which may be regained via us of 'su' and/or 'sudo'
