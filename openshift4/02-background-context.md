@@ -35,6 +35,8 @@ Podman is primarily used to interact with container images and the resulting con
 * It is Kubernetes-compatible
 * Can run as rootless (_requiring the use of sudo on all CLI commands_)
 
+See [shortcomings of rootless Podman](https://github.com/containers/podman/blob/master/rootless.md) here.
+
 
 ### Kubernetes Features
 | Feature | Description | Implication |
@@ -185,4 +187,4 @@ I had to read this a few times to make sure I really grokked it. A reader had as
 
 I'm not 100% on why this works. I'm not even sure I need this (I plan to let my the processes inside my containers run as root). I'm making a note about this solution though just in case I run into problem later on that could be attributable to this situation.
 
-Update: A newer (June 18, 2020) article by Walsh, [Should you use the --user flag in rootless containers?](https://www.redhat.com/sysadmin/user-flag-rootless-containers) identifies the `--userns=keep-id` flag that tells Podman to create a user namespace where the current rootless use's UID:GID map to the same values in the container (_which results in the loss of root capabilities, but which may be regained via us of 'su' and/or 'sudo'
+Update: A newer (June 18, 2020) article by Walsh, [Should you use the --user flag in rootless containers?](https://www.redhat.com/sysadmin/user-flag-rootless-containers) identifies the `--userns=keep-id` flag that tells Podman to create a user namespace where the current rootless use's UID:GID map to the same values in the container (_which results in the loss of root capabilities, but which may be regained via us of 'su' and/or 'sudo'_).
