@@ -1,5 +1,27 @@
 ## Podman Command Basics
 
+I'm dumping various commands at the top for reference, with additional commentary below
+```bash
+# podman search alpine
+# podman search --filter=is-official alpine
+# podman search --filter=-is-official --no-trunc alpine
+# podman search docker.io/postgresql-10 --limit 5
+
+# podman login github.io
+# podman search github.io/
+
+# podman pull docker.io/library/alpine:latest
+# podman images
+# podman inspect docker.io/library/alpine | less
+# skopeo inspect docker://docker.io/library/alpine
+
+# podman run -d -t docker.io/library/ubuntu
+# podman ps -a
+# podman unshare
+# podman mount <CONTAINER ID FROM podman ps>
+# podman unmount <CONTAINER ID FROM podman ps>
+```
+
 ### Searching for and pulling images
 For full details on searching for images via podman, see the official [Red Hat documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/building_running_and_managing_containers/working-with-container-images_building-running-and-managing-containers). For my own purposes, I'll highlight and expand upon some of the tool's behaviours
 
@@ -282,7 +304,7 @@ docker.io/library/alpine  latest  a24bb4013296  4 months ago  5.85 MB
 CONTAINER ID  IMAGE                            COMMAND    CREATED       STATUS           PORTS   NAMES
 654d90bbf6a7  docker.io/library/ubuntu:latest  /bin/bash  13 hours ago  Up 13 hours ago          epic_bose
 
-# podman unmount
+# podman unshare
    (this put my shell into a user namespace where I was treated as root, with the prompt showing "root@HOST")
    
 # podman mount 654d90bbf6a7
