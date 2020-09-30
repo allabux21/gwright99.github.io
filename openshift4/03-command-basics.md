@@ -644,3 +644,127 @@ drwx------ 5 deeplearning deeplearning 4096 Sep 29 12:04 f7cf6801755e051f1ca5d01
 drwx------ 2 deeplearning deeplearning 4096 Sep 29 12:30 l
 ```
 
+### Set up database with stateful storage
+Stateless containers are great but I'm going to need to save state at some point, so I set about quickly figuring this out.
+
+Older articles (circa 2018, like the [Managing containerized system services with Podman](https://developers.redhat.com/blog/2018/11/29/managing-containerized-system-services-with-podman/)) note a step that requires changing the ownership of the local volume that is being mounted into the container. This is so that the container process can successfully write data into the folder, ensuring persistence should that container ever be destroyed. 
+
+Given that I'm experimented with Podman late September 2020, was this still true? I set out to find out. To do my test I needed to:
+* Download a database container image (_I chose mariadb since I had already seen a few steps involved in setting up an instance_)
+* Mount a local volume inside the container, where the mariadb process stored its data
+* Add a record to the database
+* Exit and destroy the container
+* Instantiate a new container image, using the same mount parameter as before
+* See if the data had persisted
+
+```bash
+# podman pull docker.io/library/mariadb
+Trying to pull docker.io/library/mariadb...
+Getting image source signatures
+Copying blob d72e567cc804 skipped: already exists
+...
+Copying config 41fa9265d4 done
+Writing manifest to image destination
+Storing signatures
+41fa9265d4dfb214f0a79ee919392687d09babc3522df21fce946292f9c8149c
+
+# mkdir -p ~/PodmanVolume/mariadb-data
+
+# ls -al /home/deeplearning/PodmanVolumes
+drwxr-xr-x  4 deeplearning deeplearning 4096 Sep 30 12:32 .
+drwxr-xr-x 14 deeplearning deeplearning 4096 Sep 30 16:07 ..
+drwxr-xr-x  5 deeplearning deeplearning 4096 Sep 30 12:52 mariadb-data
+
+# podman run -d -v /home/deeplearning/PodmanVolumes/mariadb-data:/var/lib/mysql -e MYSQL_USER=user1 -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=t00r -p 3306:3306 docker.io/library/mariadb
+
+# podman ps
+CONTAINER ID  IMAGE                             COMMAND  CREATED         STATUS             PORTS                   NAMES
+2c9b9f7bac39  docker.io/library/mariadb:latest  mysqld   13 minutes ago  Up 13 minutes ago  0.0.0.0:3306->3306/tcp  eager_lamarr
+
+# ls -al /home/deeplearning/PodmanVolumes
+drwxr-xr-x  4 deeplearning deeplearning 4096 Sep 30 12:32 .
+drwxr-xr-x 14 deeplearning deeplearning 4096 Sep 30 16:07 ..
+drwxr-xr-x  5       100998 deeplearning 4096 Sep 30 16:15 mariadb-data
+
+# ls -al mariadb-data/
+total 122944
+drwxr-xr-x 5       100998 deeplearning      4096 Sep 30 16:18 .
+drwxr-xr-x 4 deeplearning deeplearning      4096 Sep 30 16:16 ..
+-rw-rw---- 1       100998       100998     32768 Sep 30 16:17 aria_log.00000001
+-rw-rw---- 1       100998       100998        52 Sep 30 16:17 aria_log_control
+drwx------ 2       100998       100998      4096 Sep 30 16:17 db
+-rw-rw---- 1       100998       100998       992 Sep 30 16:17 ib_buffer_pool
+-rw-rw---- 1       100998       100998 100663296 Sep 30 16:18 ib_logfile0
+-rw-rw---- 1       100998       100998  12582912 Sep 30 16:17 ibdata1
+-rw-rw---- 1       100998       100998  12582912 Sep 30 16:18 ibtmp1
+-rw-rw---- 1       100998       100998         0 Sep 30 16:17 multi-master.info
+drwx------ 2       100998       100998      4096 Sep 30 16:17 mysql
+drwx------ 2       100998       100998      4096 Sep 30 16:17 performance_schema
+
+# podman logs eager_lamarr
+2020-09-30 20:18:03+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 1:10.5.5+maria~focal started.
+2020-09-30 20:18:03+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+2020-09-30 20:18:03+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 1:10.5.5+maria~focal started.
+2020-09-30 20:18:04 0 [Note] mysqld (mysqld 10.5.5-MariaDB-1:10.5.5+maria~focal) starting as process 1 ...
+2020-09-30 20:18:04 0 [Warning] Could not increase number of max_open_files to more than 4096 (request: 32186)
+2020-09-30 20:18:04 0 [Warning] Changed limits: max_open_files: 4096  max_connections: 151 (was 151)  table_cache: 1957 (was 2000)
+2020-09-30 20:18:04 0 [Note] InnoDB: Using Linux native AIO
+2020-09-30 20:18:04 0 [Note] InnoDB: Uses event mutexes
+2020-09-30 20:18:04 0 [Note] InnoDB: Compressed tables use zlib 1.2.11
+2020-09-30 20:18:04 0 [Note] InnoDB: Number of pools: 1
+2020-09-30 20:18:04 0 [Note] InnoDB: Using SSE4.2 crc32 instructions
+2020-09-30 20:18:04 0 [Note] mysqld: O_TMPFILE is not supported on /tmp (disabling future attempts)
+2020-09-30 20:18:04 0 [Note] InnoDB: Initializing buffer pool, total size = 134217728, chunk size = 134217728
+2020-09-30 20:18:04 0 [Note] InnoDB: Completed initialization of buffer pool
+2020-09-30 20:18:04 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2020-09-30 20:18:04 0 [Note] InnoDB: 128 rollback segments are active.
+2020-09-30 20:18:04 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2020-09-30 20:18:04 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2020-09-30 20:18:04 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2020-09-30 20:18:04 0 [Note] InnoDB: 10.5.5 started; log sequence number 47663; transaction id 33
+2020-09-30 20:18:04 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2020-09-30 20:18:04 0 [Note] Plugin 'FEEDBACK' is disabled.
+2020-09-30 20:18:04 0 [Note] InnoDB: Buffer pool(s) load completed at 200930 20:18:04
+2020-09-30 20:18:04 0 [Note] Server socket created on IP: '::'.
+2020-09-30 20:18:04 0 [Warning] 'proxies_priv' entry '@% root@21cc644dd03c' ignored in --skip-name-resolve mode.
+2020-09-30 20:18:04 0 [Note] Reading of all Master_info entries succeeded
+2020-09-30 20:18:04 0 [Note] Added new Master_info '' to hash table
+2020-09-30 20:18:04 0 [Note] mysqld: ready for connections.
+Version: '10.5.5-MariaDB-1:10.5.5+maria~focal'  socket: '/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+
+# mysql --user=user1 --password=pass -h 127.0.0.1 -P 3306 -t db
+    (this dropped me into the SQL prompt on the container)
+    
+> CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
+    Query OK, 0 rows affected (0.04 sec)
+
+> mysql> INSERT INTO pet (name, owner) VALUES ('graham', 'fulgencio');
+    Query OK, 1 row affected (0.01 sec)
+    
+> exit
+    Bye
+    
+# podman rm -f eager_lamarr
+
+# podman run -d -v /home/deeplearning/PodmanVolumes/mariadb-data:/var/lib/mysql -e MYSQL_USER=user1 -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=t00r -p 3306:3306 docker.io/library/mariadb
+3757a2216835de45dc21662ac9275ae99aee838a8a2c613ed9e5ad13021b4246
+
+# podman ps
+CONTAINER ID  IMAGE                             COMMAND  CREATED        STATUS            PORTS                   NAMES
+3757a2216835  docker.io/library/mariadb:latest  mysqld   4 seconds ago  Up 4 seconds ago  0.0.0.0:3306->3306/tcp  flamboyant_ellis
+
+# mysql --user=user1 --password=pass -h 127.0.0.1 -P 3306 -t db
+   (this dropped me into the SQL prompt on the container)
+   
+> SELECT * from pet;
++--------+-----------+---------+------+-------+-------+
+| name   | owner     | species | sex  | birth | death |
++--------+-----------+---------+------+-------+-------+
+| graham | fulgencio | NULL    | NULL | NULL  | NULL  |
++--------+-----------+---------+------+-------+-------+
+1 row in set (0.00 sec)
+
+```
+
+As you can see, Podman automatically invoked a `chown` on the /home/deepleearning/PodmanVolumes/mariadb-test/ folder, setting it to another UID. The newly-instantiated MariaDB database was then able to save its initial state and the additional record I later added to the database. When I deleted the first container and replaced it with another, the new MariaDB container was able to verify my user identity and return the data I had saved via the first container. Success!
+
