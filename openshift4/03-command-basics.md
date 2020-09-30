@@ -16,10 +16,24 @@ I'm dumping various commands at the top for reference, with additional commentar
 # skopeo inspect docker://docker.io/library/alpine
 
 # podman run -d -t docker.io/library/ubuntu
+# podman run -it docker.io/library/ubuntu /bin/bash
+# podman run -it --name helloubuntu docker.io/library/ubuntu /bin/bash
+
+# podman stop -f <CONTAINER ID or NAME>
+# podman rm <CONTAINER ID or NAME>
+# podman rmi <REPOSITORY NAME>
+
 # podman ps -a
 # podman unshare
 # podman mount <CONTAINER ID FROM podman ps>
 # podman unmount <CONTAINER ID FROM podman ps>
+
+THIS DID NOT STORE DATA IN VOLUME
+# podman run -d -v /home/deeplearning/PodmanVolumes/mariadb-data:/var/lib/mysql/data:Z -e MYSQL_USER=user1 -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=t00r -p 3306:3306 docker.io/library/mariadb
+#     mysql --user=user1 --password=pass -h 127.0.0.1 -P 3306 -t db
+#     CREATE TABLE pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
+#     INSERT INTO pet (name, owner) VALUES ('graham', 'fulgencio');
+
 ```
 
 ### Searching for and pulling images
