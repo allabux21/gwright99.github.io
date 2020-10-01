@@ -13,17 +13,25 @@ I'm dumping various commands at the top for reference, with additional commentar
 # podman pull docker.io/library/alpine:latest
 # podman images
 # podman inspect docker.io/library/alpine | less
+# podman inspect -l -f "{{.NetworkSettings.IPAddress}}"
 # skopeo inspect docker://docker.io/library/alpine
 
 # podman run -d -t docker.io/library/ubuntu
 # podman run -it docker.io/library/ubuntu /bin/bash
 # podman run -it --name helloubuntu docker.io/library/ubuntu /bin/bash
+# podman run --name helloubuntu docker.io/library/ubuntu echo 'Hello!'
+# podman run -e GREET=Hello -e TARGET=Reader ubuntu printenv GREET TARGET
+
+# podman exec --it <IMAGE NAME> /bin/bash
 
 # podman stop -f <CONTAINER ID or NAME>
+# podman restart <CONTAINER ID or NAME>
 # podman rm <CONTAINER ID or NAME>
 # podman rmi <REPOSITORY NAME>
+# podman rm -a  (!!DANGEROUS)
 
 # podman ps -a
+# podman ps --format "{{.ID}} {{.Image}} {{.Names}}"
 # podman unshare
 # podman mount <CONTAINER ID FROM podman ps>
 # podman unmount <CONTAINER ID FROM podman ps>
@@ -224,6 +232,9 @@ Note that the $.GraphDriver key is of type 'overlay' and points to the directory
 Also of interest is the $.Config.Cmd key (and $.Config.Entrypoint if present). This lets us know that the container will drop you into a bash shell if you started it with `podman run` and did not overwrite it with a commandline argument. As another best practice, I'll always inspect the containers I download - even if they are official images - to ensure that nothing malicious immediately jumps out at me.  
 
 The [Redhat documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/building_running_and_managing_containers/working-with-container-images_building-running-and-managing-containers) has an interesting example involving `registry.redhat.io/rhel8/rsyslog` that involves an $.Labels.install value, but I've never encountered this workflow so I'll just make a note of it now and revisit later when I know more. 
+
+For a shorter way of invoking the inspect command you can use `podman inspect -l -f "{{.<KEY_PATH_HERE>}}"`. It roughly translates as 'show me the (-l)atest container/image id and (-f)ormat the output using a Go template to specifically return the element(s) defined by the dot notation path  (e.g. .NetworkSettings.IPAddress).
+NOTE: This does not appear to work with rootless podman. I'll need to investigate more later.
 
 #### Inspect image on remote registry
 We installed Skopeo on our system for a reason and this was it! Instead of potentially wasted hundreds of MBs of download cap, just examine the image on the remote registry!
@@ -956,9 +967,9 @@ MariaDB [(none)]> show databases;
 
 ```
 
-
 To stop pod:
 > podman stop <POD_INFRA_ID>   <- MUST BE the infra id. Should stop all containers in the pod. Doesn't seem to be true.
 > podman start <POD_INFRA_ID>
+
 
 
