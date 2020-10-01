@@ -815,5 +815,62 @@ a4fa2fc0619d  k8s.gcr.io/pause:3.2                       15 minutes ago  Up 2 mi
 3757a2216835  docker.io/library/mariadb:latest  mysqld   2 hours ago     Up 2 hours ago    0.0.0.0:3306->3306/tcp  flamboyant_ellis 
 ```
 
-Looks like all the commands are still working at this point. We've created a pod (instantiated with its own infra pof), and then added an alpine instance. But how do I make the pod DO something?
+Looks like all the commands are still working at this point, let's try the commands that create a pod and container in the same command. But first let's remind ourselves which containers and pods are already on the system:
+```bash
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND  CREATED      STATUS          PORTS                   NAMES               POD ID        PODNAME
+a700757aca10  docker.io/library/alpine:latest   top      2 hours ago  Up 2 hours ago                          crazy_shtern        e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                       2 hours ago  Up 2 hours ago                          e94689355ac7-infra  e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld   4 hours ago  Up 4 hours ago  0.0.0.0:3306->3306/tcp  flamboyant_ellis
+
+# podman pod ps
+POD ID        NAME         STATUS   CREATED      # OF CONTAINERS  INFRA ID
+e94689355ac7  bold_banach  Running  3 hours ago  2                a4fa2fc0619d
+```
+
+Now let's try creating a pod and container at the same time:
+```bash
+# podman pull docker.io/library/nginx
+...
+Storing signatures
+7e4d58f0e5f3b60077e9a5d96b4be1b974b5a484f54f9393000a99f3b6816e3d
+
+# podman run -d -t --pod new:nginx -p 32597:80 docker.io/library/nginx
+73d129c7edbbb703f9739164ba03524381ccbaf113c9a947efdf36bc341f6a10
+
+# podman pod ps
+POD ID        NAME         STATUS   CREATED         # OF CONTAINERS  INFRA ID
+f59faabb7cd3  nginx        Running  33 seconds ago  2                e4a44f543a70
+e94689355ac7  bold_banach  Running  3 hours ago     2                a4fa2fc0619d
+
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND               CREATED         STATUS             PORTS                   NAMES                POD ID        PODNAME
+73d129c7edbb  docker.io/library/nginx:latest    nginx -g daemon o...  52 seconds ago  Up 52 seconds ago  0.0.0.0:32597->80/tcp   recursing_albattani  f59faabb7cd3  nginx
+e4a44f543a70  k8s.gcr.io/pause:3.2                                    52 seconds ago  Up 52 seconds ago  0.0.0.0:32597->80/tcp   f59faabb7cd3-infra   f59faabb7cd3  nginx
+a700757aca10  docker.io/library/alpine:latest   top                   2 hours ago     Up 2 hours ago                             crazy_shtern         e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                                    3 hours ago     Up 2 hours ago                             e94689355ac7-infra   e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld                4 hours ago     Up 4 hours ago     0.0.0.0:3306->3306/tcp  flamboyant_ellis
+
+(Can shorten the flags: instead of using -a --pod, coudl do -ap)
+# podman ps -ap
+CONTAINER ID  IMAGE                             COMMAND               CREATED         STATUS             PORTS                   NAMES                POD ID        PODNAME
+73d129c7edbb  docker.io/library/nginx:latest    nginx -g daemon o...  52 seconds ago  Up 52 seconds ago  0.0.0.0:32597->80/tcp   recursing_albattani  f59faabb7cd3  nginx
+e4a44f543a70  k8s.gcr.io/pause:3.2                                    52 seconds ago  Up 52 seconds ago  0.0.0.0:32597->80/tcp   f59faabb7cd3-infra   f59faabb7cd3  nginx
+a700757aca10  docker.io/library/alpine:latest   top                   2 hours ago     Up 2 hours ago                             crazy_shtern         e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                                    3 hours ago     Up 2 hours ago                             e94689355ac7-infra   e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld                4 hours ago     Up 4 hours ago     0.0.0.0:3306->3306/tcp  flamboyant_ellis
+```
+
+The Baude article referenced an video that showed how to create a pod that had:
+* A MariaDB container bound to the 127.0.0.1 address (meaning only containers in the same pod could access it)
+* Adds an nginx container to the pod
+* Installs the MariaDB-client package onto the alpine container
+* Connects to the MariaDB container from the alpine container
+Unfortunately, the video appeared to be archived and I was not able to access it. So let's see if we can recreate the steps ourselves!
+
+
+
+
+
+We've created a pod (instantiated with its own infra pof), and then added an alpine instance. But how do I make the pod DO something?
 
