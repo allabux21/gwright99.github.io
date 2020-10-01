@@ -861,16 +861,104 @@ a4fa2fc0619d  k8s.gcr.io/pause:3.2                                    3 hours ag
 3757a2216835  docker.io/library/mariadb:latest  mysqld                4 hours ago     Up 4 hours ago     0.0.0.0:3306->3306/tcp  flamboyant_ellis
 ```
 
+Adding a pod is pretty straightforward too:
+```bash
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND               CREATED         STATUS             PORTS                   NAMES                POD ID        PODNAME
+73d129c7edbb  docker.io/library/nginx:latest    nginx -g daemon o...  22 minutes ago  Up 22 minutes ago  0.0.0.0:32597->80/tcp   recursing_albattani  f59faabb7cd3  nginx
+e4a44f543a70  k8s.gcr.io/pause:3.2                                    22 minutes ago  Up 22 minutes ago  0.0.0.0:32597->80/tcp   f59faabb7cd3-infra   f59faabb7cd3  nginx
+a700757aca10  docker.io/library/alpine:latest   top                   3 hours ago     Up 3 hours ago                             crazy_shtern         e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                                    3 hours ago     Up 3 hours ago                             e94689355ac7-infra   e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld                4 hours ago     Up 4 hours ago     0.0.0.0:3306->3306/tcp  flamboyant_ellis
+
+# podman pod ps
+POD ID        NAME         STATUS   CREATED         # OF CONTAINERS  INFRA ID
+f59faabb7cd3  nginx        Running  25 minutes ago  2                e4a44f543a70
+e94689355ac7  bold_banach  Running  3 hours ago     2                a4fa2fc0619d
+
+# podman run -dt --name add_container_to_pod --pod nginx ubuntu top
+8b9b580120b835098c4f3c96990fa9d6d86edf193b4a4414ca97d9e0a7d4ec3f
+
+# podman ps -a --pod
+CONTAINER ID  IMAGE                             COMMAND               CREATED         STATUS             PORTS                   NAMES                 POD ID        PODNAME
+8b9b580120b8  docker.io/library/ubuntu:latest   top                   4 seconds ago   Up 4 seconds ago   0.0.0.0:32597->80/tcp   add_container_to_pod  f59faabb7cd3  nginx
+73d129c7edbb  docker.io/library/nginx:latest    nginx -g daemon o...  23 minutes ago  Up 23 minutes ago  0.0.0.0:32597->80/tcp   recursing_albattani   f59faabb7cd3  nginx
+e4a44f543a70  k8s.gcr.io/pause:3.2                                    23 minutes ago  Up 23 minutes ago  0.0.0.0:32597->80/tcp   f59faabb7cd3-infra    f59faabb7cd3  nginx
+a700757aca10  docker.io/library/alpine:latest   top                   3 hours ago     Up 3 hours ago                             crazy_shtern          e94689355ac7  bold_banach
+a4fa2fc0619d  k8s.gcr.io/pause:3.2                                    3 hours ago     Up 3 hours ago                             e94689355ac7-infra    e94689355ac7  bold_banach
+3757a2216835  docker.io/library/mariadb:latest  mysqld                4 hours ago     Up 4 hours ago     0.0.0.0:3306->3306/tcp  flamboyant_ellis
+
+# podman pod list
+POD ID        NAME         STATUS   CREATED         # OF CONTAINERS  INFRA ID
+f59faabb7cd3  nginx        Running  26 minutes ago  3                e4a44f543a70
+e94689355ac7  bold_banach  Running  3 hours ago     2                a4fa2fc0619d
+```
+
 The Baude article referenced an video that showed how to create a pod that had:
 * A MariaDB container bound to the 127.0.0.1 address (meaning only containers in the same pod could access it)
 * Adds an nginx container to the pod
 * Installs the MariaDB-client package onto the alpine container
 * Connects to the MariaDB container from the alpine container
-Unfortunately, the video appeared to be archived and I was not able to access it. So let's see if we can recreate the steps ourselves!
+
+The link in the article appears to be broken, but I think I [found an alternative](https://asciinema.org/a/245493). Here are the steps:
+```bash
+# podman pod list
+POD ID        NAME         STATUS   CREATED      # OF CONTAINERS  INFRA ID
+
+# podman ps -a
+CONTAINER ID  IMAGE   COMMAND  CREATED  STATUS  PORTS   NAMES
+
+# podman run -dt -e MYSQL_ROOT_PASSWORD=t00r --pod new:db docker.io/library/mariadb
+060fc40f35653cb3dad75280572f1bec3469079ac5b4a18465cc1c7f2fe7f967
+
+# podman pod ps
+POD ID        NAME    STATUS   CREATED         # OF CONTAINERS  INFRA ID
+2ec3f212979f  db      Running  20 seconds ago  2                7cc2bbe6f229
+
+# podman ps -ap
+CONTAINER ID  IMAGE                             COMMAND  CREATED         STATUS             PORTS   NAMES               POD ID        PODNAME
+060fc40f3565  docker.io/library/mariadb:latest  mysqld   52 seconds ago  Up 51 seconds ago          nervous_dubinsky    2ec3f212979f  db
+7cc2bbe6f229  k8s.gcr.io/pause:3.2                       52 seconds ago  Up 52 seconds ago          2ec3f212979f-infra  2ec3f212979f  db
+
+# podman run -it --rm --pod db docker.io/library/alpine /bin/sh
+    (drops onto the alpine container shell)
+
+> apk add mariadb-client
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.12/community/x86_64/APKINDEX.tar.gz
+(1/6) Installing mariadb-common (10.4.13-r0)
+(2/6) Installing ncurses-terminfo-base (6.2_p20200523-r0)
+(3/6) Installing ncurses-libs (6.2_p20200523-r0)
+(4/6) Installing libgcc (9.3.0-r2)
+(5/6) Installing libstdc++ (9.3.0-r2)
+(6/6) Installing mariadb-client (10.4.13-r0)
+Executing busybox-1.31.1-r16.trigger
+OK: 39 MiB in 20 packages
+
+> mysql -u root -P 3306 -h 127.0.0.1 -p
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.5.5-MariaDB-1:10.5.5+maria~focal mariadb.org binary distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
++--------------------+
+3 rows in set (0.001 sec)
+
+```
 
 
+To stop pod:
+> podman stop <POD_INFRA_ID>   <- MUST BE the infra id. Should stop all containers in the pod. Doesn't seem to be true.
+> podman start <POD_INFRA_ID>
 
-
-
-We've created a pod (instantiated with its own infra pof), and then added an alpine instance. But how do I make the pod DO something?
 
