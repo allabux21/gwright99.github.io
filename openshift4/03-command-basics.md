@@ -779,6 +779,15 @@ CONTAINER ID  IMAGE                             COMMAND  CREATED        STATUS  
 
 As you can see, Podman automatically invoked a `chown` on the /home/deepleearning/PodmanVolumes/mariadb-test/ folder, setting it to another UID. The newly-instantiated MariaDB database was then able to save its initial state and the additional record I later added to the database. When I deleted the first container and replaced it with another, the new MariaDB container was able to verify my user identity and return the data I had saved via the first container. Success!
 
+Update: As I look over my Redhat training guide (DO180, p.57), this may still be true for some OSes? The training used RHEL and required SELinux changes to a local directory before a MySql container could save files to that mounted volume.
+```bash
+# sudo mkdir /var/dbfiles
+# sudo chown -R 27:27 /var/dbfiles
+# sudo semanage fcontext -a -t container_file_t '/var/dbfiles(/.*)?'
+# ls -dZ /var/dbfiles
+# sudo restorecon -Rv /var/dbfiles
+```
+
 ### Limiting Container Resources
 While this focused on the `docker` tool, [MariaDB and Docker use cases, Part 1](https://mariadb.com/resources/blog/mariadb-and-docker-use-cases-part-1/) has two interesting ideas that I'll take a second to note:
 1. Running instances concurrently on the same host.<br>The article mentions that solutions like MySQL Sandbox do exist to facilitate this, but it's much easier to just spin up three containers, with each pulling a different image based on the iamge tage (e.g. docker.io/library/mariadb:10.0) and mapping a different host port.
