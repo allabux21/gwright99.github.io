@@ -10,8 +10,10 @@ Podman uses CNI to link containers to a host via a software-defined network (SDN
 * By default, container networks are hidden from the host network.
 
 <img src="./img/PodmanNetworking.png">
+(_Source: Red Hat DO180 training document_)
 
 <img src="./img/bridge.png">
+(_[Source](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking/#bridge)_)
 
 Given that container IPs can change frequently and are mostly opaque to the host, how does the host ensure that it can access a specific container? You have two possibilities:
 1. Container Port Forwarding
@@ -42,3 +44,14 @@ You can also implement port forwarding without specifying the host port the forw
 This technique strikes me as a bit dumb because it means I need to run a second follow-up command to see what Podman randomly chose (and then remember it). I suppose it might make sense if you have lots of ports in use that it becomes hard to find one that is available (is this actually possible?) or maybe you are doing this for security reasons to make it harder for someone to guess what ports are open? Once again, it's not super well explained why I would do this, so I've noted it because intend to always specify the host port as an assumptive best practice until proven otherwise.
  
 
+
+FQDN - Fully Qualified Domain Name. [hostname].[domain].[tld]
+e.g "mymail.somecollege.edu" or "smtp.example.com"
+
+* hostname = "mymail"
+* domain = "somecollege.edu"
+* top-level domain = ".edu"
+
+"www.indian.edu"
+* host = 'www'
+* domain = "indiana.edu"
