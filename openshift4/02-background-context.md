@@ -48,6 +48,18 @@ See [shortcomings of rootless Podman](https://github.com/containers/podman/blob/
 | Secrets & Configuration Management | Sensitive data can made available to containers without requiring commitment into source control | tbd |
 | Operators | Kubernetes applications that use the Kubernetes API to update the cluster's state in response to application state. | tbd | 
 
+### Kubernetes Terminology
+| Term | Definition |
+| :------ | :------ |
+| NODE | A server that hosts applications in a Kubernetes cluster.|
+| MASTER NODE | A node server that manages the `control plane` in a Kubernetes cluster. |
+| WORKER NODE | A.k.a `Compute Node`. Executes workloads for the cluster. Worker Node host our application pods.|
+| RESOURCE | Any component definition managed by Kubernetes. Contain the configuration and state of a component.|
+| CONTROLLER | A Kubernetes process that watches resources and makes changes to move from current state to desired state.|
+| LABEL | Key-value pair assigned to a Kubernetes resource. Selectors use these to filter.|
+| NAMESPACE | Scope used to segregate Kubernetes resources and processes. This means multiple resources can have the same (so long as they all reside in different namespaces). |
+
+* Note: Training docs mention latest Kubernetes version manages many Controllers as Operators (plug-in components that react to cluster events). Not covered in the training.
 
 ### Openshift Features
 The Openshift Container Platform extends a base Kubernetes implementation with additional features such as:
