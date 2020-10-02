@@ -58,7 +58,7 @@ Notes:
      * CMD can be present without specifying an ENTRYPOINT.
      * Podman can override CMD during the `podman run` command.
      
-     
+#### ENTRYPOINT vs CMD     
 I want to focus on ENTRYPOINT and CMD a bit more. Consider the following examples:
 ```bash
 EXAMPLE 1
@@ -76,17 +76,19 @@ Example 1 defines the command to be executed and its parameters. These cannot be
 Example 2 defines the command in ENTRYPOINT, but specifies its parameters in CMD. The parameters can be changed at container invocation time, but the container will always execute `/bin/date`.
 Example 3 leverages the default ENTRYPOINT `/bin/sh -c` and passes in a shell command and related parameters. These can all be changed at container invocation time.
 
- #### Exec versus shell command form
- The ADD, COPY, CMD, and ENTRYPOINT commands have two different notation styles: _Exec_ and _Shell_. It is generally recommend to use Exec because it avoids wrapping the command in a shell (which can cause strange results).
+#### Exec versus shell command form
+The ADD, COPY, CMD, and ENTRYPOINT commands have two different notation styles: _Exec_ and _Shell_. It is generally recommend to use Exec because it avoids wrapping the command in a shell (which can cause strange results).
 
 Examples:
-    * Exec form: `ENTRYPOINT ["command", "param1", "param2"]`
-    * Shell form: `ENTRYPOINT command param1 param2`
+```docker
+EXEC FORM
+---------
+ENTRYPOINT ["command", "param1", "param2"]
+COPY ["<source>", ... "<destination"]
 
-    * Exec form: `COPY ["<source>", ... "<destination"]`
-    * Shell form: `COPY <source> ... <destination>`
- 
-     
-     
- EXEC vs SHELL form
- exec form preferred
+SHELL FORM
+----------
+ENTRYPOINT command param1 param2
+COPY <source> ... <destination>
+```
+
