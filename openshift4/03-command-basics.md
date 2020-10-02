@@ -118,6 +118,8 @@ INDEX       NAME                       DESCRIPTION                              
 docker.io   docker.io/library/alpine   A minimal Docker image based on Alpine Linux with a complete package index and only 5 MB in size!   6793    [OK]
 ```
 
+Other filter options include `--filter stars=<number>` and `--filter is-automated=<true|false>`, and we can enable/disable TLS verification with `--tls-verify <true|false>`.
+
 "What is an official image?" you may ask. I had the same question and a strangely difficult time trying to find the answer. From what I can gather, an [official image](https://docs.docker.com/docker-hub/official_images/) is one that has gone through an extensive assurance process with the Docker Official Images team (which ultimately controls the repositories in which these images are published). The [docker search documentation](https://docs.docker.com/engine/reference/commandline/search/) notes that the `--is-official` flag looks for _'~images with the searched-for-name, at least 3 stars, and are official builds_'.  Based on some cursory searches I conducted, the returned results are always from the docker.io/library/ namespace, making me think that this must be a Docker-specific repository designation. Long-story short, I'm going to assume the image is ok if it looks something like `docker.io/libary/<image_name_here>`.
 
 #### Search a specific registry for an image
