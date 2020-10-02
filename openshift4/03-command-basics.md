@@ -7,7 +7,7 @@ I'm dumping various commands at the top for reference, with additional commentar
 # podman search --filter=-is-official --no-trunc alpine
 # podman search docker.io/postgresql-10 --limit 5
 
-# podman login github.io
+# podman login -u <username> -p <password> <registry>
 # podman search github.io/
 
 # podman pull docker.io/library/alpine:latest
@@ -15,6 +15,7 @@ I'm dumping various commands at the top for reference, with additional commentar
 # podman inspect docker.io/library/alpine | less
 # podman inspect -l -f "{{.NetworkSettings.IPAddress}}"
 # skopeo inspect docker://docker.io/library/alpine
+# podman tag mysql-custom-image devops/mysql:snapshot
 
 # podman run -d -t docker.io/library/ubuntu
 # podman run -it docker.io/library/ubuntu /bin/bash
@@ -155,7 +156,7 @@ Rather than risk pulling the wrong image, I'll always be specifying the full ima
 
 
 ### Interacting with local images
-This section handles basic commands for interacting with images once you've copied them into your local image repository
+This section handles basic commands for interacting with images once you've copied them into your local image repository (_out of scope: saving images to .tar files and loading from .tar files). 
 
 #### List available images
 To see the images in your local repository, type `podman images`. This will return something like:
@@ -315,6 +316,15 @@ I'm not a seasoned Skopeo user yet, so I'm sure there is plenty more one can do.
 
 The Skopeo output looks different than what we saw when we inspected through podman, so I suspect we need to specify a version to inspect before we can replicate what we got from `podman inspect ...`.
 
+#### Modifying an image
+Containers should be generated from Dockerfiles, but in the absence of a Dockerfile you may have to use a pre-existing image as a base. Podman offers a way to do this with the `podman commit` option. Essentially you can change in a running container in place and then save the results to a new image. Interesting option, but I intend to use Dockerfiles. Noting and moving on.
+
+# Tagging an image
+Tags are important to keep track of multiple releases of the same project. Use tags:
+```bash
+# podman tag <IMAGE NAME> <TAG NAME>
+```
+e.g. `podman tag mysql-custom-image devops/mysql:snapshot`
 
 #### Mount a volume to your container
 
