@@ -60,4 +60,9 @@ An OpenShift Service allows containers in one pod to open network connections to
 ```
 
 This sample Service definition does the following:
-* 
+* Declares a Kubernetes Service resource type _($.kind)_.
+* Assigns a name to uniquely identify the Service _($.metadata.name)_.
+* Defines the mapping exposed by the service _($.spec.ports.port)_ to the port on that pod that the service will forward traffic to _($.spec.ports.targetPort)_.
+* selector is how the service finds pods to forward packets to. The target pods need to have matching labels in their metadata attributes. If the service finds multiple pods with matching labels, it load balances network connections between them _($.spec.selector)_.
+
+TO DO: In a multi-container pod, only one container can grab a specific port exposed by the pod? Sounds like this is not the case due to the SELECTOR being able to handle multiple pod labels?
