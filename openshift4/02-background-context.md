@@ -62,8 +62,8 @@ See [shortcomings of rootless Podman](https://github.com/containers/podman/blob/
 * Note: Training docs mention latest Kubernetes version manages many Controllers as Operators (plug-in components that react to cluster events). Not covered in the training.
 
 ### Openshift Features
-Overall diagrams:
-<img src="./img/ocp1.png">
+Overall diagrams<br>
+<img src="./img/ocp1.png"><br>
 <img src="./img/ocp2.png">
 
 #### Infra Node vs Worker Node
