@@ -9,11 +9,11 @@ Podman uses CNI to link containers to a host via a software-defined network (SDN
 * A container that exists on SDN A cannot directly communicate with a container on SDN B.
 * By default, container networks are hidden from the host network.
 
-<img src="./img/PodmanNetworking.png">
-(_Source: Red Hat DO180 training document_)
+<img src="./img/PodmanNetworking.png"><br>
+_(Source: Red Hat DO180 training document)_
 
-<img src="./img/bridge.png">
-(_[Source](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking/#bridge)_)
+<img src="./img/bridge.png"><br>
+_([Source](https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking/#bridge))_
 
 Given that container IPs can change frequently and are mostly opaque to the host, how does the host ensure that it can access a specific container? You have two possibilities:
 1. Container Port Forwarding
@@ -43,7 +43,9 @@ You can also implement port forwarding without specifying the host port the forw
 ```
 This technique strikes me as a bit dumb because it means I need to run a second follow-up command to see what Podman randomly chose (and then remember it). I suppose it might make sense if you have lots of ports in use that it becomes hard to find one that is available (is this actually possible?) or maybe you are doing this for security reasons to make it harder for someone to guess what ports are open? Once again, it's not super well explained why I would do this, so I've noted it because intend to always specify the host port as an assumptive best practice until proven otherwise.
  
-
+### Services
+Services are the preferred way to provide access to containers (linking a stable IP address of the service to the dynamic IPs of the containers which implement the service).
+TBD: In a non-OCP environment, should I be using the `NodePort` attribute?
 
 FQDN - Fully Qualified Domain Name. [hostname].[domain].[tld]
 e.g "mymail.somecollege.edu" or "smtp.example.com"
