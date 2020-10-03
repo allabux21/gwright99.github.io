@@ -62,6 +62,32 @@ See [shortcomings of rootless Podman](https://github.com/containers/podman/blob/
 * Note: Training docs mention latest Kubernetes version manages many Controllers as Operators (plug-in components that react to cluster events). Not covered in the training.
 
 ### Openshift Features
+Overall diagrams:
+<img src="./img/ocp1.png">
+<img src="./img/ocp2.png">
+
+#### Infra Node vs Worker Node
+An Infrastructure Node contains services like monitoring, logging, and external routing that is used across the cluster. (TO DO: how many instances of an Infra Node in a cluster? Worker Nodes run application pods.
+
+#### Kubernetes & Openshift Main Resource Types
+| Term | Implemented By | Definition |
+| :--- | :------------- | :--------- |
+| PODS (po) | Kubernetes | Encapsulated collection of containers that share resources like IP addresses and persistent storage volumes. |
+| SERVICES (svc) | Kubernetes | A defined single IP & port that provides access to a pool of pods. Kubernetes keeps track of the location of all the related pods behind the scenes. By default, connects clients via round-robin. | 
+| Replication Controllers (rc) | Kubernetes | Defines how pods are horizontally scaled. Critical to providing high-availability. | 
+| Persistent Volumes (pv) | Kubernetes | Defined non-ephemeral storage for pods. | 
+| Persistent Volumes Claims (pvc) | Kubernetes | Links a persistent volume to a pod, making it available to containers in that pod (usually by mounting the volume into the container's file system). | 
+| ConfigMaps (cm) & Secrets | Kubernetes | A set of key-value pairs that can be used by other Resources. CMs and Secrets are used to centralize configuration values used by many resources. Secrets are alwasy encoded (NOT encrypted) and subject to more restrictions on user access. | 
+| :--- | :------------- | :--------- |
+| Deployment Config (dc) | Openshift | Defines the container set that should be deployed in a pod, as well as the deployment strategy to be used (e.g. graceful vs hard shift) |
+| Build config (bc) | Openshift | Defines a process to be executed in an Openshift project. Used by the OC Source-to-Image feature to build containers from source code. Critical to CICD workflows. |
+| Routes | Openshift | A DNS host name used by the Openshift router as an ingress point for applications and microservices. |
+
+Note: For a full list of resources, use `oc api-resources` and `kubectl api-resources` for a full list of resources supported by your Kubernetes/OCP installation.
+
+
+| NODE | A server that hosts applications in a Kubernetes cluster.|
+
 The Openshift Container Platform extends a base Kubernetes implementation with additional features such as:
 ADD LATER
 
