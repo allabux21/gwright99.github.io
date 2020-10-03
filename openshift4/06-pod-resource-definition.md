@@ -1,7 +1,7 @@
 ## Pod Resource Definition Syntax
 A Pod Resource Definition provides Kubernetes with the configuration settings it needs to instantiate an instance of a pod. These can be defined in either JSON or YAML format, or generated from defaults via Openshift's `oc new-app` command.
 
-### POD Resource Defintion
+### POD Resource
 Sample resource definition for a Pod within Openshift (TO DO: Can I use this with a local Podman implementation?):
 ```yaml
 apiVersion: v1
@@ -36,7 +36,7 @@ This sample Pod definition does the following:
 * Specifies the port via which the container can be contacted _($.spec.containers.resources.port.containerPort)_.  TO DO: Confirm notation for YAML when there are hyphen entries like '- resources'.
 * Defines environment variables for the container _($.spec.containers.resources.env.*)_.
 
-### Service Resource Defintion
+### Service Resource
 An OpenShift Service allows containers in one pod to open network connections to containers in another pod. Providing a stable IP address (tied to the Service name) provides the following benefits:
 1. Avoids the need for pods to constantly rediscover the IP addresses of other pods after each restart
 1. Allows a variable number horizontally-scaled pods to all be accessible through a singular IP.
@@ -66,3 +66,10 @@ This sample Service definition does the following:
 * selector is how the service finds pods to forward packets to. The target pods need to have matching labels in their metadata attributes. If the service finds multiple pods with matching labels, it load balances network connections between them _($.spec.selector)_.
 
 TO DO: In a multi-container pod, only one container can grab a specific port exposed by the pod? Sounds like this is not the case due to the SELECTOR being able to handle multiple pod labels?
+
+Each Service defined within an Openshift project is identified by two environment variables injected into each pod inside the same project:
+* ${SERVICENAME}_SERVICE_HOST
+* ${SERVICENAME}_SERVICE_PORT
+
+You can also find the Service via OpenShift's internal DNS server (visible only to pods), using the following naming convention:
+* _${SERVICENAME}.${PROJECTNAME}.svc.cluster.local
