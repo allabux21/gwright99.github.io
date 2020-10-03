@@ -1,4 +1,4 @@
-## Creating OpenShift Applications
+## OC Create Command
 
 The `oc new-app` command can create OpenShift pods in a few different ways:
 1. Axisting docker image
