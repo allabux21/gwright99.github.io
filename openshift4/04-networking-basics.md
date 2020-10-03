@@ -47,7 +47,25 @@ This technique strikes me as a bit dumb because it means I need to run a second 
 Services are the preferred way to provide access to containers (linking a stable IP address of the service to the dynamic IPs of the containers which implement the service).
 TBD: In a non-OCP environment, should I be using the `NodePort` attribute?
 
-FQDN - Fully Qualified Domain Name. [hostname].[domain].[tld]
+#### Services in Podman
+Not sure how this works. COme back later.
+
+#### Services in OpenShift
+Services in OpenShfit can be discovered in one of two ways:
+1. Environment variables injected into the pod.
+1. Openshift DNS server
+
+Each Service defined within an Openshift project is identified by two environment variables injected into each pod inside the same project:
+* ${SERVICENAME}_SERVICE_HOST
+* ${SERVICENAME}_SERVICE_PORT
+
+You can also find the Service via OpenShift's internal DNS server (visible only to pods), using the following naming convention:
+* ${SERVICENAME}.${PROJECTNAME}.svc.cluster.local
+
+The environment variable technique requires that the pod be created & started __AFTER__ the Service is created. Using the DNS lookup technique allows the pod to access the Service details even if the pod was created & started before the Service was created.
+
+### Fully Qualified Domain Name (FQDN)
+FQDNs work as follows: [hostname].[domain].[tld]
 e.g "mymail.somecollege.edu" or "smtp.example.com"
 
 * hostname = "mymail"
