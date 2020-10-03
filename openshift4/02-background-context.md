@@ -86,12 +86,6 @@ An Infrastructure Node contains services like monitoring, logging, and external 
 Note: For a full list of resources, use `oc api-resources` and `kubectl api-resources` for a full list of resources supported by your Kubernetes/OCP installation.
 
 
-| NODE | A server that hosts applications in a Kubernetes cluster.|
-
-The Openshift Container Platform extends a base Kubernetes implementation with additional features such as:
-ADD LATER
-
-
 ### Source Code
 The source code I'll be using is publicly available at [https://github.com/RedHatTraining/DO180-apps](https://github.com/RedHatTraining/DO180-apps). I forked the project into my own Github account and then cloned the source code onto my local machine via:
 ```bash
