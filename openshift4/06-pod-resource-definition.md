@@ -67,9 +67,3 @@ This sample Service definition does the following:
 
 TO DO: In a multi-container pod, only one container can grab a specific port exposed by the pod? Sounds like this is not the case due to the SELECTOR being able to handle multiple pod labels?
 
-Each Service defined within an Openshift project is identified by two environment variables injected into each pod inside the same project:
-* _${SERVICENAME}_SERVICE_HOST_
-* _${SERVICENAME}_SERVICE_PORT_
-
-You can also find the Service via OpenShift's internal DNS server (visible only to pods), using the following naming convention:
-* _${SERVICENAME}.${PROJECTNAME}.svc.cluster.local_
