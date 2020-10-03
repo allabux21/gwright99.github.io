@@ -64,6 +64,14 @@ You can also find the Service via OpenShift's internal DNS server (visible only 
 
 The environment variable technique requires that the pod be created & started __AFTER__ the Service is created. Using the DNS lookup technique allows the pod to access the Service details even if the pod was created & started before the Service was created.
 
+Applications __outside__ of the Openshift cluster can access it in one of two ways:
+1. *NodePort* - Older K8s approach. Binds available port(s) on the worker node host, which proxies the connection to the service IP address. Requires manually editing of service via `oc edit svc` and specifying NodePort details. (Not sugggested)
+1. *OpenShift Route* - Preferred technique. Exposes services via a unique URL (via `oc expose`).
+
+<img src="./img/nodeport.png">
+
+To connect your development machine to an Openshift pod, use a command like: `# oc port-forward <PODNAME_HERE> 3306:3306`. This will forward port 3306 from the local development machines to port 3306 on the specified pod in OC (note: you must leave the terminal open and invoke commands from another window; closing the original terminal will close the conenction).
+
 ### Fully Qualified Domain Name (FQDN)
 FQDNs work as follows: [hostname].[domain].[tld]
 e.g "mymail.somecollege.edu" or "smtp.example.com"
