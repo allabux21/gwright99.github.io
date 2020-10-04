@@ -67,6 +67,30 @@ This sample Service definition does the following:
 
 TO DO: In a multi-container pod, only one container can grab a specific port exposed by the pod? Sounds like this is not the case due to the SELECTOR being able to handle multiple pod labels?
 
+### Route Resource
+```json
+{
+	"apiVersion": "v1",
+	"kind": "Route",
+	"metadata": {
+		"name": "quoteapp"
+	},
+	"spec": {
+		"host": "quoteapp.apps.example.com",
+		"to": {
+			"kind": "Service",
+			"name": "<SERVICE_NAME_HERE>"
+		}
+	}
+}
+```
+Notes:
+* `host` is the FQDN associated with the route. The DNS resolution of this value must point to the IP address of the OpenShift router.
+* `oc new-app` does not create a route when building a pod (because it does not know if the pod is meant to be accessed from outside the OpenShift instance or not).
+* Naming:
+    * By default, routes use the following naming convention: `route-name-project-name.default-domain`
+    * A custom name can be provided by using the name flag, e.g. `oc expose service <SERVICE-NAME> --name <CUSTOM ROUTE NAME>`
+
 ### Managing Resources at the CLI (154)
 Use the `oc get` command to retrieve information about resources in the OpenShift cluster. Resource types are:
 * Image Stream (is)
