@@ -1,5 +1,5 @@
-## Creating Our First Openshift Application
-Lets build our first OC app!
+## Building OpenShift Applications
+Enough theory - let's start building applications!
 
 ```bash
 # oc login -u ${USERNAME} -p ${PASSWORD} ${OCP_API}
