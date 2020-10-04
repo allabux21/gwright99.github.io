@@ -73,6 +73,9 @@ Applications __outside__ of the Openshift cluster can access it in one of two wa
 
 To connect your development machine to an Openshift pod, use a command like: `# oc port-forward <PODNAME_HERE> 3306:3306`. This will forward port 3306 from the local development machines to port 3306 on the specified pod in OC (note: you must leave the terminal open and invoke commands from another window; closing the original terminal will close the conenction).
 
+### OCP Routes
+While Services allow for network access between pods inside an OpenShift instance, Routes provide network access to pods from applications outside the OpenShift instance. The Route connects connects a public-facing IP address and DNS host name to an internal-facing service IP.
+
 ### Fully Qualified Domain Name (FQDN)
 FQDNs work as follows: [hostname].[domain].[tld]
 e.g "mymail.somecollege.edu" or "smtp.example.com"
