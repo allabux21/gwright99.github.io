@@ -20,6 +20,10 @@ Lets build our first OC app!
 
 # oc describe dc mysql-openshift-app
 
+# oc logs -f dc/mysql-openshift-app
+# oc logs -f bc/mysql-openshift-app
+# oc logs -f svc/mysql-openshift-app
+
 # oc port-forward mysql-openshift-app-1-abcde 3306:3306
 # mysql -uuser1 -pmypa55 -protocol tcp -h localhost
 
