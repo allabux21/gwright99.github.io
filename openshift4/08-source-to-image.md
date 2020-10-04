@@ -239,33 +239,46 @@ This doesn't work in the RH OCP. I must have messed something up:
 ## Building an App with S2i
 The training has an example to build a php application from source. I'm going to walk through it and try to unpack what's going on.
 
-First, we need to get our environment set up. Since this exercise involves triggering a new build/deployment based on changes in a remote code repository, we need to:
-1. Clone the repository to our local machine
-1. Create a new branch on the local machine
-1. Push the branch to the remote repository (for the ImageSteam to pick up)
+I'm actually really confused by what this tutorial is trying to get us to do. On page 183 of the training materials, there is a throwaway line says this is the _'PHP version 5.6 Source-to-Image container'_ and they have us look at the material in `~/DO180/lab/openshift-s2i/`. Originally I thought I needed to do the same if I ever wanted to deploy a new a new appplication, but now I wonder if this is just an EXAMPLE of the builder image that I'll use when actually trying to use S2i? But the actual file we mess with is a single, three-line index.html file in the DO180-apps repository (s2i branch), and we point out image stream command to a different version of php (7.3). Did they give me a full application just for demonstration purposes? What is part of the builder versus part of an application I need to provide myself? 
+
+Rather than continue to get frustrated, I'll just dump the files in question and circle around at some point to see if I can figure wtf is really going on here. I've got a super confused face right now though.
+
 ```bash
-Get the source code ready
-# pwd
-/home/student/
-
-# git clone https://www.github.com/gwright99/DO180-apps/
-Cloning into 'DO180-apps'...
-remote: Enumerating objects: 86, done.
-remote: Total 86 (delta 0), reused 0 (delta), pack-reused 86
-Upacking objects: 100% (86/86), done.
-
-# cd ~/DO180-apps
-# git checkout master
-# git checkout -b s2i
-# git push -u origin s2i
-...
-* [new branch]      s2i -> s2i
-Branch s2i set up to track remote branch s2i from origin
-
-# cat /home/student/DO180-apps/php-helloworld/index.php
-<?php
-print "Hello, World!" php version is " . PHP_VERSION . "\n";
-?>
+# tree s2i-php-container
+s2i-php-container/
+├── 5.6
+│   ├── cccp.yml
+│   ├── contrib
+│   │   └── etc
+│   │   ├── conf.d
+│   │   │   ├── 00-documentroot.conf.template
+│   │   │   └── 50-mpm-tuning.conf.template
+│   │   ├── httpdconf.sed
+│   │   ├── php.d
+│   │   │   └── 10-opcache.ini.template
+│   │   ├── php.ini.template
+│   │   └── scl_enable
+DO180-OCP4.5-en-2-20200911 183
+Chapter 6 | Deploying Containerized Applications on OpenShift
+│   ├── Dockerfile
+│   ├── Dockerfile.rhel7
+│   ├── README.md
+│   ├── s2i
+│   │   └── bin
+│   │   ├── assemble
+│   │   ├── run
+│   │   └── usage
+│   └── test
+│   ├── run
+│   └── test-app
+│   ├── composer.json
+│   └── index.php
+├── hack
+│   ├── build.sh
+│   └── common.mk
+├── LICENSE
+├── Makefile
+└── README.md
 ```
 
 There are two bash scripts and a custom Dockerfile that makes changes to an image in order to play nicely with Openshift's restrictions that prevents a container from running as root:
@@ -418,4 +431,113 @@ USER 1001
 
 # Set the default CMD to print the usage of the language image
 CMD $STI_SCRIPTS_PATH/usage
+```
+
+Confusing bs section ove, lets see if we can create a simple s2i helloworld. First, we need to get our environment set up. Since this exercise involves triggering a new build/deployment based on changes in a remote code repository, we need to:
+1. Clone the repository to our local machine
+1. Create a new branch on the local machine
+1. Push the branch to the remote repository (for the ImageSteam to pick up)
+
+Set up the source code in the remote repository first:
+```bash
+Get the source code ready
+# pwd
+/home/student/
+
+# git clone https://www.github.com/gwright99/DO180-apps/
+Cloning into 'DO180-apps'...
+remote: Enumerating objects: 86, done.
+remote: Total 86 (delta 0), reused 0 (delta), pack-reused 86
+Upacking objects: 100% (86/86), done.
+
+# cd ~/DO180-apps
+# git checkout master
+# git checkout -b s2i
+# git push -u origin s2i
+...
+* [new branch]      s2i -> s2i
+Branch s2i set up to track remote branch s2i from origin
+
+# cat /home/student/DO180-apps/php-helloworld/index.php
+<?php
+print "Hello, World!" php version is " . PHP_VERSION . "\n";
+?>
+```
+
+With that done, build and deploy the container:
+```bash
+# oc login -u <USERNAME> -p <PASSWORD> <OCP_API_ENDPOINT>
+# oc new-project s2i-test
+# oc new-app --as-deployment-config --name=php-helloworld php:7.3~https://github.com/gwright99/DO180-apps --context-dir php-helloworld
+<POD BUILT AND DEPLOYED>
+
+# oc get pods
+NAME                        READY         STATUS      RESTARTS  AGE
+php-helloworld-1-build      0/1           Completed   0         68s
+php-helloworld-1-deploy     0/1           Completed   0         32s
+php-helloworld-1-429cn      1/1           Running     0         29s
+
+# oc logs --all-containers -f php-helloworld-1-build
+```
+I can't export the text from the Red Hat training workstation I'm using, but I'll note a few lines of interest that are returned by the `oc logs --all-containers -f php-helloworld-1-build` command:
+* The process retrieves an image (training materials say it's the Github repo but this is elsewhere in my output).
+* Right afterwards we see _Generating dockerfile with builder image image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:<SHA_SIGNATURE>
+* We then see the following step:
+    * STEP 1: FROM image-registry.openshift-image-registry.svc:5000/openshift/php@sha256:<SHA_SIGNATURE>
+    * STEP 2: LABEL generation
+    * STEP 3: ENV setting
+    * STEP 4: USER root
+    * STEP 5: COPY upload/src /tmp/src
+    * STEP 6: RUN chown -R 1001:0 /tmp/src
+    * STEP 7: USER 1001
+    * STEP 8: RUN /usr/libexec/s2i/assemble
+    -----> Installing application source...
+    ...
+    * STEP 9: CMD /usr/libexec/s2i/run
+    * STEP 10: COMMIT temp.builder.openshift.io/<OCP_PROJECT>/php-helloworld-1:bf6bccd2 ...
+      <PUSHES IMAGE TO OPENSHIFT IMAGE REPO>
+
+```bash
+# oc describe dc/php-helloworld
+# oc expose service php-helloworld
+route.route.openshift.io/php-helloworld exposed
+
+# oc get routes
+<ROUTE HOST/PORT RETURNED>
+
+# curl -s <ROUTE HOST/PORT>
+Hello, World! php version is 7.3.11
+```
+This shows the `index.php` file in my Github repo was pulled into the container and being served up by the PHP application. Now let's modify the local copy of `index.php`, push it to Github, and then kick off another build.
+
+I changed the index.php via the Github UI to:
+```php
+<?php
+print "Hello, World! php version is " . PHP_VERSION . "\n";
+print "Added a change.\n";
+?>
+```
+
+Now let's try recreating the container:
+```bash
+# oc start-build php-helloworld
+build.build.openshift.io/php-helloworld-2 started
+
+# oc logs php-helloworld-2-build -f
+<SHOWS CONTAINER BEING RECREATED>
+
+# oc get pods -w
+NAME                        READY         STATUS      RESTARTS  AGE
+php-helloworld-1-build      0/1           Completed   0         44m
+php-helloworld-1-deploy     0/1           Completed   0         43m
+php-helloworld-2-build      0/1           Completed   0         3m5s
+php-helloworld-2-deploy     0/1           Completed   0         2m25s
+php-helloworld-2-cxbn8      1/1           Running     0         2m28s
+
+# oc get routes
+<ROUTE HOST/PORT RETURNED>
+
+# curl -s <ROUTE HOST/PORT>
+Hello, World! php version is 7.3.11
+Added a change.
 ```
