@@ -164,7 +164,47 @@ Outputting the results of the new-app command will create a List object that con
     },
     {
       "kind": "DeploymentConfig"
-      ...
+      "spec": {
+        "strategy": {
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNews": [
+                "myapp"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "myapp:latest"
+              }
+            }
+          }
+        ],
+        ...
+        "template": {
+          "metadata: { ...},
+          "spec": {
+            "containers": [
+              {
+                "name": "myapp",
+                "image": "myapp:latest",
+                "ports": [
+                  {
+                    "containerPort": 8080,
+                    "protocol": "TCP:
+                  },
+                  {
+                    "containerPort": 8443,
+                    "protocol": "TCP"
+                  }
+                ],
+                ...
     },
     {
       "kind": "Service"
@@ -172,6 +212,24 @@ Outputting the results of the new-app command will create a List object that con
     }
   ]
 }
-
-  
 ```
+There's alot going on here, but here are the most important parts:
+* We defined the app as being based on an ImageStream (TO DO: figure out why my building an oc new-app from an image without using tilde also showed up as ImageStream).
+* The BuildConfig identifies:
+    * Where the source code repository is located
+    * That the S2I method should be used to build the image
+    * Should use the `php:7.3` image as its builder image
+    * Should save the resulting builder image output as `myapp:latest`
+* The DeploymentConfig identifies:
+    * It should deploy a new container whenever the Replication Controller template changes
+    * It should deploy a new container whenever a new version of the `myapp:latest` container is available in the repository.
+    * Whenever a new container must be deployed, it should use the `myapp:latest` container
+    * Specifies container ports
+    
+
+This doesn't work in the RH OCP. I must have messed something up:
+# oc get builds
+# oc logs build/<BUILD CONTAINER>
+# oc start-build build-config-name
+# oc get buildconfig
+# oc start-build myapp
