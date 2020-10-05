@@ -83,4 +83,4 @@ So now I could conclude that the image was remote and could be retrieved from `r
 ```bash
 # skopeo inspect docker://registry.access.redhat.com/rhscl/mysql-57-rhel7
 ```
-<img src="/img/skopeo-mysql.png">
+<img src="./img/skopeo-mysql.png">
