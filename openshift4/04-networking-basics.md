@@ -69,7 +69,9 @@ Applications __outside__ of the Openshift cluster can access it in one of two wa
 1. *OpenShift Route* - Preferred technique. Exposes services via a unique URL (via `oc expose`).
 
 <img src="./img/nodeport.png"><br>
-<img src="./img/ocp_routes.png">
+<img src="./img/ocp_routes.png"><br>
+<img src="./img/server-side-discovery.png"><br>
+<img src="./img/k8s-service-discovery.png"><br>
 
 To connect your development machine to an Openshift pod, use a command like: `# oc port-forward <PODNAME_HERE> 3306:3306`. This will forward port 3306 from the local development machines to port 3306 on the specified pod in OC (note: you must leave the terminal open and invoke commands from another window; closing the original terminal will close the conenction).
 
