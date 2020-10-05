@@ -140,3 +140,25 @@ dc0817170062    localhost/do180/nodejs                            latest
 0355cd652bd1    registry.access.redhat.com/ubi7/ubi               7.7
 c07bf25398f4    registry.access.redhat.com/rhscl/mysql-57-rhel7   latest
 ```
+
+With the base images created, time to start building the children containers derived from them. Lets 
+```bash
+# cd /home/student/DO180/labs/multicontainer-design/deploy/nodejs
+# ./build.sh
+```
+The build.sh file contains the following:
+```docker
+#!/bin/bash
+echo "Preparing build folder"
+rm -fr build
+cp -ap nodejs-source/* build
+rm build/*.sh
+
+# image build complains if he cannot read the database folder even if not needed for building the image
+sudo rm -rf {linked,kubernetes}/work
+
+source /usr/local/etc/ocp4.config
+sudo podman build --layers=false -t do180/todonodejs --build-arg NEXUS_BASE_URL=${RHT_OCP4_NEXUS_SERVER} .
+```
+
+P227
