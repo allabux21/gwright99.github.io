@@ -53,7 +53,7 @@ First, I looked at the Dockerfile which I had access to. Almost everything was c
 ```bash
 # cat /home/student/DO180/labs/multicontainer-design/images/mysql/Dockerfile
 ```
-The Dockerfile:
+The MYSQL Dockerfile:
 ```docker
 FROM rhscl/mysql-57-rhel7
 # MySQL image for DO180
@@ -84,3 +84,59 @@ So now I could conclude that the image was remote and could be retrieved from `r
 # skopeo inspect docker://registry.access.redhat.com/rhscl/mysql-57-rhel7
 ```
 <img src="./img/skopeo-mysql.png">
+
+### Creating the Application
+First, let's create the MYSQL instance:
+```bash
+# cd /home/student/DO180/labs/multicontainer-design/images/mysql
+# sudo podman build -t do180/mysql-57-rhel7 --layers=false
+
+# sudo podman image
+REPOSITORY                                        TAG           IMAGE         ID              CREATED SIZE
+localhost/do180/mysql-57-rhel7                    latest        8dc111531fce  21 seconds ago  444MB
+registry.access.redhat.com/rhscl/mysql-57-rhel7   latest        c07bf25398f4  4 weeks ago     444MB
+```
+
+Now let's create the Nodejs image. But first let's see what's in the Dockerfile:
+```docker
+FROM    ubi7/ubi:7.7
+MAINTAINER username <username@example.com>
+
+ENV     NODEJS_VERSION=8.0 \
+        HOME=/opt/app-root/src
+
+# Setting tsflags=nodocs helps create a leaner container image, as documentation is not needed in the container.
+RUN yum install -y --setopt=tsflags=nodocs rh-nodejs8 make && \
+	yum clean all --noplugins -y && \
+	mkdir -p /opt/app-root && \
+  	groupadd -r appuser -f -g 1001 && \
+  	useradd -u 1001 -r -g appuser -m -d ${HOME} -s /sbin/nologin \
+            -c "Application User" appuser && \
+  	chown -R appuser:appuser /opt/app-root && \
+	chmod -R 755 /opt/app-root
+
+ADD	./enable-rh-nodejs8.sh /etc/profile.d/
+
+USER	appuser
+WORKDIR	${HOME}
+
+CMD	["echo", "You must create your own container from this one."]
+```
+As usual, we take a base image `ubi7/ubi:7.7` and then modify the permissions so that it can run on OpenShift as non-root. 
+Then we add `enable-rh-nodejs8.sh` to the container folder `/etc/profile.d` so that it will be run automatically at login.
+```bash
+#!/bin/bash
+source /opt/rh/rh-nodejs8/enable
+export X_SCLS="`scl enable rh-nodejs8 'echo $X_SCLS'`"
+```
+
+Ok, let's create the NodeJS container:
+```bash
+# cd /home/student/DO180/labs/multicontainer-design/images/nodejs/Dockerfile
+# sudo podman images --format "table {.ID}} {{.Repository}} {{.Tag}}"
+IMAGE           REPOSITORY                                        TAG
+dc0817170062    localhost/do180/nodejs                            latest
+8dc111531fce    localhost/do180/mysql-57-rhel7                    latest
+0355cd652bd1    registry.access.redhat.com/ubi7/ubi               7.7
+c07bf25398f4    registry.access.redhat.com/rhscl/mysql-57-rhel7   latest
+```
