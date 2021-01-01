@@ -72,12 +72,12 @@ I had already executed 4+ refactorings to get the ORM-based solution to a state 
 I needed to make a decision so that I could get on with the rest of the damn project. I ultimately decided on a compromise solution: _Keep the ORM in the project, but deliberately limit how its capabilities are used._
 
 Going forward, I would govern my interaction with the ORM as follows:
-1) I WOULD use the ORM as my database connection solution.
-2) I WOULD model database tables as ORM objects rather than raw SQL statements.
-3) I WOULD use ORM syntax to for CRUD operations against the database.<br>
-4) I WOULD NOT use relationships in my ORM objects.
-5) I WOULD NOT use shorthand syntax (e.g. `Base.query = Session.query_property()`) to minimize typing.
-6) I WOULD NOT use cascading operations (i.e. I want the ORM to only execute specific operations that I specifically order it to do, not extra stuff that it opaquely doing on my behalf).
+1) I WILL use the ORM as my database connection solution.
+2) I WILL model database tables as ORM objects rather than raw SQL statements.
+3) I WILL use ORM syntax to for CRUD operations against the database.<br>
+4) I WON'T use relationships in my ORM objects.
+5) I WON'T use shorthand syntax (e.g. `Base.query = Session.query_property()`) to minimize typing.
+6) I WON'T use cascading operations (i.e. I want the ORM to only execute specific operations that I specifically order it to do, not extra stuff that it opaquely doing on my behalf).
 
 My logic was thus:
 * I had working code and it would be crazy to scrap it.
