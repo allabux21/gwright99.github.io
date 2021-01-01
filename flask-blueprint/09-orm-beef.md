@@ -47,24 +47,24 @@ Several times throughout the project thus far, I'd find a browser instance with 
 ### The Case For Keeping The ORM
 While there were good reasons for tossing the ORM, there were also good reasons for keeping it:
 
-* I expected to change databases soon.
+* I expected to change databases soon.<br>
 Using Sqlite3 made absolute sense for ease of local development, but my intention to eventually host this solution in Kubernetes meant that it would be relatively simple to switch to a more robust database solution (e.g. MariaDB or Postgres). Normally I'd discount that the argument that an ORM helps prevent database lock-in (how often are you REALLY going to change your Production database solution?) but in this case it was a valid argument.
 
-* I would need to manage the database connections myself.
+* I would need to manage the database connections myself.<br>
 SQLAlchemy was doing most of the lifting to connect and interact with the database. If I jettisoned this component, I would need to replace it with another database-specific package. The learning curve might be easier with the new package, but it wasn't guaranteed.
 
-* I would need to learn the DB functionlity
+* I would need to learn the DB functionlity.<br>
 I listed this as a reason for ditching the ORM, but it is also a reason for keeping it. I would still have to expend effort to learn the pecularities of the database. While this might be better for me long-term, it did not lessen the short-term burden.
 
-* I would likely lose the ability to leverage other helper packages
+* I would likely lose the ability to leverage other helper packages.<br>
 This issue was of major concern. The ORM itself was just __one__ part of my project. Recognizing that many business ideas would require the ability to manage and display user-specific content, I was going to need other solution components like Account Login and Session Security, much of which was already avaialable OOTB via the Flask ecosystem. 
 I had already managed to build basic user login capabilities using the Flask-Login package. This integration, however, was the result of object inheritance (with my SQLAlchmey database table objects inheriting Flask-Login object capabilities). If I jettisoned the ORM (and its database table object definitions), how was I going to be able to leverage these other packages? 
 I was either going to lose the functionality entirely, or would need to conduct more research for an alternate solution. This seemed wasteful given that I already had a viable solution that was simple to implement. 
 
-* I did not want to deviate from industry norms
+* I did not want to deviate from industry norms.<br>
 Regardless of my personal feelings, SQLAlchemy appears a defacto norm in Flask-based application development. I could assume that many of the tutorials and StackOverflow answers I found would have a SQLAlchemy component to them. Furthermore, I could assume that a subset of companies that I interviewed with would be using an ORM of some sort. Better to maintain at least a modicum of familiarity with the technology rather than dismissing it outright.
 
-* I did not want to have to refactor my code again
+* I did not want to have to refactor my code again.<br>
 I had already executed 4+ refactorings to get the ORM-based solution to a state that seemed to decouple database interaction from the webapp itself, and capable of scaling as the project grew. This was also the effort of several weeks of painful research and trial-and-error. Did I *really* want to scrap it all and restart? 
 
 
@@ -75,7 +75,7 @@ Going forward, I would govern my interaction with the ORM as follows:
 1) I WOULD use the ORM as my database connection solution.
 2) I WOULD model database tables as ORM objects rather than raw SQL statements.
 3) I WOULD use ORM syntax to for CRUD operations against the database.
-
+<br>
 4) I WOULD NOT use relationships in my ORM objects.
 5) I WOULD NOT use shorthand syntax (e.g. `Base.query = Session.query_property()`) to minimize typing.
 6) I WOULD NOT use cascading operations (i.e. I want the ORM to only execute specific operations that I specifically order it to do, not extra stuff that it opaquely doing on my behalf).
