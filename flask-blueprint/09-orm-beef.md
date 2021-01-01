@@ -88,5 +88,113 @@ My logic was thus:
 
 I may come to regret these decisions in future, but they were the decisions that were needed now. Assuming I continue to make forward projet, I'll revisit this post and provide an update on how which decisions good and which ones ended up being terrible.
 
+### Update (Roughly 2 Hours After I Said I Had Definitively Decided)
+Although I really want to forgo ORM relationships, I had a sneaking suspicion this was a bad idea. What few posts I could find on the discussion all agree that - while you didn't NEED to use relationship functionality alongside your models - it was weird not to. So I made one final research push to see if I should reconsider my decision. 
+
+I decided to start with the [simple example here](https://dev.to/4degrees/sqlalchemy-table-relationships-25od). 
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
+engine = create_engine('sqlite:////tmp/relationshiptest.db')
+
+
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
+
+    def __init__(self, connection_string='sqlite:////tmp/relationshiptest.db'):
+        self.connection_string = connection_string
+        self.session = None
+
+    def __enter__(self):
+        engine = create_engine(self.connection_string)
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        self.session = Session()  # (bind=engine)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+
+
+class user_blog_post(Base):
+    __tablename__ = 'user_blog_post'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    user_id = Column(Integer, ForeignKey('user.id'))
+
+
+if __name__ == '__main__':
+    print('Creating relationshiptest.db')
+    Base.metadata.create_all(bind=engine)
+```
+The Python code above resulted in the Sqlite3 tables below. So far, so good.
+```sql
+sqlite> .schema user
+CREATE TABLE user (
+        id INTEGER NOT NULL,
+        username VARCHAR,
+        email VARCHAR,
+        PRIMARY KEY (id)
+);
+sqlite> .schema user_blog_post
+CREATE TABLE user_blog_post (
+        id INTEGER NOT NULL,
+        title VARCHAR,
+        body VARCHAR,
+        user_id INTEGER,
+        PRIMARY KEY (id),
+        FOREIGN KEY(user_id) REFERENCES user (id)
+);
+sqlite>
+```
+Sticking with the example, let's imagine that we have a user who created 2 blog posts. Logically, we must:
+1) Create a `user` table entry
+2) Get the `user.id` of the newly created `user` record
+3) Create a `user_blog_post`, making sure to populate the `user_blog_post.user_id` foreign key field with the `user.id` we retrieved in Step 2.
+4) Create another `user_blog_post`, once again populating the `user_blog_post.user_id` foreign key field with the `user.id` we retrieved in Step 2.
+
+The hurdle here is that I won't be able to populate the `user_blog_post` records' foreign key column until I've created the user. So this means I need to somehow get the database to return the `user.id` value during the INSERT transaction (so I don't have to invoke a second transaction to query the value of `user.id`) or I need to group together the user INSERT with the subsequent user_blog_post INSERTs.
+
+A random Google query offers hints on various methods like:
+* [using RETURNING](https://stackoverflow.com/questions/8589674/sqlalchemy-getting-the-id-of-the-last-record-inserted/8590301) 
+Example:
+```python
+result = conn.execute("INSERT INTO user(username, email) VALUES ('Moshe', 'moshe@4degrees.ai') RETURNING id")
+user_id = result.fetchone()
+
+## Populate blog posts here
+```
+
+* [grouping statements](https://stackoverflow.com/questions/175066/sql-server-is-it-possible-to-insert-into-two-tables-at-the-same-time)
+Example:
+```sql
+BEGIN TRANSACTION
+   DECLARE @DataID int;
+   INSERT INTO DataTable (Column1 ...) VALUES (....);
+   SELECT @DataID = scope_identity();
+   INSERT INTO LinkTable VALUES (@ObjectID, @DataID);
+COMMIT
+```
+
+I'm sure I could replicate something akin to this functionality using the ORM model, but it would require research. And I would need to figure out if Sqlite3 supported it (one comment said it did not, but the post was from 2011 so it's possible it is supported now). The first method seems less efficient (3 transactions instead of 1) but I might be able to bulk insert the two blog posts to bring the first one down to two (something else I would need to research)...
+
+This is just a tiny, easy example and we can already see extra steps and work piling up. OR, despite my distate for it, I can use the ORM functionality that was designed to specifically make this process easier for me: `relationships`.
+
+
+
+
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
