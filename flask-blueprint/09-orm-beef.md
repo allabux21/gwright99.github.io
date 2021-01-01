@@ -29,19 +29,19 @@ db.session
 I obviously was struggling with the ORM. Maybe I was better off without it? 
 
 Ripping it out would mean:
-* I would need to use raw SQL statements. 
+* I would need to use raw SQL statements.<br> 
 Getting better at SQL is always good given the global entrenchment of RDBMS. If I had to choose between becoming a master of SQLAlchemy vs SQL, I'd pick SQL every time.
 
-* I could simplify the project strucuture. 
+* I could simplify the project strucuture.<br>
 Many of the circular import problems I had encountered thus far were caused by the code I needed to initialize and seed the database via the ORM.
 
-* I would (theoretically) be better positioned for more advanced queries later. 
+* I would (theoretically) be better positioned for more advanced queries later.<br>
 Many articles berating ORMs call out the fact that advanced uses (e.g. a query which contains a subquery) are very inefficient via ORM, and I'd probably have to end up writing raw SQL anyways. If I ditched the ORM immediately, I would be better prepared for this eventuality when/if encountered.
 
-* I could remove a large rabbit hole that I was frequetly falling into: trying to understand the inner mechanics of SQLAlchemy.
+* I could remove a large rabbit hole that I was frequetly falling into: trying to understand the inner mechanics of SQLAlchemy.<br>
 Several times throughout the project thus far, I'd find a browser instance with 20+ open tabs from a session where I was desperately trying to understand how some mechanic worked (e.g. relationships, lazy loads). If I avoided using the ORM, I could avoid the rabbit hole.
 
-* I could learn to use the native tooling offered by the database itself, rather than the ORM's abstractions.
+* I could learn to use the native tooling offered by the database itself, rather than the ORM's abstractions.<br>
 
 
 ### The Case For Keeping The ORM
@@ -87,5 +87,5 @@ My logic was thus:
 * I am not comfortable relying too much on opaque ORM functions, particuarly when I don't have a good grasp on the underlying process/mechanism the ORM is managing for me. As a result, its power should be used sparingly.
 * Relationships (in this case ORM, but equally applicable to real-life) were a major and continual source of confusion for me. If I simply ignored the ability to use object relationships, I could still leverage the ORM parts that I wanted AND adhere more closely to how a pure SQL solution might look.
 
-Next:
+Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
