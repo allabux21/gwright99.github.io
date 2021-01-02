@@ -645,10 +645,14 @@ Committing
 ```
 
 #### Super, Why Did you Spend Hours of Your Life Trying to Figure This Out?
+In addition to simply not liking not knowing how the mechanics of my tooling work, I feel there are larger rammifications at play - particularly when it comes to additional database transactions.
 
-Why do I care? Performance and cost - computationally expensive, can impact perforamnce, and cloud providers charge by the READ/WRITE.
+In a small project on a local machine, it's mostly irrelevant if your application needs to make an additional call to the database. However, if you are trying to create a performant application that uses microservice architecture, one should try to limit the computational and network latency costs as much a possible. Furthermore, I understand that some cloud databases (e.g. DynamoDB) incur a charge for every Read & Write made to the database. As a result, I feel it is well worth havinga solid understanding of the Application-Database interaction model, as this can provide a better knowledge base upon which to build future decisions. 
 
 
+
+### That Was A Fun Diversion - Could You Please Get Back to Describing How to Use Relationships?
+<MOre ideas to flesh out>
 Essentially, the relationship entry means "
 
 Dont like backref. Lazy. Be explicit on both sides.
