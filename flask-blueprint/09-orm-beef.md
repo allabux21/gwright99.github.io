@@ -353,7 +353,7 @@ I set the SQLAlchemy engine's echo flag to True in order to see the SQL statemen
 2021-01-02 10:36:42,286 INFO sqlalchemy.engine.base.Engine COMMIT
 ```
 
-SQLAlchmey was somehow retrieving the row ids of newly-created `user` records, but I didn't see where this was happening in the emitted SQL statements. The data didn't seem to be coming from the COMMIT step, because we see different `user.id` values being used in the preceding statements. I figured either:
+SQLAlchemy was somehow retrieving the row ids of newly-created `user` records, but I didn't see where this was happening in the emitted SQL statements. The data didn't seem to be coming from the COMMIT step, because we see different `user.id` values being used in the preceding statements. I figured either:
 * Sqlite must be returning some sort of response object containing the value.
 * SQLAlchemy must be doing some sort of behind the scenes `refresh`, which queried the database immediately after the insert of the user object.
 
@@ -395,6 +395,7 @@ if __name__ == '__main__':
         input('press any key')
         db.session.add(newUser2)
         db.session.add(newUser3)
+        print('Committing')
         db.session.commit()
 ```
 
@@ -503,6 +504,7 @@ sqlite>
 Finally, we commit the records. This results in more users and blog posts being created AND these records now showing up when I SELECT directly from the database:
 ```stdout
 press any key
+Committing
 2021-01-02 14:04:36,406 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
 2021-01-02 14:04:36,406 INFO sqlalchemy.engine.base.Engine ('Person2', 'person2@gmail.com')
 2021-01-02 14:04:36,410 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
@@ -539,6 +541,7 @@ sqlite> SELECT * from user;
 
 ```stdout
 press any key
+Committing
 2021-01-02 14:12:46,530 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
 2021-01-02 14:12:46,530 INFO sqlalchemy.engine.base.Engine ('Person2', 'person2@gmail.com')
 2021-01-02 14:12:46,534 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
@@ -584,8 +587,65 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) disk I/O error
 (Background on this error at: http://sqlalche.me/e/13/e3q8)
 ```
 
+#### So What's Going on Here?
+I'm still not 100 sure whether the row id is coming from a response object, being refreshed by SQLAlchemy behind the scenes, or something else (and a little bit frustrated this isn't clearly described in the documentation). With that said, after reading ["SQLAlchemy commit(), flush(), expire(), refresh(), merge() - what's the difference?"](https://www.michaelcho.me/article/sqlalchemy-commit-flush-expire-refresh-merge-whats-the-difference), by Michael Cho, I have some suspicions regarding the flow:
+1) INSERT statements were only emitted by the ORM on the `.flush()` and `.commit()` commands.
+2) Using `.flush()` or `.commit()` (which calls flush behind-the-scenes) results in the objects in memory being written to the __Database Transaction Buffer__. This is essentially a "soft write" where a record row has been allocated to each record (hence why we subsequently have access to the database's record id), but will not be finalized until we do a COMMIT (at which point the record will become available to queries).
 
-Sent me down a rabbit hole of SQLAlchemy documentation and old stackoverflow posts I didn't trust.
+I confirmed my suspicions by further modifying my test code. I commented out the `.flush()` step and try to print the `newUser.id` before the soft write to the database. Any attempts to write this value return a value of None until the softwrite occurred:
+```python
+with SQLAlchemyDBConnection() as db:
+        print('Adding newUser')
+        db.session.add(newUser)
+        print('User.id is: ', newUser.id)
+        input('Press any key1')
+        # db.session.flush()  # Not needed. SQLAlchemy has autoflush=True by default
+        input('Press any key2')
+        print('Check if we have access to user.id via SQLA and then check db')
+        print('User.id is: ', newUser.id)
+        input('Press any key3')
+```
+```stdout
+Creating relationshiptest.db
+2021-01-02 14:32:07,218 INFO sqlalchemy.engine.base.Engine SELECT CAST('test plain returns' AS VARCHAR(60)) AS anon_1
+2021-01-02 14:32:07,218 INFO sqlalchemy.engine.base.Engine ()
+2021-01-02 14:32:07,220 INFO sqlalchemy.engine.base.Engine SELECT CAST('test unicode returns' AS VARCHAR(60)) AS anon_1
+2021-01-02 14:32:07,220 INFO sqlalchemy.engine.base.Engine ()
+2021-01-02 14:32:07,222 INFO sqlalchemy.engine.base.Engine PRAGMA main.table_info("user")
+2021-01-02 14:32:07,222 INFO sqlalchemy.engine.base.Engine ()
+2021-01-02 14:32:07,225 INFO sqlalchemy.engine.base.Engine PRAGMA main.table_info("user_blog_post")
+2021-01-02 14:32:07,226 INFO sqlalchemy.engine.base.Engine ()
+Adding newUser
+User.id is:  None
+Press any key1
+Press any key2
+Check if we have access to user.id via SQLA and then check db
+User.id is:  None
+Press any key3
+press any key
+Committing
+2021-01-02 14:37:34,826 INFO sqlalchemy.engine.base.Engine SELECT CAST('test plain returns' AS VARCHAR(60)) AS anon_1
+2021-01-02 14:37:34,826 INFO sqlalchemy.engine.base.Engine ()
+2021-01-02 14:37:34,828 INFO sqlalchemy.engine.base.Engine SELECT CAST('test unicode returns' AS VARCHAR(60)) AS anon_1
+2021-01-02 14:37:34,828 INFO sqlalchemy.engine.base.Engine ()
+2021-01-02 14:37:34,829 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-02 14:37:34,831 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
+2021-01-02 14:37:34,831 INFO sqlalchemy.engine.base.Engine ('Moshe', 'moshe@4degrees.ai')
+2021-01-02 14:37:34,834 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
+2021-01-02 14:37:34,835 INFO sqlalchemy.engine.base.Engine ('Person2', 'person2@gmail.com')
+2021-01-02 14:37:34,837 INFO sqlalchemy.engine.base.Engine INSERT INTO user (username, email) VALUES (?, ?)
+2021-01-02 14:37:34,838 INFO sqlalchemy.engine.base.Engine ('Person3', 'person3@gmail.com')
+2021-01-02 14:37:34,844 INFO sqlalchemy.engine.base.Engine INSERT INTO user_blog_post (title, body, user_id) VALUES (?, ?, ?)
+2021-01-02 14:37:34,845 INFO sqlalchemy.engine.base.Engine ('first', 'first post body', 10)
+2021-01-02 14:37:34,846 INFO sqlalchemy.engine.base.Engine INSERT INTO user_blog_post (title, body, user_id) VALUES (?, ?, ?)
+2021-01-02 14:37:34,847 INFO sqlalchemy.engine.base.Engine ('second', 'second post body', 10)
+2021-01-02 14:37:34,848 INFO sqlalchemy.engine.base.Engine INSERT INTO user_blog_post (title, body, user_id) VALUES (?, ?, ?)
+2021-01-02 14:37:34,849 INFO sqlalchemy.engine.base.Engine ("Person3's Blog", 'The first blog body for Person3', 12)
+2021-01-02 14:37:34,850 INFO sqlalchemy.engine.base.Engine COMMIT
+```
+
+#### Super, Why Did you Spend Hours of Your Life Trying to Figure This Out?
+
 Why do I care? Performance and cost - computationally expensive, can impact perforamnce, and cloud providers charge by the READ/WRITE.
 
 
