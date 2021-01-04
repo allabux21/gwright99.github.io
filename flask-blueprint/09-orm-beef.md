@@ -589,10 +589,12 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) disk I/O error
 
 This noticed behaviour aligns with some of the responses provided in a very old StackOverflow post [sqlalchemy flush() and get inserted id?](https://stackoverflow.com/questions/1316952/sqlalchemy-flush-and-get-inserted-id). Assuming the information can be believed, one answer said that 'primary-key attributes are populated immediately with the flush() process as they are generated, and no call to commit() should be required', with a second commenter writing '... a refresh is not necessary. Once you flush, you can access the id field, sqlalchemy automatically refreshes the id which is auto-generated at the backend." 
 
-I believe the bit about the primary key being generated (we could clearly see the value available for insertion on the subsequent blog post creation) but I'm not so sure about the `refresh` comment. As per the official [refresh](https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session.refresh) documentation, a refresh will cause 'a query to be issued to the database and all attributes will be refreshed with their current database value.' Given that I couldn't retrieve the `user` record via the DB CLI query, why would it suddenly work for a SQLAlchemy-based query? Something was still fishy.
+I believe the bit about the primary key being generated (we could clearly see the value available for insertion on the subsequent blog post creation) but I'm not so sure about the `refresh` comment. As per the official [refresh](https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session.refresh) documentation, a refresh will cause 'a query to be issued to the database and all attributes will be refreshed with their current database value.' Given that I couldn't retrieve the `user` record via the DB CLI query, why would it suddenly work for a SQLAlchemy-based query? 
+
+Something was still fishy re the explanation of this behaviour but - short of setting up a proxy to capture all the traffic between SQLAlchemy and Sqlite (which would require more research and work) - I had taken this investigation as far as I could justifiably invest the time. I decided that I would just accept the hazy behaviour for what it was and issue myself a new project maxim "Make sure the ORM is the only component that speaks to the database". It was time to get on to other things.
 
 #### So What's Going on Here?
-I'm still not 100 sure whether the row id is coming from a response object, being refreshed by SQLAlchemy behind the scenes, or something else (and a little bit frustrated this isn't clearly described in the documentation). With that said, after reading ["SQLAlchemy commit(), flush(), expire(), refresh(), merge() - what's the difference?"](https://www.michaelcho.me/article/sqlalchemy-commit-flush-expire-refresh-merge-whats-the-difference), by Michael Cho, I have some suspicions regarding the flow:
+I'm still not 100 sure whether the row id is coming from a response object, being refreshed by SQLAlchemy behind the scenes, or something else (and a little bit frustrated this isn't clearly described in the documentation or source code). With that said, after reading ["SQLAlchemy commit(), flush(), expire(), refresh(), merge() - what's the difference?"](https://www.michaelcho.me/article/sqlalchemy-commit-flush-expire-refresh-merge-whats-the-difference), by Michael Cho, I have some suspicions regarding the flow:
 1) INSERT statements were only emitted by the ORM on the `.flush()` and `.commit()` commands.
 2) Using `.flush()` or `.commit()` (which calls flush behind-the-scenes) results in the objects in memory being written to the __Database Transaction Buffer__. This is essentially a "soft write" where a record row has been allocated to each record (hence why we subsequently have access to the database's record id), but will not be finalized until we do a COMMIT (at which point the record will become available to queries).
 
@@ -653,11 +655,68 @@ In addition to simply not liking not knowing how the mechanics of my tooling wor
 
 In a small project on a local machine, it's mostly irrelevant if your application needs to make an additional call to the database. However, if you are trying to create a performant application that uses microservice architecture, one should try to limit the computational and network latency costs as much a possible. Furthermore, I understand that some cloud databases (e.g. DynamoDB) incur a charge for every Read & Write made to the database. As a result, I feel it is well worth havinga solid understanding of the Application-Database interaction model, as this can provide a better knowledge base upon which to build future decisions. 
 
+For now, I'll just accept the behaviour for what it is and revisit at a later point once I've made more progress on the rest of the work.
 
 
 ### That Was A Fun Diversion - Could You Please Get Back to Describing How to Use Relationships?
-<MOre ideas to flesh out>
-Essentially, the relationship entry means "
+One article on SQLAlchemy relationships defined them as a way to "navigate foreign key relationships through attributes on your model". I prefer to think about it as telling SQLAlchemy "I want you to worry about managing the foreign keys as we interact with database records".
+
+Think back to our logical sequencing of steps when we wanted to link a `user` to a `blog_post`. We needed to:
+1. Create `user` record
+2. Get userid
+3. Create blog_post providing `user.id` as a Foreign Key on the `blog_post` record.
+4. Repeat Step 3 as needed.
+
+From a SQL sequencing perspective, we can't write `blog_post` records to the database until after the `user` is created. But that doesn't mean we are limited by this constraint when writing our code. Using `relationship` definitions, we can stay at the logical level where we create and define the connection between ALL the objects (i.e. a user and two user_blog_post objects), and leave it to SQLAlchmey to ensure that all the entries have their foreign keys populated properly when the objects are flushed to the database. 
+
+```python
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", backref="user")
+
+
+class user_blog_post(Base):
+    __tablename__ = 'user_blog_post'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    # Note: ForeignKey MUST be defined or relationship insert wont work.
+    user_id = Column(Integer, ForeignKey('user.id'))
+    
+if __name__ == "__main__":
+    # CREATE THE OBJECTS AND LINK THEM VIA THE blog_posts SHORTHAND.
+    newUser = user(username='Moshe', email="moshe@4degrees.ai")
+    newUser.blog_posts = [
+        user_blog_post(title="first", body="first post body"),
+        user_blog_post(title="second", body="second post body")
+        
+    # FLUSH AND COMMIT HAPPENS HERE, AT WHICH POINT 3 RECORDS WILL BE CREATED AND EACH user_blog_post.user_id 
+    # WILL BE POPULATED WITH THE AUTO-GENERATED PRIMARY KEY ASSIGNED TO THE user.id FIELD OF THE CREATED user RECORD
+    db.session.add(newUser)
+    db.session.commit()
+```
+When we check on the records create in the Sqlite database (via the Sqlite CLI), we see:
+```sql
+SQLite version 3.31.1 2020-01-27 19:55:54
+Enter ".help" for usage hints.
+
+sqlite> .tables
+user            user_blog_post
+
+sqlite> select * from user;
+1|Moshe|moshe@4degrees.ai
+
+sqlite> select * from user_blog_post;
+1|first|first post body|1
+2|second|second post body|1
+```
+
+
+
 
 Dont like backref. Lazy. Be explicit on both sides.
 Does the implicit join only work because there is a single Foreign Key?
