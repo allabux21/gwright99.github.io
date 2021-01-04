@@ -587,6 +587,10 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) disk I/O error
 (Background on this error at: http://sqlalche.me/e/13/e3q8)
 ```
 
+This noticed behaviour aligns with some of the responses provided in a very old StackOverflow post [sqlalchemy flush() and get inserted id?](https://stackoverflow.com/questions/1316952/sqlalchemy-flush-and-get-inserted-id). Assuming the information can be believed, one answer said that 'primary-key attributes are populated immediately with the flush() process as they are generated, and no call to commit() should be required', with a second commenter writing '... a refresh is not necessary. Once you flush, you can access the id field, sqlalchemy automatically refreshes the id which is auto-generated at the backend." 
+
+I believe the bit about the primary key being generated (we could clearly see the value available for insertion on the subsequent blog post creation) but I'm not so sure about the `refresh` comment. As per the official [refresh](https://docs.sqlalchemy.org/en/13/orm/session_api.html#sqlalchemy.orm.session.Session.refresh) documentation, a refresh will cause 'a query to be issued to the database and all attributes will be refreshed with their current database value.' Given that I couldn't retrieve the `user` record via the DB CLI query, why would it suddenly work for a SQLAlchemy-based query? Something was still fishy.
+
 #### So What's Going on Here?
 I'm still not 100 sure whether the row id is coming from a response object, being refreshed by SQLAlchemy behind the scenes, or something else (and a little bit frustrated this isn't clearly described in the documentation). With that said, after reading ["SQLAlchemy commit(), flush(), expire(), refresh(), merge() - what's the difference?"](https://www.michaelcho.me/article/sqlalchemy-commit-flush-expire-refresh-merge-whats-the-difference), by Michael Cho, I have some suspicions regarding the flow:
 1) INSERT statements were only emitted by the ORM on the `.flush()` and `.commit()` commands.
