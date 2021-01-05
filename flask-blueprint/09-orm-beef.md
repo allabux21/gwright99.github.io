@@ -16,9 +16,7 @@ However, my opinion began to change as I started reviewing the project code agai
 
 * My code was littered with commented blocks I was afraid to delete, reference links, confused explanations, notes to further investigate later, and other notes that said "I did investigate more and still dont understand what the documentation is trying to explain but I *think* it works this way."
 
-* Instantiation and syntax patterns had repeatedly changed as I moved from Flask-SQLAlchemy to SQLAlchemy, and then needed to change again to accommodate the creation of a context manager for database connections (granted partially driven by the limitations of Sqlite to only access requests from one process at a time). 
-Model.query
-db.session
+* Instantiation and syntax patterns had repeatedly changed as I moved from Flask-SQLAlchemy to SQLAlchemy, and then needed to change again to accommodate the creation of a context manager for database connections (granted partially driven by the limitations of Sqlite to only accept requests from one process at a time). 
 
 * I had to find, research, and eventually rewrite a series of functions (Bob Waycott) to be able to find and load multiple models spread over multiple files. While the search logic was reusable, the model creation was tied to the SQLAlchemy Base class, thereby requiring me to rewrite the database module to separate the logic the instantiates db object (Base, engine, ContenxtManager) from poplation functions (due to circular imports).  
 
@@ -26,9 +24,8 @@ db.session
 
 
 ### The Case For Ditching The ORM
-I obviously was struggling with the ORM. Maybe I was better off without it? 
+I obviously was struggling with the ORM. Maybe I was better off without it? Ripping it out would mean:
 
-Ripping it out would mean:
 * I would need to use raw SQL statements.<br> 
 Getting better at SQL is always good given the global entrenchment of RDBMS. If I had to choose between becoming a master of SQLAlchemy vs SQL, I'd pick SQL every time.
 
@@ -49,9 +46,6 @@ While there were good reasons for tossing the ORM, there were also good reasons 
 
 * I expected to change databases soon.<br>
 Using Sqlite3 made absolute sense for ease of local development, but my intention to eventually host this solution in Kubernetes meant that it would be relatively simple to switch to a more robust database solution (e.g. MariaDB or Postgres). Normally I'd discount that the argument that an ORM helps prevent database lock-in (how often are you REALLY going to change your Production database solution?) but in this case it was a valid argument.
-
-* I would need to manage the database connections myself.<br>
-SQLAlchemy was doing most of the lifting to connect and interact with the database. If I jettisoned this component, I would need to replace it with another database-specific package. The learning curve might be easier with the new package, but it wasn't guaranteed.
 
 * I would need to learn the DB functionlity.<br>
 I listed this as a reason for ditching the ORM, but it is also a reason for keeping it. I would still have to expend effort to learn the pecularities of the database. While this might be better for me long-term, it did not lessen the short-term burden.
@@ -740,7 +734,7 @@ first
 ```
 Easy-peasy, right? Yes, so long as you remain aware of a few caveats:
 1) Relationship Loading Technique and Join Type 
-2) ORM mapping
+2) Session Object Mapping and Lazy Load
 3) Query syntax
 4) 
 
@@ -768,6 +762,8 @@ user_and_blogposts = db.session.query(user).options(joinedload(user.blog_posts))
 
 CAVEAT: SQLAlchemy eager loads use a LEFT OUTER JOIN by default (see [here](https://stackoverflow.com/questions/38549/what-is-the-difference-between-inner-join-and-outer-join#:~:text=You%20use%20INNER%20JOIN%20to,and%20columns%20will%20have%20values.&text=LEFT%20OUTER%20JOIN%20returns%20all,matches%20in%20the%20second%20table.) for a refresher on SQL JOINs if you suddenly feel a little hazy on the types). An [INNER JOIN can be used instead](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#joined-eager-loading), defined either at design time or within the query itself.
 
+See [What Kind of Loading to Use?](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#relationship-loading-techniques) for more guidance by the SQLAlchemy folks on the trade-offs between calls, complexity, and performacne.
+
 ```python
 # EXAMPLE 1 - INNER JOIN DEFINED IN CLASS DEFINITION
 class user(Base):
@@ -782,7 +778,149 @@ class user(Base):
 user_and_blogposts = db.session.query(user).options(joinedload(user.blog_posts, innerjoin=True)).all()
 ```
 
-#####
+##### Session Object Mapping and Lazy Load
+As noted above, using a Lazy Load relationship loading technique will cause SQLAlchemy to emit a second SELECT query if we try to access data on another table via a retrieved record's relationship attribute. The documentation identifies [one exception to the rule](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#lazy-loading): "The one case where SQL is not emitted is for a simple many-to-one relationship, when the related object can be identified by its primary key alone and that object is already present in the current Session. For this reason, while lazy loading can be expensive for related collections, in the case that one is loading lots of objects with simple many-to-ones against a relatively small set of possible target objects, lazy loading may be able to refer to these objects locally without emitting as many SELECT statements as there are parent objects."
+
+I didn't fully grasp the implications of this until I ran the following test:
+```python
+### SAME CODE HERE THAT I USED IN MY PREVIOUS EXAMPLES PRIOR TO THE __main__ DUNDER
+if __name__ == '__main__':
+
+    Base.metadata.create_all(bind=engine)
+
+    newUser = user(username='Moshe', email="moshe@4degrees.ai")
+    newUser.blog_posts = [
+        user_blog_post(title="first", body="first post body"),
+        user_blog_post(title="second", body="second post body")
+    ]
+
+    with SQLAlchemyDBConnection() as db:
+        # ADD user AND RELATED user_blog_posts TO DATABASE
+        db.session.add(newUser)
+        db.session.commit()
+
+        # RETRIEVE user AND RELATED BLOG POSTS
+        print("\n\n1 -----------------------------")
+        person1 = db.session.query(user).first()
+        print(f"{person1.blog_posts[0].title}")
+
+        print("\n\n1A ----------------------------")
+        person1A = db.session.query(user).first()
+        print(f"{person1A.blog_posts[0].title}")
+        
+        input('COMPARE SELECT EMISSION FOR person1 VS person1A')
+```
+
+```stdout
+1 -----------------------------
+2021-01-05 09:28:53,084 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-05 09:28:53,086 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 09:28:53,091 INFO sqlalchemy.engine.base.Engine (1, 0)
+2021-01-05 09:28:53,097 INFO sqlalchemy.engine.base.Engine SELECT user_blog_post.id AS user_blog_post_id, user_blog_post.title AS user_blog_post_title, user_blog_post.body AS user_blog_post_body, user_blog_post.user_id AS user_blog_post_user_id
+FROM user_blog_post
+WHERE ? = user_blog_post.user_id
+2021-01-05 09:28:53,101 INFO sqlalchemy.engine.base.Engine (1,)
+first
+
+
+1A ----------------------------
+2021-01-05 09:28:53,108 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 09:28:53,112 INFO sqlalchemy.engine.base.Engine (1, 0)
+first
+
+COMPARE SELECT EMISSION FOR person1 VS person1A
+```
+The Python code creates a single `user` record and two related `user_blog_post` records in the database. It then runs two  successive transactions to retrieve the records:
+* The first transaction retrieves the first record found in the `user` table and then tries to access the title of first `user_blog_post` record (accessed via the `user_blog` relationship we had defined in our models). Because I didn't change the default relationship loading technique, SQLAlchemy used the lazy load method - issuing one query to retrieve the `user` and then issuing a follow-up query in response to the attempt to access the `user_blog_post` title via the relationship. This is why we see two SELECT statements being echoed in the stdout of the transaction.
+
+* The second transaction repeats this process: retrieve the first record in the `user` table and then retrieve the associated blog post title via relationship. This time, only a _single_ SELECT statement is issued before the code is able to finish execution. What gives?
+
+This appears to be the exception that SQLAlchemy was calling out. We had already retrieved the blog post in the previous query and were still working within the same database session. As a result of the way SQLALchemy converted the blog_post_record back into memory, it was able to tell that it already had the record and thus had to no need to issue the follow-up query.
+
+I confirmed this behaviour by modifying the code slightly, so that each retrieval transaction took place with its own Session object. This resulted in both transactions executing both an initial query for the `user` record, with a follow-up query for the user_blog_post object when we tried to access it via the relationship.
+```python
+...
+if __name__ == '__main__':
+
+    Base.metadata.create_all(bind=engine)
+
+    newUser = user(username='Moshe', email="moshe@4degrees.ai")
+    newUser.blog_posts = [
+        user_blog_post(title="first", body="first post body"),
+        user_blog_post(title="second", body="second post body")
+    ]
+
+    with SQLAlchemyDBConnection() as db:
+        # ADD user AND RELATED user_blog_posts TO DATABASE
+        db.session.add(newUser)
+        db.session.commit()
+
+        # RETRIEVE user AND RELATED BLOG POSTS
+        print("\n\n1 -----------------------------")
+        person1 = db.session.query(user).first()
+        print(f"{person1.blog_posts[0].title}")
+    
+    # INSTANTIATE A NEW SESSION OBJECT
+    with SQLAlchemyDBConnection() as db:
+        print("\n\n1A ----------------------------")
+        person1A = db.session.query(user).first()
+        print(f"{person1A.blog_posts[0].title}")
+        
+        input('COMPARE SELECT EMISSION FOR person1 VS person1A')
+```
+
+```stdout
+...
+1 -----------------------------
+2021-01-05 12:58:12,666 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-05 12:58:12,667 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 12:58:12,674 INFO sqlalchemy.engine.base.Engine (1, 0)
+2021-01-05 12:58:12,678 INFO sqlalchemy.engine.base.Engine SELECT user_blog_post.id AS user_blog_post_id, user_blog_post.title AS user_blog_post_title, user_blog_post.body AS user_blog_post_body, user_blog_post.user_id AS user_blog_post_user_id
+FROM user_blog_post
+WHERE ? = user_blog_post.user_id
+2021-01-05 12:58:12,684 INFO sqlalchemy.engine.base.Engine (1,)
+first
+2021-01-05 12:58:12,686 INFO sqlalchemy.engine.base.Engine ROLLBACK
+
+
+1A ----------------------------
+2021-01-05 12:58:12,692 INFO sqlalchemy.engine.base.Engine SELECT CAST('test plain returns' AS VARCHAR(60)) AS anon_1
+2021-01-05 12:58:12,692 INFO sqlalchemy.engine.base.Engine ()
+2021-01-05 12:58:12,695 INFO sqlalchemy.engine.base.Engine SELECT CAST('test unicode returns' AS VARCHAR(60)) AS anon_1
+2021-01-05 12:58:12,696 INFO sqlalchemy.engine.base.Engine ()
+2021-01-05 12:58:12,699 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-05 12:58:12,700 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 12:58:12,703 INFO sqlalchemy.engine.base.Engine (1, 0)
+2021-01-05 12:58:12,706 INFO sqlalchemy.engine.base.Engine SELECT user_blog_post.id AS user_blog_post_id, user_blog_post.title AS user_blog_post_title, user_blog_post.body AS user_blog_post_body, user_blog_post.user_id AS user_blog_post_user_id
+FROM user_blog_post
+WHERE ? = user_blog_post.user_id
+2021-01-05 12:58:12,708 INFO sqlalchemy.engine.base.Engine (1,)
+first
+COMPARE SELECT EMISSION FOR person1 VS person1A
+```
+
+
+What if the record was changed behind the scenes? (multi-tenant).
+
+
+
+
+
+
+
+
+The SQLAlchemy ORM has a very specific job: it maps SQL records to Python objects (and vice versa). This is a complex exercise that is (thankfully) hidden from us a programmers. We can stick with our dot-notation Python commands and automagically our code relationships are turned into the appropriate SQL. 
+
+This hidden behaviour, however, cannot be totally ignored - particularly when it comes to the querying of database results. 
+
 
 
 Model.query
