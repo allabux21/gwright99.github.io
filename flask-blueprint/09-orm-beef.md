@@ -736,7 +736,6 @@ Easy-peasy, right? Yes, so long as you remain aware of a few caveats:
 1) Relationship Loading Technique and Join Type 
 2) Session Object Mapping and Lazy Load
 3) Query syntax
-4) 
 
 ###### Relationship Loading Technique and Join Type
 SQLAlchemy has [reams of documentation](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html) about the mechanics of relationship loading. It is important to note that the default "lazy loading" technique __does not__ query the records stored in tables other than the object we supplied as part of our ORM query. This technique will issue a second SELECT statement to retrieve these records in the event we try to access any of these attributes via the original object's relationship.
@@ -907,19 +906,74 @@ first
 COMPARE SELECT EMISSION FOR person1 VS person1A
 ```
 
+I wondered what would happen if I kept both transactions in a single Session but also emulated updates coming into the database from a source other than the ORM. Would it be clever enough to realize that the object it had retrieved and stored in memory was actually out-of-data-now? I modified the code again to run one final test.
 
-What if the record was changed behind the scenes? (multi-tenant).
+I added an input pause between the first and second retrieval transactions. After the first two SELECT queries were complete, I logged into the database and modified the title of the now-retrieved `user_blog_post` object. I then let the second retrieval query execute. SQLAlchemy did not appear to be aware that the record value had changed, because it returned the stored value of the previously-retrieved user_blog_post object.
+```python
+...
+if __name__ == '__main__':
+
+    Base.metadata.create_all(bind=engine)
+
+    newUser = user(username='Moshe', email="moshe@4degrees.ai")
+    newUser.blog_posts = [
+        user_blog_post(title="first", body="first post body"),
+        user_blog_post(title="second", body="second post body")
+    ]
+
+    with SQLAlchemyDBConnection() as db:
+        # ADD user AND RELATED user_blog_posts TO DATABASE
+        db.session.add(newUser)
+        db.session.commit()
+        
+        print("\n\n1 -----------------------------")
+        person1 = db.session.query(user).first()
+        print(f"{person1.blog_posts[0].title}")
+
+        input("Via SQL CLI, modify the title of the first blog post.")
+
+        print("\n\n1A ----------------------------")
+        person1A = db.session.query(user).first()
+        print(f"{person1A.blog_posts[0].title}")
+
+        input('COMPARE SELECT EMISSION FOR person1 VS person1A')
+```
+
+```sql
+sqlite> UPDATE user_blog_post SET title = "ModifiedFirstTime" WHERE id = 1;
+sqlite> select * from user_blog_post;
+1|ModifiedFirstTime|first post body|1
+2|second|second post body|1
+3|Person3's Blog|The first blog body for Person3|3
+```
+
+```stdout
+1 -----------------------------
+2021-01-05 15:01:07,432 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-05 15:01:07,433 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 15:01:07,438 INFO sqlalchemy.engine.base.Engine (1, 0)
+2021-01-05 15:01:07,441 INFO sqlalchemy.engine.base.Engine SELECT user_blog_post.id AS user_blog_post_id, user_blog_post.title AS user_blog_post_title, user_blog_post.body AS user_blog_post_body, user_blog_post.user_id AS user_blog_post_user_id
+FROM user_blog_post
+WHERE ? = user_blog_post.user_id
+2021-01-05 15:01:07,447 INFO sqlalchemy.engine.base.Engine (1,)
+first
+Via SQL CLI, modify the title of the first blog post.
 
 
+1A ----------------------------
+2021-01-05 15:02:54,234 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-05 15:02:54,241 INFO sqlalchemy.engine.base.Engine (1, 0)
+first
+COMPARE SELECT EMISSION FOR person1 VS person1A
+```
 
+CONCLUSION: Be aware of your relationship loading techniques and remember that discrepancies can occur if you let solutions other than the ORM interact with your database records (without building in more robust data integrity protections like `expire` and `refresh`. 
 
-
-
-
-
-The SQLAlchemy ORM has a very specific job: it maps SQL records to Python objects (and vice versa). This is a complex exercise that is (thankfully) hidden from us a programmers. We can stick with our dot-notation Python commands and automagically our code relationships are turned into the appropriate SQL. 
-
-This hidden behaviour, however, cannot be totally ignored - particularly when it comes to the querying of database results. 
+This seems to align with the general best practice that every request a webapp API receives should use its own Session only the for the lifetime of that single http request, but goes further because we've seen how data _within_ that limited lifetime could still become misaligned under the right circumstances.
 
 
 
