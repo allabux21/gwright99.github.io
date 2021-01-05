@@ -715,8 +715,80 @@ sqlite> select * from user_blog_post;
 2|second|second post body|1
 ```
 
+#### What Is Written Must Be Retrieved
+We are eventually going to want to retrieve records that we've written to the database. Whereas raw SQL would require use to craft a proper JOIN query, we can once again leverage the `relationship` mechanism to retrive the data in a programmatic not-dotation manner.
+
+Imagine we want to retrieve the `user` and `user_blog_post` entries that we just created. This simple Python snippet is enough to complete the task:
+```python
+# Using the db connection context manager I created earlier
+with SQLAlchemyDBConnection() as db:
+    person1 = db.session.query(user).first()
+    print(f"{person1.blog_posts[0].title}")
+```
+Which results in the follow SQL being emitted by SQLALCHEMY and resulting stdout:
+```stdout
+2021-01-04 16:31:49,900 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-04 16:31:49,902 INFO sqlalchemy.engine.base.Engine SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email
+FROM user
+ LIMIT ? OFFSET ?
+2021-01-04 16:31:49,908 INFO sqlalchemy.engine.base.Engine (1, 0)
+2021-01-04 16:31:49,911 INFO sqlalchemy.engine.base.Engine SELECT user_blog_post.id AS user_blog_post_id, user_blog_post.title AS user_blog_post_title, user_blog_post.body AS user_blog_post_body, user_blog_post.user_id AS user_blog_post_user_id
+FROM user_blog_post
+WHERE ? = user_blog_post.user_id
+2021-01-04 16:31:49,916 INFO sqlalchemy.engine.base.Engine (1,)
+first
+```
+Easy-peasy, right? Yes, so long as you remain aware of a few caveats:
+1) Relationship Loading Technique and Join Type 
+2) ORM mapping
+3) Query syntax
+4) 
+
+###### Relationship Loading Technique and Join Type
+SQLAlchemy has [reams of documentation](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html) about the mechanics of relationship loading. It is important to note that the default "lazy loading" technique __does not__ query the records stored in tables other than the object we supplied as part of our ORM query. This technique will issue a second SELECT statement to retrieve these records in the event we try to access any of these attributes via the original object's relationship.
+
+Looking at the `stdout` of the example above, you'll notice there are TWO SELECT statements:
+* The first SELECT was issued in reponse to the ```python person1 = db.session.query(user).first() ``` invocation.
+* The second SELECT was issued in response to the ```python print(f"{person1.blog_posts[0].title}")``` invocation. In this case, we are using the `blog_post` relationship as a way to jump from the `user` object to a related `user_blog_post` object, but the ORM doesn't have this data because its lazyload only grabbed the `user` table data! The second query was automatically invoked to retrieve the `user_blog_post` object data needed to successfully complete the print command.
+
+I mentioned earlier in this post that one of the design considerations I was minding was the number of database transactions the application must invoke in order to complete a request. Using lazyload carelessly can significantly increase this number, but conversely it also limits the amount of data returned in a response. Depending on buiness need, it may be necessary to replace the the default behaviour with a more [eager SELECT option](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#relationship-loading-techniques) to ensure a multitable dataset is returned via a single query.
+```python
+# EXAMPLE 1 - LOAD DEFINITION IN CLASS DEFINITION
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", backref="user", lazy="joined")
+    
+# EXAMPLE 2 - LOAD DEFINITION IN QUERY SPECIFICATION
+user_and_blogposts = db.session.query(user).options(joinedload(user.blog_posts)).all()
+```
+
+CAVEAT: SQLAlchemy eager loads use a LEFT OUTER JOIN by default (see [here](https://stackoverflow.com/questions/38549/what-is-the-difference-between-inner-join-and-outer-join#:~:text=You%20use%20INNER%20JOIN%20to,and%20columns%20will%20have%20values.&text=LEFT%20OUTER%20JOIN%20returns%20all,matches%20in%20the%20second%20table.) for a refresher on SQL JOINs if you suddenly feel a little hazy on the types). An [INNER JOIN can be used instead](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#joined-eager-loading), defined either at design time or within the query itself.
+
+```python
+# EXAMPLE 1 - INNER JOIN DEFINED IN CLASS DEFINITION
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", backref="user", lazy="joined", innerjoin=True)
+    
+# EXAMPLE 2 - INNER JOIN DEFINITION IN QUERY SPECIFICATION
+user_and_blogposts = db.session.query(user).options(joinedload(user.blog_posts, innerjoin=True)).all()
+```
+
+#####
 
 
+Model.query
+Session.query
+
+Map
 
 Dont like backref. Lazy. Be explicit on both sides.
 Does the implicit join only work because there is a single Foreign Key?
