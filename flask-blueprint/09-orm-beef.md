@@ -733,9 +733,12 @@ WHERE ? = user_blog_post.user_id
 first
 ```
 Easy-peasy, right? Yes, so long as you remain aware of a few caveats:
+TO DO: REORDER THESE
 1) Relationship Loading Technique and Join Type 
 2) Session Object Mapping and Lazy Load
-3) Query syntax
+3) Session Creation
+4) Query syntax
+5) Backref vs
 
 ###### Relationship Loading Technique and Join Type
 SQLAlchemy has [reams of documentation](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html) about the mechanics of relationship loading. It is important to note that the default "lazy loading" technique __does not__ query the records stored in tables other than the object we supplied as part of our ORM query. This technique will issue a second SELECT statement to retrieve these records in the event we try to access any of these attributes via the original object's relationship.
@@ -975,6 +978,110 @@ CONCLUSION: Be aware of your relationship loading techniques and remember that d
 
 This seems to align with the general best practice that every request a webapp API receives should use its own Session only the for the lifetime of that single http request, but goes further because we've seen how data _within_ that limited lifetime could still become misaligned under the right circumstances.
 
+##### Session Creation
+I must talk about Session creation before covering query syntax because it turns out that the way you create a Session affects what query syntax you can use.
+
+As was demonstrated in my previous Database Connection Model [TO DO: ADD LINK] post, I had to refactor the code several times as I struggled to split database functionality (connectivity and object models) from a hard dependency on the initialization of a webapp. Even after had broken the hard dependency, I was still often forgetting to close the database connection once I had completed my submission. 
+
+The problem was resolved by creating a __Context Manager__ that would automatically close the connection for me. I happened to find the method described in Joel Ramos's article["Python Context Managers and the 'with' Statement](https://blog.ramosly.com/python-context-managers-and-the-with-statement-8f53d4d9f87) early in my search and found that it worked well for my mental model, so I opted to implement it. As result, much of the Session creation logic moved from the top-level of the module to within the class that would act as a context manager.
+
+```python
+# BEFORE
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+engine = create_engine('sqlite:////tmp/declarative_db.db')
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Session = scoped_session(session_factory)
+
+# Interact with database via the Session object
+...
+```
+To:
+```python
+# AFTER
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
+
+    def __init__(self, connection_string='sqlite:////tmp/relationshiptest.db'):
+        self.connection_string = connection_string
+        self.session = None
+
+    def __enter__(self):
+        engine = create_engine(self.connection_string, echo=True)
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        self.session = Session()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+
+# INTERACT WITH THE DATABASE WITHIN THE CONTEXT MANAGER
+with SQLAlchemyDBConnetion() as db:
+    db.session.query(...)
+```
+
+Subsequent investigation of SQLAlchemy Sessions revealed alternative methods of context management, so I felt it was important to:
+1) Provide links to these other methods for reference purposes
+2) Explain the design considerations I chose to adhere by
+
+Other notable sources:
+1) [SQLAlchemy Session Basics](https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it)<br>The SQLAlchemy documentation offer a few different option suggestions, one of which is a turning ather function that handles commits and rollback into context manager via Python's `contextlib` standard library.
+
+2) [Dan Bader's "Context Managers and the 'with' Statement in Python](https://dbader.org/blog/python-context-managers-and-with-statement)<br>This succint article covers different ways to create a context manager including both the technique I followed from Ramos's article and the contextlib method described by SQLAlchemy. 
+
+3) [Oliver Beattie's Github Gist](https://gist.github.com/obeattie/210032)<br>A pure code example, Beattie uses the contextlib method but also has a more complicated setup where he differentiates between a throwaway temporary session for SELECT and a more robust transaction session for INSERT/UPDATE/etc. Furthermore, there is another control function that uses the `functools.wraps` method to wrap a function in a function in a function.
+
+Bader notes in his article _"Both the class-based implementations and the generator-based are practically equivalent. Depending on which one you find more readable you might prefer one over the other. A downside of the @contextmanager-based implementation might be that it requires understanding of advanced Python concepts, like decorators and generators. Once again, making the right choice here comes down to what you and your team are comfortable using and find the most readable."_. This describes exactly why I chose to follow the Ramos method:
+* I wanted code that I could read that explicitly described the `__init__`, `__enter__`, and `__exit__` dunders.
+* I wanted a context manager that ONLY handled my connection, whereas I would be responsible for flushes/commits/rollbacks separately
+* I did not want nested complexity
+* I did not want to divert my attention in order to refresh my knowledge on [decorator 'inside baseball](https://stackoverflow.com/questions/308999/what-does-functools-wraps-do); I recall looking into `functools.wrap` in the past and struggling to grok the nested function calls (I was already struggling to fully grasp the proper SQLAlchemy patterns and didnt need to make my problems even more numerous!).
+* I wasn't convinced I needed Beattie's extra complexity because I thought SQLAlchemy was already handling the transaction management part for me?
+
+
+CONTINUAL INIT USING () VS SINGULAR INIT
+
+
+##### Query Syntax
+When reading how to execute ORM queries, I saw two competing notations. The syntax was similar but not identical and - not wanting to have to devote headspace to remember both syntaxes - I wanted to take an explicit stance on the one-and-only way to execute an ORM query. This ended up being quite easy once I understood the underlying mechanic. 
+
+The two syntaxes I was seeing were `Model.query(...)` and `Session.query(Model)...`. Why were these different and which one should I use? __ANSWER__: Use `Session.query(Model)...`
+
+It appears that the Model query technique is merely a shorthand and only works if you bind a Session object to your declarative_base:
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+engine = create_engine('sqlite:////tmp/declarative_db.db')
+session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Session = scoped_session(session_factory)
+
+Base.query = Session.query_property()
+
+# DEFINE SOME TABLE OBJECT HERE THAT INHERITS FROM declarative_base
+class someClass(Base):
+...
+
+# YOU COULD THEN QUERY VIA:
+someClass.query(...)
+```
+For the gain of having a few less IDE autocompletes at the start of a database query, we require the global declaration of a `Session` object, and then build a hard dependency between the `Session` and `Base` objects. I suspect there are further downstream consequences of this design pattern that I dont yet appreciate, but the global Session object and dependency already seem wrong to me.
+
+As I demonstrated in my previous code examples, while the Base declaration is global (to allow me to reuse the database module without needing to instantiate a Flask app), I've chosen to encapsulate the Session in a ContextManager
+NOTE: I THINK I NEED TO DECLARE MY CONTEXTMANAGER GLOBALLY ONCE, THEN I INVOKE IT REPEATEDLY AFTERWARD (i.e. `with CM` instead of `with CM()` - this was i only have to init once. IF I do this won't I be single committed to the connection string I pass in at initiation time though? (as opposed to initiating everytime and retainign flexibility to change the string from e.g sqlite to mariadb). DONT WANT TO USE FlaskSQLAlchemy for reasons.
+
+
+* Model.query
+* Session.query(Model)
 
 
 Model.query
@@ -983,7 +1090,7 @@ Session.query
 Map
 
 Dont like backref. Lazy. Be explicit on both sides.
-Does the implicit join only work because there is a single Foreign Key?
+
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
