@@ -738,7 +738,7 @@ TO DO: REORDER THESE
 2) Session Object Mapping and Lazy Load
 3) Session Creation
 4) Query syntax
-5) Backref vs
+5) Backref vs Back_Populates
 
 ###### Relationship Loading Technique and Join Type
 SQLAlchemy has [reams of documentation](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html) about the mechanics of relationship loading. It is important to note that the default "lazy loading" technique __does not__ query the records stored in tables other than the object we supplied as part of our ORM query. This technique will issue a second SELECT statement to retrieve these records in the event we try to access any of these attributes via the original object's relationship.
@@ -1092,12 +1092,11 @@ On the otherhand, I like reusing established patterns and I was used to opening 
 
 
 ##### Query Syntax
-When reading how to execute ORM queries, I saw two competing notations. The syntax was similar but not identical and - not wanting to have to devote headspace to remember both syntaxes - I wanted to take an explicit stance on the one-and-only way to execute an ORM query. This ended up being quite easy once I understood the underlying mechanic. 
+During my readings, I noticed examples using two simple - but different - query notations: `Model.query(...)` vs `Session.query(Model)...`. Not wanting to devote headspace to remember both syntaxes, I sought an explicit stance on the one-and-only way to execute an ORM query. This ended up being quite easy once I understood the underlying mechanic. (__ANSWER__: Use `Session.query(Model)...`)
 
-The two syntaxes I was seeing were `Model.query(...)` and `Session.query(Model)...`. Why were these different and which one should I use? __ANSWER__: Use `Session.query(Model)...`
-
-It appears that the Model query technique is merely a shorthand and only works if you bind a Session object to your declarative_base:
+The Model query technique appears to simply be a shorthand, and requires one to bind a Session object to your declarative_base object:
 ```python
+# EXAMPLE: MODEL QUERY SYNTAX
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -1117,19 +1116,48 @@ class someClass(Base):
 # YOU COULD THEN QUERY VIA:
 someClass.query(...)
 ```
-For the gain of having a few less IDE autocompletes at the start of a database query, we require the global declaration of a `Session` object, and then build a hard dependency between the `Session` and `Base` objects. I suspect there are further downstream consequences of this design pattern that I dont yet appreciate, but the global Session object and dependency already seem wrong to me.
+To save a few characters of typing at the start of a database query definition, we require the global declaration of a `Base` and `Session` object, and then build a hard dependency between them. I had just spent alot of effort to *BREAK* hard dependencies and implement factory pattern in my web application, so I wasn't super enthused about reintroducing the pattern if this was the only benefit. Worst of all, I wasn't sure how this was going to impact the Context Manager class I had created to manage my database Session objects - would I need to pass in the `declarative_base` variable on every instantiation (or hardcode it in the `__init__` method?
 
-As I demonstrated in my previous code examples, while the Base declaration is global (to allow me to reuse the database module without needing to instantiate a Flask app), I've chosen to encapsulate the Session in a ContextManager
-NOTE: I THINK I NEED TO DECLARE MY CONTEXTMANAGER GLOBALLY ONCE, THEN I INVOKE IT REPEATEDLY AFTERWARD (i.e. `with CM` instead of `with CM()` - this was i only have to init once. IF I do this won't I be single committed to the connection string I pass in at initiation time though? (as opposed to initiating everytime and retainign flexibility to change the string from e.g sqlite to mariadb). DONT WANT TO USE FlaskSQLAlchemy for reasons.
+The alternative approach was to use the slightly more verbose `Session.query(SOME_CLASS)...` method and leverage the objects I already needed to define for the ORM. Furthermore, I felt the syntax was better because it was explicit, rather than requiring me to remember/mentally substitute any line of code that used the `Base.query = Session.query_property()` approach. 
+
+```python
+# EXAMPLE: SESSION QUERY SYNTAX
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
 
 
-* Model.query
-* Session.query(Model)
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
 
+    def __init__(self, connection_string='sqlite:////tmp/relationshiptest.db'):
+        # OVERRIDE THE DEFAULT connection_string IF NEEDED
+        self.connection_string = connection_string
+        self.session = None
 
-Model.query
-Session.query
+    def __enter__(self):
+        engine = create_engine(self.connection_string, echo=True)
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        self.session = Session()  # (bind=engine)
+        return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+# DEFINE SOME TABLE OBJECT HERE THAT INHERITS FROM declarative_base
+class someClass(Base):
+...
+
+# YOU COULD THEN QUERY VIA:
+with SQLAlchemyDBConnection() as db:
+    result = db.session.query(someClass).first()
+    ...
+```
+Only time will tell if I end up regretting obligating myself to typing more when engaging with my database connection. I'm hopefully my IDE autocomplete will minimize the pain and the simpler headspace makes this worthwhile.
+
+##### Backref vs Back_Populates
 Map
 
 Dont like backref. Lazy. Be explicit on both sides.
