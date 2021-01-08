@@ -1041,11 +1041,54 @@ Bader notes in his article _"Both the class-based implementations and the genera
 * I wanted code that I could read that explicitly described the `__init__`, `__enter__`, and `__exit__` dunders.
 * I wanted a context manager that ONLY handled my connection, whereas I would be responsible for flushes/commits/rollbacks separately
 * I did not want nested complexity
-* I did not want to divert my attention in order to refresh my knowledge on [decorator 'inside baseball](https://stackoverflow.com/questions/308999/what-does-functools-wraps-do); I recall looking into `functools.wrap` in the past and struggling to grok the nested function calls (I was already struggling to fully grasp the proper SQLAlchemy patterns and didnt need to make my problems even more numerous!).
+* I did not want to divert my attention to refresh my knowledge on [decorator 'inside baseball'](https://stackoverflow.com/questions/308999/what-does-functools-wraps-do); I recall looking into `functools.wrap` in the past and struggling to grok the nested function calls (I was already struggling to fully grasp the proper SQLAlchemy patterns and didnt need to make my problems even more numerous!).
 * I wasn't convinced I needed Beattie's extra complexity because I thought SQLAlchemy was already handling the transaction management part for me?
 
+I did have one final decision to make with the Ramos approach: would I instantiate a new instance of the class every time I needed a session, or would I instantiate only once and reuse it across the application?
+```python
+# EXAMPLE OF INSTANTIATION MODELS
 
-CONTINUAL INIT USING () VS SINGULAR INIT
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
+
+    def __init__(self, connection_string='sqlite:////tmp/relationshiptest.db'):
+        # OVERRIDE THE DEFAULT connection_string IF NEEDED
+        self.connection_string = connection_string
+        self.session = None
+
+    def __enter__(self):
+        engine = create_engine(self.connection_string, echo=True)
+        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        self.session = Session()  # (bind=engine)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+        
+# OPTION 1
+with SQLAlchemyDBConnection() as db:
+    # SQLAlchemyDBConnection.__init__ and .__enter__ executed by this point
+    result = db.session.query(someClass).first()
+    ....
+    
+with SQLAlchemyDBConnection() as db:
+    # SQLAlchemyDBConnection.__init__ executed again before .__enter__
+    result = db.session.query(someClass).first()
+    ....
+    
+# OPTION 2
+db = SQLAlchmeyDBConnection()  # CLASS IS INITIALIZED HERE
+with db:
+    # SQLAlchemyDBConnetion.__enter__ ONLY EXECUTED. DID NOT NEED TO INITIALIZE
+    result = db.session.query(someClass).first()
+    ...
+```
+
+Instantiating the `SQLAlchemyDBConnection` each time meant I could change the `connection_string` as needed, but the downside was a potential loss of efficiency from the extra `__init__` functions. I thought it was unlikely that I would change the connection_string often and - even if I did - Ramos had an easy workaround: just create a different instance for each database! If I needed to interact with two different SQLite files, I could instantiate two instances of SQLAlchemyDbConnection class and provide a different connection string for each. If I needed to interact with SQLite and MongoDB, I could either modify the SQLAlchemyDConnection to accommodate addition mandatory connection information like Port, or I could just quickly create another Context Manager class that was specific to MongoDB.
+
+On the otherhand, I like reusing established patterns and I was used to opening files via context manager (eg ```python with open('FILENAME', 'r') as file:```. In the end, I decided to stick with 'instantiation-every-time' because it felt more natural. This decision, however, impacted my options in the next topic I'll cover: the ORM query syntax.
+
+
 
 
 ##### Query Syntax
