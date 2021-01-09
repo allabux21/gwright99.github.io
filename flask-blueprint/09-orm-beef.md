@@ -1086,7 +1086,99 @@ with db:
 
 Instantiating the `SQLAlchemyDBConnection` each time meant I could change the `connection_string` as needed, but the downside was a potential loss of efficiency from the extra `__init__` functions. I thought it was unlikely that I would change the connection_string often and - even if I did - Ramos had an easy workaround: just create a different instance for each database! If I needed to interact with two different SQLite files, I could instantiate two instances of SQLAlchemyDbConnection class and provide a different connection string for each. If I needed to interact with SQLite and MongoDB, I could either modify the SQLAlchemyDConnection to accommodate addition mandatory connection information like Port, or I could just quickly create another Context Manager class that was specific to MongoDB.
 
-On the otherhand, I like reusing established patterns and I was used to opening files via context manager (eg ```python with open('FILENAME', 'r') as file:```. In the end, I decided to stick with 'instantiation-every-time' because it felt more natural. This decision, however, impacted my options in the next topic I'll cover: the ORM query syntax.
+In the end, I was convinced by the [SQLAlchemy documentation](https://docs.sqlalchemy.org/en/13/orm/session_basics.html#when-do-i-make-a-sessionmaker), which said that a `sessionmaker` should only be made once in the application global scope. Unfortunately, this meant I had to rejig my SQLAlchemyDBConnection class (to move the sessionmaker logic from `__enter__` to `__init__` and also modify how I invoked the class when I wanted to interact with the database. Given that I was reorganizing this class, I also took the opportunity to reorganize how I create `declarative_base` objects as well
+
+```python
+# FULL CODE, WITH MODIFICATIONS
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, joinedload
+
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+
+# CREATE THE ROOT OBJECT FOR OUR ORM OBJECTS
+Base = declarative_base()
+
+# DEFINE DB CONNECTION STRINGS. ADD ANOTHER STRING FOR EACH TARGET DB.
+sqlite_connection_string = 'sqlite:////tmp/relationshiptest.db'
+
+
+# GENERIC FUNCTION TO CREATE INITIAL TABLES
+# WILL NEED TO BE EXPANDED AS OTHER VALUES ARE REQUIRED (E.G. port)
+def createBaseTables(base=None, connection_string=None, echo=False):
+    # Uses `Base` object that was assigned sqlalchemy.ext.declarative.declarative_base
+    engine = create_engine(connection_string, echo=echo)
+    base.metadata.create_all(engine)
+
+
+# GENERIC CONTEXT MANAGER CLASS.
+# WILL NEED TO BE EXPANDED AS OTHER VALUES ARE REQUIRED (e.g. port)
+class SQLAlchemyDBConnection(object):
+    """SQLAlchemy database connection"""
+
+    def __init__(self, connection_string=None, echo=False):
+        engine = create_engine(connection_string, echo=echo)
+        self.session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    def __enter__(self):
+        self.session = self.session_factory()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", backref="user")
+
+
+class user_blog_post(Base):
+    __tablename__ = 'user_blog_post'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    # Note: ForeignKey MUST be defined or relationship insert wont work.
+    user_id = Column(Integer, ForeignKey('user.id'))
+
+# CREATE THE CONTEXT MANAGERS TO BE USED IN THE REST OF THE APPLICATION. CREATE ONE PER CONNECTION STRING
+sqlitedb = SQLAlchemyDBConnection(connection_string=sqlite_connection_string, echo=True)
+
+if __name__ == '__main__':
+
+    # CREATE THE TABLES IN THE SQLITE DATABASE
+    createBaseTables(base=Base, connection_string=sqlite_connection_string, echo=True)
+
+    # CREATE TEST RECORD DATA
+    newUser = user(username='Moshe', email="moshe@4degrees.ai")
+    newUser.blog_posts = [
+        user_blog_post(title="first", body="first post body"),
+        user_blog_post(title="second", body="second post body")
+    ]
+
+    # POPULATE DB WITH TEST DATA
+    with sqlitedb as db:
+        print('Adding newUser')
+        db.session.add(newUser)
+        db.session.commit()
+
+    # QUERY DATA
+    with sqlitedb as db:
+        result = db.session.query(user_blog_post).first()
+        user_of_blog = result.user.username
+        print(f'user_of_blog is: {user_of_blog}')
+
+        print('accessing user_blog_post data via user')
+        result = db.session.query(user).first()
+        print('first blog title of first user is: ', result.blog_posts[0].title)
+```
+
+I think the changes make the code better organized and more flexible. However, the decision directly impacted my options in the next topic I'll cover: the ORM query syntax.
 
 
 
@@ -1158,7 +1250,40 @@ with SQLAlchemyDBConnection() as db:
 Only time will tell if I end up regretting obligating myself to typing more when engaging with my database connection. I'm hopefully my IDE autocomplete will minimize the pain and the simpler headspace makes this worthwhile.
 
 ##### Backref vs Back_Populates
-Map
+This is yet another issue where "less typing" is pitted versus "clear, explicit definition" to achieve the _same_ ultimate behaviour. 
+
+Let's return to the `user` and `user_blog_post` classes from earlier to illustrate this point:
+```python
+...
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", backref="user")
+
+
+class user_blog_post(Base):
+    __tablename__ = 'user_blog_post'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    # Note: ForeignKey MUST be defined or relationship insert wont work.
+    user_id = Column(Integer, ForeignKey('user.id'))
+```
+The `user` class establishes an ORM-based relationship to the `user_blog_post` class, meaning we can use the relationship attribute to:
+* Reach from `user` to `user_blog_post`
+* Reach from `user_blog_post` to `user`
+
+Example:
+```python
+...
+with SQLAlchemyDBConnection() as db:
+    x = db.session.query(user).first()
+    related_blog_title = x.user_blog
+```
+
 
 Dont like backref. Lazy. Be explicit on both sides.
 
