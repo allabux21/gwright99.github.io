@@ -974,7 +974,7 @@ first
 COMPARE SELECT EMISSION FOR person1 VS person1A
 ```
 
-CONCLUSION: Be aware of your relationship loading techniques and remember that discrepancies can occur if you let solutions other than the ORM interact with your database records (without building in more robust data integrity protections like `expire` and `refresh`. 
+CONCLUSION: Be aware of your relationship loading techniques and remember that discrepancies can occur if you let solutions other than the ORM interact with your database records (without building in more robust data integrity protections like `expire` and `refresh`. For more advanced query creation techniques, refer to [this article](https://medium.com/python-in-plain-english/relationships-with-sqlalchemy-958b7358e16).
 
 This seems to align with the general best practice that every request a webapp API receives should use its own Session only the for the lifetime of that single http request, but goes further because we've seen how data _within_ that limited lifetime could still become misaligned under the right circumstances.
 
@@ -1278,8 +1278,13 @@ class user_blog_post(Base):
 ```
 This technique is a tad more verbose, but explicitly surfaces the relationship in BOTH objects. Just as I argued re: the query technique, I think a bit of extra typing is well worth the extract design clarity.
 
+It is worth further noting a few more issues related to SQLAlchemy relationship management: 
+1. The placement of a Foreign Key affects methods SQLAlchemy offers.<br>In our example above, we have a one-to-many relationship between `user` and `user_blog_post`. This means we can use `.append` when attaching blog entries to a user via the `user.blog_posts` relationship attribute, but will see an error if we try to use `user_blog_post.user.append(USER_OBJECT)` (instead we must use `user_blog_post.user = USER_OBJECT`.
 
+1. Orphan Records vs Cascading Deletes.<br>SQLAlchemy will balk if the deletion of a record results in a null value in another table (thereby creating an orphan record). 
+Example: We have a Student table, an Activity table, and an Enrollment table which uses the Student.id and Activity.id as a compound key. If we delete a Student record whose Student.id is present in the Enrollment table, SQLAlchemy will return a `AssertionError: Dependency rule tried to blank-out primary key column` error (and refuse to delete the Student record).
 
+We can tell SQLAlchemy to automatically delete any orphans it may generate by adding a `cascade='all, delete-orphan'` option on the relationship. (Further note, as per SQLAlchemy itself `'delete-orphan cascade` is normally configured on the 'one' side of the 'one-to-many' relationship). This is yet again another good reason to use `back_populates` over `backref` as I'm not sure how you would specify the relationship on the 'one' if the backref definition was placed on the 'many'.
 
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
