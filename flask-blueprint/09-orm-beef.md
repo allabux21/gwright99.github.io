@@ -1193,12 +1193,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-Base = declarative_base()
-
+# CREATE SESSION OBJECT
 engine = create_engine('sqlite:////tmp/declarative_db.db')
 session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Session = scoped_session(session_factory)
 
+# CREATE DECLARATIVE BASE
+Base = declarative_base()
+
+# TIE DECLARATIVE BASE QUERY TO SESSION OBJECT
 Base.query = Session.query_property()
 
 # DEFINE SOME TABLE OBJECT HERE THAT INHERITS FROM declarative_base
@@ -1210,44 +1213,11 @@ someClass.query(...)
 ```
 To save a few characters of typing at the start of a database query definition, we require the global declaration of a `Base` and `Session` object, and then build a hard dependency between them. I had just spent alot of effort to *BREAK* hard dependencies and implement factory pattern in my web application, so I wasn't super enthused about reintroducing the pattern if this was the only benefit. Worst of all, I wasn't sure how this was going to impact the Context Manager class I had created to manage my database Session objects - would I need to pass in the `declarative_base` variable on every instantiation (or hardcode it in the `__init__` method?
 
-The alternative approach was to use the slightly more verbose `Session.query(SOME_CLASS)...` method and leverage the objects I already needed to define for the ORM. Furthermore, I felt the syntax was better because it was explicit, rather than requiring me to remember/mentally substitute any line of code that used the `Base.query = Session.query_property()` approach. 
+The alternative approach was to use the slightly more verbose `Session.query(SOME_CLASS)...` method that was already available in the Context Manager class I had created. I didn't need to make any changes to use this technique, and I happened to like it better anyways since it was explicit and consistent across any object I wanted to query for.
 
-```python
-# EXAMPLE: SESSION QUERY SYNTAX
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-Base = declarative_base()
+I opted to stick with the `Session.query(SOME_CLASS)` approach. I may end up regretting needing to type an additional few characters each time I'm interacting with the database, but I think IDE autocomplete will minimize the pain and the simpler headspace makes this worthwhile.
 
 
-class SQLAlchemyDBConnection(object):
-    """SQLAlchemy database connection"""
-
-    def __init__(self, connection_string='sqlite:////tmp/relationshiptest.db'):
-        # OVERRIDE THE DEFAULT connection_string IF NEEDED
-        self.connection_string = connection_string
-        self.session = None
-
-    def __enter__(self):
-        engine = create_engine(self.connection_string, echo=True)
-        Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        self.session = Session()  # (bind=engine)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.close()
-
-# DEFINE SOME TABLE OBJECT HERE THAT INHERITS FROM declarative_base
-class someClass(Base):
-...
-
-# YOU COULD THEN QUERY VIA:
-with SQLAlchemyDBConnection() as db:
-    result = db.session.query(someClass).first()
-    ...
-```
-Only time will tell if I end up regretting obligating myself to typing more when engaging with my database connection. I'm hopefully my IDE autocomplete will minimize the pain and the simpler headspace makes this worthwhile.
 
 ##### Backref vs Back_Populates
 This is yet another issue where "less typing" is pitted versus "clear, explicit definition" to achieve the _same_ ultimate behaviour. 
@@ -1272,20 +1242,44 @@ class user_blog_post(Base):
     # Note: ForeignKey MUST be defined or relationship insert wont work.
     user_id = Column(Integer, ForeignKey('user.id'))
 ```
-The `user` class establishes an ORM-based relationship to the `user_blog_post` class, meaning we can use the relationship attribute to:
-* Reach from `user` to `user_blog_post`
-* Reach from `user_blog_post` to `user`
+The `blog_posts = relationship("user_blog_post", backref="user")` definition in the `user` class establishes an ORM-based relationship to the `user_blog_post` class, meaning we can use the relationship attribute to:
+* Reach from `user` to `user_blog_post`, via `user.blog_posts`
+* Reach from `user_blog_post` to `user`, via `user_blog_post.user`.
+
+While there is nothing *technically* wrong with this relationship definition techique, I feel it's an anti-pattern because the relationship is defined entirely within the `user` object; no hint exists in the `user_blog_post` object. For the sake of saving an extra line at design-time, we complicate the effort of later readers/maintainers to understand what's happening in the code (particularly if working with a project with several hundred ORM object definitions).
+
+Rather than use `backref`, I'm making a decisio to always use `back_populates` instead. This establishes the same exact relationship as was established by the `backref` techique, but requires me to explicitly define the relationship *in both* objects. Using the `back_populates` technique, our classes would now look like:
+```python
+```
 
 Example:
 ```python
-...
-with SQLAlchemyDBConnection() as db:
-    x = db.session.query(user).first()
-    related_blog_title = x.user_blog
+class user(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    email = Column(String)
+    
+    # Adding relationship linkage
+    blog_posts = relationship("user_blog_post", back_populates="user")
+
+
+class user_blog_post(Base):
+    __tablename__ = 'user_blog_post'
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    body = Column(String)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    
+    # Adding relationship linkage
+    # Note: ForeignKey MUST be defined or relationship insert wont work
+    user = relationship("user", back_populates="blog_posts")
+
 ```
+This technique is a tad more verbose, but explicitly surfaces the relationship in BOTH objects. Just as I argued re: the query technique, I think a bit of extra typing is well worth the extract design clarity.
 
 
-Dont like backref. Lazy. Be explicit on both sides.
+
 
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
