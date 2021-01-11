@@ -1384,7 +1384,7 @@ This is the last item to consider before I get cracking. In many-to-many relatio
 * Use a Table<br>Use this method when you need to link foreign keys only
 * Define a new class object<br>Use this method when you need to link foreign keys AND keep track of additional data via columns unique to this table.
 
-The SQLAlchemy docs cover both the [Asssociation Table option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-many) and [Association Object option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#association-object). For my own benefit, I'm listing their examples here with my own additional description:
+The SQLAlchemy docs cover both the [Asssociation Table option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-many) and [Association Object option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#association-object). For my own benefit, I'm listing their examples here with my own additional descriptions and modifications for clarity:
 
 ```python
 # ASSOCIATION TABLE EXAMPLE (BIDIRECTIONAL RELATIONSHIP VIA back_populates)
@@ -1395,13 +1395,13 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 association_table = Table('association', Base.metadata,
-    Column('left_id', Integer, ForeignKey('left.id')),
-    Column('right_id', Integer, ForeignKey('right.id'))
+    Column('parent_table_id', Integer, ForeignKey('parent_table.id')),
+    Column('children_table_id', Integer, ForeignKey('children_table.id'))
 )
 
 
 class Parent(Base):
-    __tablename__ = 'left'
+    __tablename__ = 'parent_table'
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     children = relationship(
@@ -1411,7 +1411,7 @@ class Parent(Base):
 
 
 class Child(Base):
-    __tablename__ = 'right'
+    __tablename__ = 'children_table'
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     parents = relationship(
@@ -1435,18 +1435,18 @@ with sqlitedb:
     sqlitedb.session.add_all[p1, p2])
     sqlitedb.session.commit()
 ```
-This results in the following SQLite tables and records:
+This results in the creation of the following SQLite tables and records, showing that the association table is being automatically created:
 ```sql
 SQLite version 3.31.1 2020-01-27 19:55:54
 Enter ".help" for usage hints.
 sqlite> .tables
-association  left  right
+association  parent_table  children_table
 
-sqlite> select * from left;
+sqlite> select * from parent_table;
 1|Parent1
 2|Parent2
 
-sqlite> select * from right;
+sqlite> select * from children_table;
 1|Child1
 2|Child2
 
@@ -1456,8 +1456,26 @@ sqlite> select * from association;
 2|1
 
 ```
+If we were to try to retrieve the children of Parent1 via ```python children_of_p1 = p1.children```, we can see the assocation table is used to limit the records that are retrieved from the children table:
+```sql
+2021-01-11 11:02:21,459 INFO sqlalchemy.engine.base.Engine BEGIN (implicit)
+2021-01-11 11:02:21,460 INFO sqlalchemy.engine.base.Engine SELECT parent_table.id AS parent_table_id, parent_table.name AS parent_table_name
+FROM parent_table
+WHERE parent_table.id = ?
+2021-01-11 11:02:21,462 INFO sqlalchemy.engine.base.Engine (1,)
 
+2021-01-11 11:02:21,465 INFO sqlalchemy.engine.base.Engine SELECT children_table.id AS children_table_id, children_table.name AS children_table_name
+FROM children_table, association
+WHERE ? = association.parent_table_id AND children_table.id = association.children_table_id
+2021-01-11 11:02:21,468 INFO sqlalchemy.engine.base.Engine (1,)
+```
 
+Now lets assume that we made a data entry mistake and it turns out Parent1 isn't actually related to Child2. We would fix this in the Python code by breaking the relationship with ```python p1.children.remove(c2)``` which translates to the following SQL being emitted by the ORM:
+```sql
+2021-01-11 11:06:47,835 INFO sqlalchemy.engine.base.Engine DELETE FROM association WHERE association.parent_table_id = ? AND association.children_table_id = ?
+2021-01-11 11:06:47,836 INFO sqlalchemy.engine.base.Engine (1, 2)
+2021-01-11 11:06:47,838 INFO sqlalchemy.engine.base.Engine COMMIT
+```
 
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
