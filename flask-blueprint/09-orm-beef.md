@@ -739,6 +739,7 @@ TO DO: REORDER THESE
 3) Session Creation
 4) Query syntax
 5) Backref vs Back_Populates
+6) Extending the object model with properties
 
 ###### Relationship Loading Technique and Join Type
 SQLAlchemy has [reams of documentation](https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html) about the mechanics of relationship loading. It is important to note that the default "lazy loading" technique __does not__ query the records stored in tables other than the object we supplied as part of our ORM query. This technique will issue a second SELECT statement to retrieve these records in the event we try to access any of these attributes via the original object's relationship.
@@ -1286,6 +1287,90 @@ Example: We have a Student table, an Activity table, and an Enrollment table whi
 
 We can tell SQLAlchemy to automatically delete any orphans it may generate by adding a `cascade='all, delete-orphan'` option on the relationship. (Further note, as per SQLAlchemy itself `'delete-orphan cascade` is normally configured on the 'one' side of the 'one-to-many' relationship). This is yet again another good reason to use `back_populates` over `backref` as I'm not sure how you would specify the relationship on the 'one' if the backref definition was placed on the 'many'.
 
+##### Extending the Object Model with Properties
+I found this good idea while reading Mike Patterson's [Relationships with SQLAlchemy](https://medium.com/python-in-plain-english/relationships-with-sqlalchemy-958b7358e16_ blog post.
+
+Patterson presents a scenario where a student wants to enroll in various activities offered by their school. We model this as:
+```python
+class Student(Base):
+    __tablename__ = 'student'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    enrollments = relationship(
+        "Enrollment", back_populates="student",
+        cascade='all, delete-orphan')  # Set cascade to remove orphaned enrollments.
+
+
+class Activity(Base):
+    __tablename__ = 'activity'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    enrollments = relationship("Enrollment", back_populates="activity")
+
+
+class Enrollment(Base):
+    __tablename__ = 'enrollment'
+    id_student = Column(ForeignKey(Student.id), primary_key=True)
+    id_class = Column(ForeignKey(Activity.id), primary_key=True)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date)
+    
+    # Because the foreign key is on this table, SQLAlchemy knows
+    # these are one to many relationships with Enrollment being the many
+    student = relationship(Student, back_populates='enrollments')
+    activity = relationship(Activity, back_populates='enrollments')
+
+```
+Extending our scenario, let's assume our student has had multiple activities over the years, that those activities have changed as the student's tastes evolve, and that we are a meticulous recordkeeper. This means that our Activity table will be populated with activites that the student used to do, as well as the student still does. Is there a way to easily leverage the already-existing `relationship` but cleanly limit the results without having to specify it in the query each time?
+
+Patterson says yes: **use a property decorator to wrap a function**. Example:
+```python
+class Student(Base):
+    __tablename__ = 'student'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    
+    # RELATIONSHIP(s)
+    enrollments = relationship(
+        "Enrollment", back_populates="student",
+        cascade='all, delete-orphan')  # Set cascade to remove orphaned enrollments.
+        
+   # PROPERTY FUNCTIONS - CREATE TWO FUNCTIONS THAT WILL RETURN ACTIVE AND LEGACY ACTIVITIES
+   @property
+   def current_activities(self):
+        for enrollment in self.enrollments:
+            if not enrollment.end_date:
+                yield enrollment.activity
+            
+   @property
+   def past_activities(self):
+        for enrollment in self.enrollments:
+            if enrollment.end_date:
+                yield enrollment.activity
+                
+  # OTHER STUFF HERE LIKE CONTEXT MANAGER AND OBJECT LINKAGE
+  ....
+  
+  # ACCESS DATA THROUGH NEW @property FUNCTIONS
+  all_tables = sqlitedb.session.query(Student) \
+            .options(
+                joinedload(Student.enrollments)
+                .joinedload(Enrollment.activity)
+            )
+            
+  for student in all_tables:
+        print(f"{student.name} activity: {student.enrollments[0].activity.name}")
+        
+        # RESULTS RETURNED THROUGH A GENERATOR. MUST COMPENSATE FOR THIS WHEN PRINTING.
+        print(f"Former activities are: {[x.name for x in student.past_activities]}")
+        print(f"Current activities are: {[x.name for x in student.current_activities]}")
+```
+
+I've documented the `@property` method for reference purposes. But I'm not sure how useful it will be in day-to-day use. I originally wondered if it would just be easier to move this filtering logic, but I think that means I would need to either:
+1. Do a generic query and post process (akin to what's happening in the `@property` logic), or
+2. Run two separate queries, each with its own filtering logic.
+
+I think the benefit here is that we can run the query once, retrieving all the physical results from the SQL database and then use the ORM objects to slice and dice further without needing to run more queries. Time will tell.
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
