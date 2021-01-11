@@ -1285,7 +1285,7 @@ It is worth further noting a few more issues related to SQLAlchemy relationship 
 1. Orphan Records vs Cascading Deletes.<br>SQLAlchemy will balk if the deletion of a record results in a null value in another table (thereby creating an orphan record). 
 Example: We have a Student table, an Activity table, and an Enrollment table which uses the Student.id and Activity.id as a compound key. If we delete a Student record whose Student.id is present in the Enrollment table, SQLAlchemy will return a `AssertionError: Dependency rule tried to blank-out primary key column` error (and refuse to delete the Student record).
 
-We can tell SQLAlchemy to automatically delete any orphans it may generate by adding a `cascade='all, delete-orphan'` option on the relationship. (Further note, as per SQLAlchemy itself `'delete-orphan cascade` is normally configured on the 'one' side of the 'one-to-many' relationship). This is yet again another good reason to use `back_populates` over `backref` as I'm not sure how you would specify the relationship on the 'one' if the backref definition was placed on the 'many'.
+We can tell SQLAlchemy to automatically delete any orphans it may generate by adding a `cascade='all, delete-orphan'` option on the relationship. (Further note, as per SQLAlchemy itself `'delete-orphan cascade` is normally configured on the 'one' side of the 'one-to-many' relationship). This is yet again another good reason to use `back_populates` over `backref` as I'm not sure how you would specify the relationship on the 'one' if the backref definition was placed on the 'many'. See more details [here](https://docs.sqlalchemy.org/en/13/orm/session_basics.html#deleting-objects-referenced-from-collections-and-scalar-relationships).
 
 ##### Extending the Object Model with Properties
 I found this good idea while reading Mike Patterson's [Relationships with SQLAlchemy](https://medium.com/python-in-plain-english/relationships-with-sqlalchemy-958b7358e16_ blog post.
@@ -1371,6 +1371,94 @@ I've documented the `@property` method for reference purposes. But I'm not sure 
 2. Run two separate queries, each with its own filtering logic.
 
 I think the benefit here is that we can run the query once, retrieving all the physical results from the SQL database and then use the ORM objects to slice and dice further without needing to run more queries. Time will tell.
+
+##### Multithreading-safe Session
+SQLAlchemy warns that a [global Session object IS NOT thread-safe by default](https://docs.sqlalchemy.org/en/13/orm/contextual.html#unitofwork-contextual). This can be mitigate, however, by using `scoped_session()` functionality provided by the package. 
+
+Given that I already built a context manager (which creates a new session each time we enter it), I wasn't sure if I needed to modify my code to include `scoped_session`. A Google search returned poor result set when I searched for "SQLAlchemy context manager vs scoped session" but I did find an article by Xiang Zhu ["Using Python SQLAlchemy session in multithreading"](https://copdips.com/2019/05/using-python-sqlalchemy-session-in-multithreading.html) which suggested that my existing context manager approach was sufficient.
+
+It remains to be seen if I ever need to run a session within another session. In such a case, I think the global scoped_session approach might work, but am not sure about the context manager in a context manager scenario. This seems very edge-case-y to me, however, so I'm going to stick with my existing pattern on the educated guess that it is probably ok.
+
+##### Association Tables
+This is the last item to consider before I get cracking. In many-to-many relationships, an association table must be used to track what is linked to what. It is important to note that this can be done in two ways: 
+* Use a Table<br>Use this method when you need to link foreign keys only
+* Define a new class object<br>Use this method when you need to link foreign keys AND keep track of additional data via columns unique to this table.
+
+The SQLAlchemy docs cover both the [Asssociation Table option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-many) and [Association Object option](https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#association-object). For my own benefit, I'm listing their examples here with my own additional description:
+
+```python
+# ASSOCIATION TABLE EXAMPLE (BIDIRECTIONAL RELATIONSHIP VIA back_populates)
+from sqlalchemy import Column, Integer, ForeignKey, Table
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+association_table = Table('association', Base.metadata,
+    Column('left_id', Integer, ForeignKey('left.id')),
+    Column('right_id', Integer, ForeignKey('right.id'))
+)
+
+
+class Parent(Base):
+    __tablename__ = 'left'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    children = relationship(
+        "Child",
+        secondary=association_table,
+        back_populates="parents")
+
+
+class Child(Base):
+    __tablename__ = 'right'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    parents = relationship(
+        "Parent",
+        secondary=association_table,
+        back_populates="children")
+```
+Now lets create some records and add them to the database:
+```python
+...
+with sqlitedb:
+    p1 = Parent(name="Parent1")
+    p2 = Parent(name="Parent2")
+    c1 = Child(name="Child1")
+    c2 = Child(name="Child2")
+    
+    p1.children.add(c1)
+    p1.children.add(c2)
+    p2.children.add(c1)
+    
+    sqlitedb.session.add_all[p1, p2])
+    sqlitedb.session.commit()
+```
+This results in the following SQLite tables and records:
+```sql
+SQLite version 3.31.1 2020-01-27 19:55:54
+Enter ".help" for usage hints.
+sqlite> .tables
+association  left  right
+
+sqlite> select * from left;
+1|Parent1
+2|Parent2
+
+sqlite> select * from right;
+1|Child1
+2|Child2
+
+sqlite> select * from association;
+1|1
+1|2
+2|1
+
+```
+
+
+
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
