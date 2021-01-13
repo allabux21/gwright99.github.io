@@ -1551,9 +1551,13 @@ with sqlitedb:
 > ThisParent is a BiologicalParent to ThatChild
 ```
 
-# CREATE AND INTERACT WITH OBJECTS
-# NOTE: AT THIS POINT, THESE ARE ALL JUST PYTHON OBJECTS (NOT SQL RECORDS). NO NEED TO ACTUALLY MAKE SURE THE
-# OBJECTS ARE FULLY POPULATED UNTIL JUST BEFORE WE INTEND TO FLUSH TO SQL DATABASE
+##### Feature to be Mindful of: Association Proxy
+I documented the object linking method that I intuitively prefer, but must admit that the method is a bit verbose when trying to access attributes via relationships (e.g. `objA.relationship.relationship.objB.attribute`). 
+
+SQLAlchemy offers a shortcut feature called the [Association Proxy](https://docs.sqlalchemy.org/en/13/orm/extensions/associationproxy.html). The documentation describes it as, _"It essentially conceals the usage of a 'middle' attribute between two endpoints, and can be used to cherry-pick fields from a collection of related objects or to reduce the verbosity of using the association object pattern."_ Basically, in addition to defining a relationship from one object to another, I can also define other rules like "when I call this attribute, I want you to pull it from the object that is linked via the relationship that is also defined in this object".
+
+I can see the value of less typing (I'm alreadying beginning to question my decision to use `sqlitedb.session...` instead of just `session...` BUT I feel that these shortcuts place a higher demand on my headspace resources. Explicit may be longer, but I can clearly follow it from start to finish. Shortcuts like the association proxy may make my code less verbose but I also need to devote headspace to remember that I had built shortcuts in the object model (which I am executing elsewhere). As a result, I've noted the feature as a reminder to myself to revisit once I'm more comfortable with SQLAlchemy object interactions, but will refrain from using right now to minimize the amount of potential debugging I will need to do in my beginning code base.
+
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
