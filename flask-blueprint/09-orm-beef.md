@@ -1476,7 +1476,84 @@ Now lets assume that we made a data entry mistake and it turns out Parent1 isn't
 2021-01-11 11:06:47,836 INFO sqlalchemy.engine.base.Engine (1, 2)
 2021-01-11 11:06:47,838 INFO sqlalchemy.engine.base.Engine COMMIT
 ```
+The documentation covers further scenarios like "what if i wanted to delete the child object directly?". I appears that my decision to use `back_populates` everywhere makes this possible (since relationships are comprehensively defined). I'll investigate more once I actually encounter this situation in the while, because I want to move on to the Association Object now.
 
+Returning to our example, lets assume that we need to collect some additional data like whether a Parent is the biological parent or a step parent. Since an individual can be the biological parent to one child, but a step-parent to another, it makes the most sense to capture this element in the Association table between Parent and Child. Unfortunately, the need for extra columns means we can't use the Table method, but must now create a full-fledged Association Object and modify the relationship definitions so that the Parent and Children tables point directly to the Association Object, rather than to each other.
+
+```python
+# ASSOCIATION TABLE EXAMPLE (BIDIRECTIONAL RELATIONSHIP VIA back_populates)
+from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class Association(Base):
+    __tablename__ = 'association2',
+    parent_table_id = Column(Integer, ForeignKey('parent_table.id'), primary_key=True)
+    children_table_id = Column(Integer, ForeignKey('children_table.id'), primary_key=True)
+    extra_data = Column(String(50))
+    # ESTABLISH RELATIONSHIPS
+    child = relationship("Child", back_populates="parents")
+    parent = relationship("Parent", back_populates="children")
+
+
+class Parent(Base):
+    __tablename__ = 'parent_table'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    children = relationship("Association", back_populates="parent")
+
+
+class Child(Base):
+    __tablename__ = 'children_table'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    parents = relationship("Association", back_populates="child")
+```
+
+With the redefinition of the classes and relationships complete, we can now start creating objects and linking them together. The SQLAlchemy example continues with a code snippet:
+```python
+p = Parent()
+a = Association(extra_data="step-parent")
+a.child = Child()
+p.children.append(a)
+
+for assoc in p.children():
+    print(assoc.extra_data)
+    print(assoc.child)
+```
+
+I believe the example is attempting to demonstrate that:
+1. Because these are pure Python objects at this point, you can slowly populate the attributes over time (unlike with writing the MYSQL record where you must have all the mandtories at write-time).
+2. You can chain together shorter relationships into a longer relationship chain. 
+
+While the SQLAlchemy flow *does* work, I found the style to be counter-intuitive and spent longer than I would care to admit trying to wrap my head around the inter-linkage sequence. I found I preferred using a slightly more verbose style that made the Assocation the focal point of the relatinoship definition:
+```python
+# EXAMPLE
+a = Association(extra_data="BiologicalParent")
+p = Parent(name="ThisParent")
+c = Child(name="ThatChild")
+
+# LINK OBJECTS USING ASSOCIATION AS FOCUS
+a.parent = p
+a.child = c
+
+# ASSUME WE WANT THE LAST PARENT IN THE TABLE AND WANT TO KNOW WHO THEIR CHILDREN ARE AND THE RELATIONSHIP TO THEM
+with sqlitedb:
+    # TO GET LAST ENTRY, order_by DESCENDING THEN USE first().
+    p = sqlitedb.session.query(Parent).order_by(Parent.id.desc()).first()
+    
+    for assoc in p.children:
+        print(f"{p.name} is a {assoc.extra_data} to {assoc.child.name}")
+```
+```stdout
+> ThisParent is a BiologicalParent to ThatChild
+```
+
+# CREATE AND INTERACT WITH OBJECTS
+# NOTE: AT THIS POINT, THESE ARE ALL JUST PYTHON OBJECTS (NOT SQL RECORDS). NO NEED TO ACTUALLY MAKE SURE THE
+# OBJECTS ARE FULLY POPULATED UNTIL JUST BEFORE WE INTEND TO FLUSH TO SQL DATABASE
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
