@@ -1558,6 +1558,55 @@ SQLAlchemy offers a shortcut feature called the [Association Proxy](https://docs
 
 I can see the value of less typing (I'm alreadying beginning to question my decision to use `sqlitedb.session...` instead of just `session...` BUT I feel that these shortcuts place a higher demand on my headspace resources. Explicit may be longer, but I can clearly follow it from start to finish. Shortcuts like the association proxy may make my code less verbose but I also need to devote headspace to remember that I had built shortcuts in the object model (which I am executing elsewhere). As a result, I've noted the feature as a reminder to myself to revisit once I'm more comfortable with SQLAlchemy object interactions, but will refrain from using right now to minimize the amount of potential debugging I will need to do in my beginning code base.
 
+##### Warning: Beware Style Clashes
+I had another `relationship` example open in my browser, so I decided to reinforce the concept by trying this one as well. I found some stylistic differences that I didn't gel with the official SQLAlchemy documentation (but still worked), so I thought it was worth calling out. 
+
+You can find the example [here](https://www.pythoncentral.io/sqlalchemy-association-tables/). The code in question is:
+```python
+from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.declarative import declarative_base
+ 
+Base = declarative_base()
+ 
+
+class Department(Base):
+    __tablename__ = 'department'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    employees = relationship(
+        'Employee',
+        secondary='department_employee_link'
+    )
+ 
+ 
+class Employee(Base):
+    __tablename__ = 'employee'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    hired_on = Column(DateTime, default=func.now())
+    departments = relationship(
+        Department,
+        secondary='department_employee_link'
+    )
+ 
+ 
+class DepartmentEmployeeLink(Base):
+    __tablename__ = 'department_employee_link'
+    department_id = Column(Integer, ForeignKey('department.id'), primary_key=True)
+    employee_id = Column(Integer, ForeignKey('employee.id'), primary_key=True)
+    extra_data = Column(String(256))
+    department = relationship(Department, backref=backref("employee_assoc"))
+    employee = relationship(Employee, backref=backref("department_assoc"))
+    
+```
+The Department-Employee example differs from the official SQLAlchemy Object association in two ways:
+1. It uses the `secondary` parameter in the relationship definitions tying the Department and Employee classes to the Association Object class;
+2. It retains a direct relationship between the Department and Employee classes.
+
+The result is a solution which more closely resembles an Assocation Table / Association Object hybrid rather than pure solution. Given that the example references a previous post which had the reader create an Association Table (with the post I was following providing direction on how to change the Association Table into an Association Object), my first thought was that the authors had missed a few necessary changes. However, the documented code DID work when I executed it, so this was a bit puzzling. 
+
+It's possible that I'm missing a minor behavioural nuance here, but I don't understand what the hybrid does that makes it better (if anything) than the pure Association Object example from SQLAlchemy. My takeway here is that I stick with the non-hybrid approach, but need to remain aware of this other possible implementation when I'm reading 3rd party code.
 
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
