@@ -1633,6 +1633,10 @@ all relationship variables prefixed with "rel_"
 
 DOCSTRING CONVENTIONS (VSCODE, useing '\t' causes display errors in Pylance).
 Use of Docstring help to avoid needing extra long variable names (eg. rel_message_sender instead of rel_User_message_sender)
+https://realpython.com/documenting-python-code/
+Some display issues with Pylance. CHoice - write docstrings that looks good in VSCode (Markdown) or write docstrings that are compliant to the Python tooling (Sphinx, Google, etc). https://stackoverflow.com/questions/6046263/how-to-indent-a-few-lines-in-markdown-markup
+https://github.com/sublimelsp/LSP-pyright/issues/42
+
 
     # has no Python-side or server-side default generator indicated, nor does it indicate 'autoincrement=True' or 'nullable=True', and no explicit value is passed
     # PROBLEM WAS THE INIT - I hadn't yet created these objects in the SQL db, so I didn't have a .id
