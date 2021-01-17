@@ -1631,5 +1631,19 @@ all relationship variables prefixed with "rel_"
 #   msg2 = Message(rel_message_type=msg_type_global, text="This is message #2")
 
 
+DOCSTRING CONVENTIONS (VSCODE, useing '\t' causes display errors in Pylance).
+Use of Docstring help to avoid needing extra long variable names (eg. rel_message_sender instead of rel_User_message_sender)
+
+    # has no Python-side or server-side default generator indicated, nor does it indicate 'autoincrement=True' or 'nullable=True', and no explicit value is passed
+    # PROBLEM WAS THE INIT - I hadn't yet created these objects in the SQL db, so I didn't have a .id
+    # to assign. Should remember that init ok for standalone object, but not those that require
+    # dynamic population by SQLAlchemy as it write records.
+    #def __init__(self, message, sender, recipient, status="Draft"):
+    #    self.message_id = message.id
+    #    self.sender_id = sender.id
+    #    self.recipient_id = recipient.id
+    #    self.status = status
+
+
 Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
 Previous: 
