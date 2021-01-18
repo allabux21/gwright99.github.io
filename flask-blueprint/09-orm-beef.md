@@ -1608,46 +1608,5 @@ The result is a solution which more closely resembles an Assocation Table / Asso
 
 It's possible that I'm missing a minor behavioural nuance here, but I don't understand what the hybrid does that makes it better (if anything) than the pure Association Object example from SQLAlchemy. My takeway here is that I stick with the non-hybrid approach, but need to remain aware of this other possible implementation when I'm reading 3rd party code.
 
-#### Naming Convention Practices
-Always use Association Object. Always name Association Object as composite of the two objects' full names plus "assocation"
-
-Object A : User
-Object B : Message
-Object C : UserMessageAssociation
-
-Lookups always have Lookup at the end.
-all relationship variables prefixed with "rel_"
-
-# Actual database columns must reference database table names (foreign keys)
-# relationships reference Python class objects
-# When I link the objects in the Python code, I MUST do it on the RELATIONSHIP attributes,
-# NOT the database columns!!!!!
-# eg:
-
-#   msg_type_global = MessageTypeLookup(type='Global')
-#   msg_type_personnal = MessageTypeLookup(type='Personal')
-
-#   msg1 = Message(rel_message_type=msg_type_global, text="This is message #1")
-#   msg2 = Message(rel_message_type=msg_type_global, text="This is message #2")
-
-
-DOCSTRING CONVENTIONS (VSCODE, useing '\t' causes display errors in Pylance).
-Use of Docstring help to avoid needing extra long variable names (eg. rel_message_sender instead of rel_User_message_sender)
-https://realpython.com/documenting-python-code/
-Some display issues with Pylance. CHoice - write docstrings that looks good in VSCode (Markdown) or write docstrings that are compliant to the Python tooling (Sphinx, Google, etc). https://stackoverflow.com/questions/6046263/how-to-indent-a-few-lines-in-markdown-markup
-https://github.com/sublimelsp/LSP-pyright/issues/42
-
-
-    # has no Python-side or server-side default generator indicated, nor does it indicate 'autoincrement=True' or 'nullable=True', and no explicit value is passed
-    # PROBLEM WAS THE INIT - I hadn't yet created these objects in the SQL db, so I didn't have a .id
-    # to assign. Should remember that init ok for standalone object, but not those that require
-    # dynamic population by SQLAlchemy as it write records.
-    #def __init__(self, message, sender, recipient, status="Draft"):
-    #    self.message_id = message.id
-    #    self.sender_id = sender.id
-    #    self.recipient_id = recipient.id
-    #    self.status = status
-
-
-Next: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
-Previous: 
+Next: [Docstrings and Naming Conventions](./10-docstrings.md)<br>
+Previous: [Database Connection Pattern](./08-database-connection-pattern.md)<br>
