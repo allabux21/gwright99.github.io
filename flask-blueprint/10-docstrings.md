@@ -77,18 +77,63 @@ I had chosen WHERE I would document the class but I still hadn't decided HOW, an
 
 One very opinion article said to only use Sphinx style because that was the official Python method. Unfortunately the article was several years old and I found found Sphinx-style to be the least visually accessible method, so that was ignored. Another article suggested either Google or NumPy, suggesting that Google was good but Numpy was better if your text was longer. Unfortunately his examples were super short so there wasn't any noticeably compelling difference between the two formats other tha some minor differences on how headers were identified and where carrige returns were placed.
 
-Normally I would have said "to hell with these purity priests!" and just implemented a documentation style that met my needs. I was being a little cautious, however, because I wanted my code to be able to integrate with the Python ecosystems's documentation generation packages and also be able to leverge the functionality of `doctest` [TODO: find link] - a package which crawls a code package's docsrings and executes any of the code examples contained within to see if they actually work.
+Normally I would have said "to hell with these purity priests!" and just implemented a documentation style that met my own needs. I was being a little cautious, however, because I wanted my code to be able to integrate with the Python ecosystem's documentation generation packages and also be able to leverge the functionality of `doctest` [TODO: find link] - a package which crawls a code package's docstrings and executes any of the code examples contained within to see if they actually work.
 
-Ultimately, I choose to use LSST as my reference implementation because I liked that they were opinionated and had very comprehensive implementation descriptions. Unfortunately, I also did a half-assed job of it because:
+Ultimately, I chose to use LSST as my reference implementation because I liked that they were opinionated and had very comprehensive examples, and because they chose to implement the Numpy system (which I happened to find personally appealing). However, I also did a half-assed job implementing this documentation style into my code because:
 1. Full compliance broke VSCode (see next section), and
-2. Writing fully flesh documentation take major time and effort, and I wasn't convinced my data model was solid yet so it was possible I was going to have to make changes that invalidated the hours of writing I was doing to document the AS IS.
+2. Writing fully-fleshed documentation takes *major* time and effort. I wasn't convinced my data model was solid yet, so it was possible additional changes would invalidate large swathes of what I had already written.
 
 ##### Mitigating the Display Quirks of VSCode
+The [Google](https://realpython.com/documenting-python-code/#google-docstrings-example)- and [Numpy](https://realpython.com/documenting-python-code/#numpyscipy-docstrings-example)-style docstrings make heavy use of whitespace and tabs to create clear, clean documentation blocks (a major reason why I prefer them to the more compact but IMHO less legible reStructured and Epytext styles).
+
+The whitespace made reading easier when directly examining the source code, but displayed as a unformatted wall of text when displayed in an Intellisense pop-up window by VSCode. After another round of investigation, I discovered that [VSCode renders docstrings as Markdown](https://github.com/microsoft/pylance-release/issues/48) (with VSCode itself driven by some setting in the Pyright package), and there appeared to be no way to tweak settings to easily fix the problem.
+
+TODO: INSERT SIDE-BY-SIDE OF CLEAN SOURCE CODE VS VSCODE DISPLAY.
+
+So now I had another problem decision to make:
+1. *I could change nothing.*<br> This would keep me compliant to Python documentation standards at the expense of usable Intellisense popups. I considered this a bad choice because I was going to be the only user of the documentation for the foreseeable future, so why was I going to make my immediate life more difficult at the expense of an abstract best practice and *potential* future integration with docstring testing tools?
+
+1. *I could change documentation styles*<br>I could avoid the documentation bloat and (maybe) VScode whitespace display problem by abandoning my preferred Google/Numpy documentation style in favour of the more compact reStructured/Epytext style. I did not favour this choice because it didn't guarantee a display fix but definitely meant I was going to have to use a documentation style which I clearly disliked.
+
+1. *I could manually insert whitespace indicators*<br>By manually inserting `\n` and `\t` in my docstrings, I could force the VSCode rendering engine to display the text with greater fidelity to how it was formatted in my classes. This was non-ideal however, as adding the whitespace indicators cause the VSCode Intellisense popup to have _other_ display issues, plus it meant my docstrings were now littered with escaped whitespace characters (causing further size bloat and being less visually appealing).
+
+None of my options were ideal. In the end, I used a hybrid that touched upon options 2 and 3:
+* I used Numpy-style headers to visually break up the sections, but Google-style Attribute notation for great compaction.
+* I avoided using `\t` to minimize visual clutter, but still added `\n` to force carriage returns.
+
+##### Balancing immediate vs long-term absract needs 
+I have no illusions that this is a perfect solution. I made the decision to implement this way with the resigned understanding that I will likely need to revisit the problem at a later point (either when VSCode solves the display problem, I want to build in automated documentation testing, or if I ever decide to release this project publicly).
+
+This decision is ok, however, because the major problems are LATER. Obviously I would prefer to get things right on the first try and minimize the refactoring debt that I accumulate, but it was clear that there was no solution that would work both technically and culturally (i.e. serve my individual needs). This is still a learning project devoted 100% to enhancing my own skillset and understanding. If that means I have to deliberately break a few Python conventions over the short-term in order to achieve greater results, the trade-off seems fair based on the knowledge I have right now.
+
+
+### Naming Convention Practices
+With the docstrings semi-resolved, I could then turn to the original question that spawned this whole problem in the first place: how should I name my ORM classes and their variables?
+
+As noted at the beginning of this post, I found that adding `_rel` as a prefix to any relationship variable was a useful self-documented reminder as I interacted with the class. Ensuring my docstrings had a good example at very top meant I had removed the need to add further details into the variable name itself - I could just hover the mouse and reference the Intellisense documentation instead. 
+
+I still needed to figure out a clear system for how to name the objects themselves though. Based on my initial rudimentary coding efforts, I had already identified the following considerations:
+* Singular vs Plural
+* Abbreviations vs Full Text
+* Table Purpose
+
+_NOTE: I'm absolutely sure best practices have been documented a million times over on this topic. I was just so tired of solving other problems that I couldn't bear to go down another rabbit hole of stylistic argumentation, so I decided I would just rely on my own organic experience with the understanding that any mistake made would be useful for future learning and growth._
+
+_SECOND NOTE: I am not super well-versed in the jargon of SQL, so expect barbarian-like language as I discuss concepts that likely have a specific and accurate term that I am unaware of._
+
+##### Singular vs Plural (Decision: Singular)
+I dithered about this for awhile. Mentally, I was constantly thinking about the SQL tables as plural (e.g. "Users", "Messages"). But from a code perspective, I was creating and linking individual object instances. Furthermore, the plural didn't work well once you add association and lookup tables into the mix.(e.g. "MessageType" seems more correct than "MessagesType"). For these reasons, I settled on using the singular to naming my classes and tables.
+
+##### Abbreviation vs Full Text (Decision: Full Text ... I think ...)
+I've repeatedly stated my preference for longer, more explicit names despite the additional typing and memory footprint costs. I'm still holding to this maxim, but must admit that I'm starting to become a little less certain as I go through the act of writing source code. Auto-complete is a godsend, but one still needs to find/select the right variable and there is no way to avoid the increased need for screen real estate as longer variables are used. I've decided to stick with full text for now (understanding that I can back out this decision with aggressive find-replace action later). I may change my mind later.
+
+##### Table Purpose
+This was easy in some senses: "Lets use a `User` table to store users!". 
+
+I found this became less clear when I needed to create support tables as I tried to normalize my data. For example, was calling a table `MessageType` clear enough, or should I further qualify it by specifically identifying it as `MessageTypeLookup`? I personally found that the 'Lookup' part made it immediately clear (to me at least) that this was a small table that only existed to extract and normalize some data elements that previously lived on the Message table, but maybe the mere presence of "Type" would have been enough for a more experienced database user? What if I needed to change my data model in the future and this Lookup table was no longer a true lookup table - would I need to go back and change the name and all associated references? 
 
 
 
-
-#### Naming Convention Practices
 Always use Association Object. Always name Association Object as composite of the two objects' full names plus "assocation"
 
 Object A : User
