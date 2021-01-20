@@ -10,3 +10,5 @@ This is the main page for my Flask blueprint project.
 * [06 - Interlude #01 - The Philosophy of Flask Tutorials](./06-interlude-01-philosophy-of-flask-tutorials.md)
 * [07 - Flask Application Instantiation & Invocation Pattterns](./07-flask-instantiation-and-invocation-patterns.md)
 * [08 - Database Connection Pattern](./08-database-connection-pattern.md)
+* [09 - Why the Beef with ORMs?](./09-orm-beef.md)
+* [10 - Docstrings and Naming Conventions] (./10-docstrings.md)
