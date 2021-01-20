@@ -86,7 +86,7 @@ Ultimately, I chose to use LSST as my reference implementation because I liked t
 ##### Mitigating the Display Quirks of VSCode
 The [Google](https://realpython.com/documenting-python-code/#google-docstrings-example)- and [Numpy](https://realpython.com/documenting-python-code/#numpyscipy-docstrings-example)-style docstrings make heavy use of whitespace and tabs to create clear, clean documentation blocks (a major reason why I prefer them to the more compact but IMHO less legible reStructured and Epytext styles).
 
-The whitespace made reading easier when directly examining the source code, but displayed as a unformatted wall of text when displayed in an Intellisense pop-up window by VSCode. After another round of investigation, I discovered that [VSCode renders docstrings as Markdown](https://github.com/microsoft/pylance-release/issues/48) (with VSCode itself driven by some setting in the Pyright package), and there appeared to be no way to tweak settings to easily fix the problem.
+The whitespace made reading easier when directly examining the source code, but displayed as a unformatted wall of text when displayed in an Intellisense pop-up window by VSCode. After another round of investigation, I discovered that [VSCode renders docstrings as Markdown](https://github.com/microsoft/pylance-release/issues/48) (with VSCode itself driven by some setting in the Pyright package), and there appeared to be [no way to tweak settings to easily fix the problem](https://stackoverflow.com/questions/6046263/how-to-indent-a-few-lines-in-markdown-markup).
 
 TODO: INSERT SIDE-BY-SIDE OF CLEAN SOURCE CODE VS VSCODE DISPLAY.
 
@@ -132,38 +132,22 @@ This was easy in some senses: "Lets use a `User` table to store users!".
 
 I found this became less clear when I needed to create support tables as I tried to normalize my data. For example, was calling a table `MessageType` clear enough, or should I further qualify it by specifically identifying it as `MessageTypeLookup`? I personally found that the 'Lookup' part made it immediately clear (to me at least) that this was a small table that only existed to extract and normalize some data elements that previously lived on the Message table, but maybe the mere presence of "Type" would have been enough for a more experienced database user? What if I needed to change my data model in the future and this Lookup table was no longer a true lookup table - would I need to go back and change the name and all associated references? 
 
+A colleague of mine with many years of experience with databases told me that naming convention are more art than science. So it sounds like I should just do what I think makes sense.
 
+### Naming Convention Decisions
+I'll use the following naming conventions for SQL table names:
+* Use singular case
+* Do not include qualifiers like "Lookup". I should able to infer that a table is a lookup by the presence of other words in the name (e.g. "Type").
+* Use "Link" instead of "Association" to save characters on association tables.
+* Name association tables as "<ObjA><ObjB><Link>"
 
-Always use Association Object. Always name Association Object as composite of the two objects' full names plus "assocation"
+I'll use the following naming conventions for ORM relationship-linking attributes:
+* Prefix all variables with "rel_"
+* Vary between singular and plural cases depending on what's being linked (e.g "rel_linked_id" and "rel_waiting_messages")
+* Do not include linked_object in name (unless it is really necessary)
 
-Object A : User
-Object B : Message
-Object C : UserMessageAssociation
+I've identified no hard-and-fast rules yet for the attributes linked to SQL columns. Will update this section if they become apparent.
 
-Lookups always have Lookup at the end.
-all relationship variables prefixed with "rel_"
-
-# Actual database columns must reference database table names (foreign keys)
-# relationships reference Python class objects
-# When I link the objects in the Python code, I MUST do it on the RELATIONSHIP attributes,
-# NOT the database columns!!!!!
-# eg:
-
-#   msg_type_global = MessageTypeLookup(type='Global')
-#   msg_type_personnal = MessageTypeLookup(type='Personal')
-
-#   msg1 = Message(rel_message_type=msg_type_global, text="This is message #1")
-#   msg2 = Message(rel_message_type=msg_type_global, text="This is message #2")
-
-
-DOCSTRING CONVENTIONS (VSCODE, useing '\t' causes display errors in Pylance).
-Use of Docstring help to avoid needing extra long variable names (eg. rel_message_sender instead of rel_User_message_sender)
-https://realpython.com/documenting-python-code/
-Some display issues with Pylance. CHoice - write docstrings that looks good in VSCode (Markdown) or write docstrings that are compliant to the Python tooling (Sphinx, Google, etc). https://stackoverflow.com/questions/6046263/how-to-indent-a-few-lines-in-markdown-markup
-https://github.com/sublimelsp/LSP-pyright/issues/42
-
-Decision - follow Numpy style but make accommodations for VScode to make it usable (keep `\n and \t and code blocks`).
-Did not find way to move docstrings out the class itself.
 
 Next: TBD<br>
 Previous: [Beef With ORMs](./09-orm-beef.md)<br>
