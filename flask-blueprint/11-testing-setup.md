@@ -189,8 +189,91 @@ def test_home_page_with_post(test_client):
     
 ```
 
+### Remediating My Existing Code
+During the original July 2020 development stint, I had started working on getting a testing framework implemented. My `conftest.py` looked like this before I stopped:
 
-Thankfully - although I had completely forgotten how I managed it before - I had actually implemented some testing functionality during my previous development run.
+```python
+# conftest.py
+# All custom fixtures should reside here - this is automatically discovered by Pytest. No import needed.
+import logging
+import os
+import pytest
+import sys
+
+from dotenv import load_dotenv
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from blueprint import create_app                    # noqa: E402 #pylint: disable=wrong-import-position
+from blueprint.db.database import init_db           # noqa: E402 #pylint: disable=wrong-import-position
+
+load_dotenv('.flaskenv-test', override=True)  # Set FLASK_ENV
+
+# with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
+#    _data_sql = f.read().decode('utf8')
+
+LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture(name='test_app', scope='function')
+def fixture_test_app():
+    # Main function has been build to set its config based on the FLASK_ENV
+    # This is set above by load_dotenv, so I should be able to reuse the
+    # function, and then just tack on the db drop/create.
+    app = create_app()
+
+    # Clear everything in the testdb and create
+    init_db()
+
+    return app
+
+# tutorial has
+# yield app
+# os.close
+# os.unlink(db_path)
+
+
+@pytest.fixture(name="client")
+def fixture_client(test_app):
+    return test_app.test_client()
+
+
+# Simple fixture. Logs message, allows test to excute, then logs final message.
+# @pytest.fixture(scope='function')
+# def example_fixture():
+#    LOGGER.info("Setting up Example Fixture...")
+#    yield
+#    LOGGER.info("Tearing Down Example Fixture...")
+
+```
+
+Before deciding what to fix, let's take stock of the AS IS state:
+* I needed to add the `system.path.insert` shim to successfully import my project-specific modules. This line had to be executed before the import statements.
+* Unfortunately, the placement of the shim caused my linters to throw an import exception. This exception prevented the Make file test automation from successfully completing. 
+* I didn't want to silence the linter import errors throughout the IDE, so I locally silenced it with the `# noqa: E402 #pylint disable=wrong-import-position` inline comment. 
+* I used the `dotenv` python library to load environment variables that the Flask application needed, like `FLASK_APP` and `FLASK_ENV`.
+* I was trying to do ... something ... with a `data.sql` file. I dont remember the exact details but assume I was trying to load some startup database records.
+* I created a primitive logger object that I never subsequently used, other than for a commented fixture that demonstrated a simple log-yield-log pattern.
+
+Onto the pre-existing fixtures:
+* The core fixture `def fixture_test_app()` had two items of note: (1) the alias 'test_app' was defined in the fixture decorator (and used by downstream fixtures); (2) the function contained an `init_db()` step - something which was required based on the previous database integration pattern I used but no longer relevant now that I had implemented a newer, more decoupled pattern.
+* The `def fixture_client(test_app)` was pretty straight forward: get a properly configured Flask app from the base fixture and then return a `test_client` for that app for API behaviour-testing purposes.
+
+#### Onto the Remediation
+The import shim and dotenv logic could stay. Everything else needed to change, and some of these changes meant I probably needed to change the project's `__init__.py` file too. I decided to start with the base fixture and follow various modification paths as they revealed themselves.
+
+##### Fixing the base fixture
+I identified six things that needed to change in the pre-existing base fixture:
+1. The decorator scope should change from `function` to `module`<br>The Flask application only needed to be created and configured once for the entire testing cycle.
+1. The decorator name should be removed<br>Rather than simplyfying my code, I found the alias made it more challenging to trace calls by downstream fixtures. I would remove the alias and directly refer to the function name itself.
+1. The function name shoud be prefixed with `fixture_`<br>I didn't want a repeat of struggle I had keeping track of ORM attributes and relationship attributes, so i decided to prefix all my fixture functions with a hintword.
+1. I needed to change the database integration model<br>The old integration wasn't going to work anymore. I needed to implement the new model and make sure this worked for my dev, testing, and production instances.
+1. The two existing fixtures should be streamlined into one<br>I felt there was no justifiable reason for separating the Flask app creation from the test_client creation. I would combine the two and simplify my code at the same time.
+1. I need to rough in logging capabilities<br>I was primarily using `print` statements to debug right now. A better solution would be to create logger that would write to file AND stdout.
+
+The first three changes were easy, but the database change required a bit more thought.
+
+The Flask application only needed to be created once and I did not see any reason to separate the `client_app` generation logic into a separate fixture. Furthermore 
 
 
 
