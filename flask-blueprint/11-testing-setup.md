@@ -90,7 +90,7 @@ Five major things happened when I reread this code:
 Let's start unpacking.
 
 #### Getting VSCode To Detect My Tests
-I wanted y tests in a separate folder that was a peer to the application code, rather than nestled within it. Manipulating the folder strucutre was easy, but it quickly became a nightmare when it came to:
+I wanted my tests in a separate folder that was a peer to the application code, rather than nestled within it. Manipulating the folder strucutre was easy, but it quickly became a nightmare when it came to:
 1. Getting VSCode to discover the tests
 2. Defining the proper import paths for the test cases to execute successfully. 
 
@@ -105,7 +105,89 @@ Using relative import paths not only felt unclean (too many "../../" and "./"), 
 #### Flask Environment Definition
 TO DO: Fill this in later.
 
-#### Fixtures (specifically the test_client fixture)
+#### Fixtures
+As a reminder, fixtures are functions which can be configured to run at various points in the Setup/Teardown parts of a classic test case. As per Kennedy' article, fixtures had the following scopes:
+* `function` - run once per test function (default scope)
+* `class` - run once per test class
+* `module` - run once per test file
+* `session` - run once per session
+
+I suspect that I would use the module scope to create common database objects (that are used by multiple test cases, e.g. User) rather than having to recreate the data every time, and I might use the function scope to invoke the database context manager. I continued with the article to see if I was right.
+
+The next paragraph confirmed my suspicions. Modifying his code to reflect my own project's structure, we might go about confirming that our User object is behaving properly as follows:
+```python
+# tests/conftest.py
+import pytest
+from blueprint.models.User import User
+
+@pytest.fixture(scope='module')
+def new_user():
+    user = User(username="tester", email="tester@gmail.com", password="testerpassword")
+    return user
+
+```
+
+```python
+# test/unit/test_models.py
+import pytest
+
+def test_new_user(new_user):  # Use the `new_user` fixture to supply this testcase with the fixture's `user` object.
+    """
+    GIVEN a User model
+    WHEN a new User is created
+    THEN check the username, email, and hashed_password
+    """
+    assert new_user.username == ' 'tester'
+    assert new_user.email == 'tester@gmail.com'
+    assert new_user.password != 'testerpassword'
+    
+```
+I liked how Kennedy included a short but clear docstring in his testcases and have decided I will include the same in my own. Given the previous post on my struggles with getting docstring 'right', I'll remain mindful of how I try to balance clarity with terseness.
+
+##### Special Fixture For Testing Views: test_client()
+While testing objects is easy, we need a different way to test that the routes are working. Thankfully Flask has solved this problem via the `test_client()` method. This can be used to invoke calls to our endpoints and examine the response data. Returning to Kennedy's article, we can access the test_client like so:
+```python
+# test/conftest.py
+
+import pytest
+from blueprint import create_app
+
+@pytest.fixture(scope='module')
+def test_client():
+    flask_app = create_app('flask_test.cfg')
+    
+    with flask_app.test_client() as testing_client:
+        with flask_app.app_context():
+            yield testing_client
+            
+```
+```python
+# tests/functional/test_endpoints.py
+import pytest
+
+
+def test_home_page_with_get(test_client):
+    """
+    GIVEN a Flask application configured for testing
+    WHEN the '/' page is requested via GET
+    THEN check that the response is valid
+    """
+    response = test_client.get("/")
+    assert response.status_code == 200
+    assert b"<SOME_TEXT_THAT_SHOULD_BE_IN_RESPONSE>" in response.data
+    
+    
+def test_home_page_with_post(test_client):
+    """
+    GIVEN a Flask application configured for testing
+    WHEN the '/' page is requested via POST
+    THEN check that a '405' status code is returned
+    """
+    response = test_client('/')
+    assert response.status_code == 405
+    assert b"<SOME_TEXT_THAT_SHOULD_NOT_BE_IN_RESPONSE>" not in response.data
+    
+```
 
 
 Thankfully - although I had completely forgotten how I managed it before - I had actually implemented some testing functionality during my previous development run.
