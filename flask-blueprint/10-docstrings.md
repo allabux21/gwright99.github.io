@@ -149,5 +149,5 @@ I'll use the following naming conventions for ORM relationship-linking attribute
 I've identified no hard-and-fast rules yet for the attributes linked to SQL columns. Will update this section if they become apparent.
 
 
-Next: TBD<br>
+Next: [Testing Set Up](./11-testing-setup.md)<br>
 Previous: [Beef With ORMs](./09-orm-beef.md)<br>
