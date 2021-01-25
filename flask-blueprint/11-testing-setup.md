@@ -335,7 +335,44 @@ I was ok with the Make file using development as the default FLASK_ENV but neede
 ** Process C is spawned to execute the second step of the recipe (`@echo ....`)
 * In my previous efforts, I did not realize these lines were atomic and was defining FLASK_ENV within the recipe in a way that guaranteed it would be overwritten by the parent thread's value.
 
-The Stack Overflow article provided a solution: chain the lines together.
+The Stack Overflow article provided a solution: chain the lines together. Several troubleshooting hours later I landed on a final state for my Makefile entries:
+```make
+...
+# Setting default values to development.
+export FLASK_ENV = development
+export FLASK_APP := wsgi
+
+.DEFAULT_GOAL := run
+
+run:
+	@flask run
+
+test: 
+	@export FLASK_ENV=testing; pytest
+
+production: 
+	export FLASK_ENV=production; flask run
+...
+```
+I didn't particularly like hardcoding the FLASK_ENV in here, but I couldn't figure out a better way to do it and was tired of fighting the code.
+
+#### The Dreaded PyTest ImportError Returns
+While verifying that the Make file's 'test' command worked, I noticed something weird - somehow the FLASK_ENV was being set to 'testing' automagically. This had me puzzled so I investigated, being with the test_client fixture which serves as the base of my pytest setup.
+
+Print statements didn't seem to want to appear on stdout when I invoked pytest, so I used a rudimentary logger `LOGGER = logging.getLogger(__name__)` that I created in conftest.py. I inserted several environment variable checks in the function that creates the test_client(), thinking that I'd see the point where 'development' changed to 'testing'. The value was consistently 'developent', however, so this let me to believe that the value was somehow changing in the test_case that relied upon the fixture as a pre-requisite.
+
+Print statements didn't work in this test case either, so I needed a Logger. I didn't want to create a new logger in the test_case file, so I tried to import the Logger that I had created in conftest.py and ... set off several hours worth of rage, frustration, and a terrible flashback to trying to fix this bloody problem six months before. ANGER!!!!!!
+
+Let me tell you how I fixed it first, before getting into the unclear reasons for why it failed:
+My initial folder setup looked like
+.
++-- blueprint
+|   +-- (various files)
++-- tests
+|   +-- conftest.py
+|   +-- (various testcases)
+
+
 
 
 
