@@ -444,6 +444,53 @@ I figured it out thanks to [this Github issue](https://github.com/microsoft/pyth
 ```
 This caused all the Pyright complaints to cease, and VSCode could import and resolve all the packages again. Thank god.
 
+This success made me brave. I didn't like that my testcases did not identify the full path in their import statements (I had a feeling this would trip me up later), so I went back to do more modifications. As per the pytest docs, if I added `__init__.py` files in all my test folders, they would be treated as packages and the testcases would be imported with fully-qualified names (_this seemed to run counter to the direction from newer versions of Python that __init__ files were no longer needed to identity a folder as a package, but whatevs_). 
+
+I disabled the `python.analysis.extraPaths` entry in my settings.json, added a bunch of cluttery `__init__.py` files into the test folders, modified my import statements, and I prayed. Hard.
+```
+# Modified tests folder structure:
+```tree
++-- blueprint
+|   +-- (various files)
++-- tests
+|   +-- __init__.py
+|   +-- envvars
+|       +--(various .env files)
+|   +-- unit
+|       +-- __init__.py
+|       +-- test_factory.py
+|	+-- unittest2.py
+|   +-- functional
+|       +-- __init__.py
+|       +-- grahamfile.py 
+|       +-- test_app.py
++-- conftest.py
++-- Makefile
+```
+
+The import statements in `tests/unit/test_factory.py` became:
+```python
+# No longer needed, but retained for reference
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# The original way that worked (where pytest imports as top-level modules)
+#from conftest import LOGGER
+#from functional.grahamfile import GRAHAM
+#from grahamfile import mykey
+#from unittest2 import anotherkey
+from blueprint.db.database import declarative_base
+
+# New way where pytest imports as qualified name
+from tests.conftest import LOGGER
+from tests.functional.grahamfile import mykey
+from tests.unit.unittest2 import anotherkey
+```
+Everything worked! Wahoo!!! I decided at this point that I would not tinker further. I understood there was still a gap should I ever want to test *installed* code via a tool like tox (as per the pytest docs) but this seemed unlikely to affect me over the medium-term and I just wanted to get onto other things.
+
+
+# NOticed:
+- the same value was getting appended to my path over and over again. 
+- Pytest flask-env was always being reported by the app as testing even if I set it to somethign else.
 
 
 
