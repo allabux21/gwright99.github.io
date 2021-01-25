@@ -296,8 +296,46 @@ The `.flaskenv*` files were structurally the same, and had only minor content di
 
 In addition to all the files I had spawned to set these two environment variables, I had OTHER configuration files in the `blueprint.config` folder, which handled the defintion of Flask application configuration values and sensitive data like SECRET_KEY and database connection strings.
 
+This configuration rat nest was a becoming a big problem because it was directly limiting my ability to build a more flexible database context manager that could:
+* Juggle three different sets of database connection strings: those that served development, testing, and production.
+* Support multiple databases concurrently (e.g. instantiate a sqlite context manager as well as a separate Mongodb instance). I didn't know if I really needed this, but it seemed important to get working.
 
+The FLASK_ENV environment variable seemed like the perfect environment identification because: 
+** It was always populated
+** Its potential values were perfect (development, testing, production)
+** It was easily accessed with `os.environ`
 
+I could make the non-streamlined dev and testing configuration work, but didn't know how I was going to be able to test the production instance locally without having to remember to manually set FLASK_ENV on the CLI every time I wanted to test. I gathered my courage and returned to the Make file.
+
+##### Ugh Make Files
+During my previous effort, I had tried to avoid modifying the Make file because I found the tool to be finicky and majority of the help posts to be less than clear. I couldn't think of another (non-Docker) way to standardize the FLASK_ENV definition though, so I dove back in. 
+
+The 'as is' file had the following logic for the development and testing instances. 
+```make
+BLUE='\033[1;34m'
+TAG := $(shell git describe --tags --always --dirty)
+...
+# Setting default values to development.
+export FLASK_ENV = development
+export FLASK_APP := wsgi
+
+run:
+	@flask run
+    
+test: 
+	@pytest
+	@echo "\nDirty git tag: $(TAG)\n"
+....
+```
+
+I was ok with the Make file using development as the default FLASK_ENV but needed a way to overwrite this (preferrably in the Make file itself so I didn't need to continue the `dotenv` solution I had in the test fixture. Google searching ensued and I eventually found a few articles that helped me puzzle out what to do. [This Stack Overflow](https://stackoverflow.com/questions/35948154/how-to-set-environment-variables-in-makefile) post was particularly useful because it helped me understand why my previous attempts had failed:
+* The Make file is invoked in one process, but spawns a new child process for each line of a recipe. Using the code above as an example:
+** Process A is spawned when I type `make test` on the command line.
+** Process B is spawned to execute the first step of the recipe (`@pytest`)
+** Process C is spawned to execute the second step of the recipe (`@echo ....`)
+* In my previous efforts, I did not realize these lines were atomic and was defining FLASK_ENV within the recipe in a way that guaranteed it would be overwritten by the parent thread's value.
+
+The Stack Overflow article provided a solution: chain the lines together.
 
 
 
