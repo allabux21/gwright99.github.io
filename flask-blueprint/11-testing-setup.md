@@ -271,9 +271,36 @@ I identified six things that needed to change in the pre-existing base fixture:
 1. The two existing fixtures should be streamlined into one<br>I felt there was no justifiable reason for separating the Flask app creation from the test_client creation. I would combine the two and simplify my code at the same time.
 1. I need to rough in logging capabilities<br>I was primarily using `print` statements to debug right now. A better solution would be to create logger that would write to file AND stdout.
 
-The first three changes were easy, but the database change required a bit more thought.
+The first three changes were easy, but the database change required a bit more thought. As it turned out, it required a very deep dive into my configuration set up and ... I had to change the damn database logic again.
 
-The Flask application only needed to be created once and I did not see any reason to separate the `client_app` generation logic into a separate fixture. Furthermore 
+##### Join Me For A Convoluted Journey
+This whole thing was sparked by the presence of `load_dotenv('.flaskenv-test', override=True)` in my `conftest.py` file. I mentioned that my 'tests' folder was a peer to the 'blueprint' folder (where all the application code is), but I had neglected to mention that I had several other files that were peers to 'test' and 'blueprint'. Amongst them were:
+* .flaskenv
+* .flaskenv-test
+* .flaskenv-prod
+* dev.Dockerfile
+* prod.Dockerfile
+
+The Dockerfiles were important to my remote deployment plans but not relevant over the short term due to my decision to develop directly within WSL2 rather than on Docker/Kubernetes. I thought of them as a quasi-silver bullets: any configuration item I couldn't get working on my local machine/Make implementation could be easily solved later due to my ability to extensively set environment variables and modify/replace source code copied into the container. I relegated them to a "do later when you are getting closer to do fully-fledged remote deployments" and more to my more pressing problem: the flaskenv files.
+
+The `.flaskenv*` files were structurally the same, and had only minor content differences; each file contained two key-values pairs: FLASK_APP and FLASK_ENV. The FLASK_APP was alwasy 'wsgi.py', whereas the FLASK_ENV varied (.flaskenv had 'development', .flaskenv-test had 'testing', and .flaskenv-prod had 'production'). There was nothing wrong with defining the environment variables like this, the problem was that I was loading everything differently:
+* The development instance was setting FLASK_ENV and FLASK_APP via two different methods:
+** Via my local ~/.profile
+** Via a top-level export in the Makefile I created as part of Martin Heinz automation project setup.
+* The testing instance was setting FLASK_ENV and FLASK_APP via `.load_dotenv('.flaskenv-test', override=True)`.
+* The production instance did not have any method of setting the FLASK_ENV and FLASK_APP values defined in `.flaskenv-prod`. This was primarily due to:
+** I had assumed I would not test the production configuration in a non-production environment.
+** Because of my first assumption, I had not built my code in a way to deliberately instantiate a production instance.
+** I assumed any instantiation of a production instance (in Production) would occur via the prod.Dockerfile (where I easily could set environment variables with ENV)
+** I had given up trying to modify the Make file by inserting a 'production' target that could dynamically modify environment variables.
+
+In addition to all the files I had spawned to set these two environment variables, I had OTHER configuration files in the `blueprint.config` folder, which handled the defintion of Flask application configuration values and sensitive data like SECRET_KEY and database connection strings.
+
+
+
+
+
+
 
 
 
