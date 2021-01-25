@@ -365,13 +365,13 @@ Print statements didn't work in this test case either, so I needed a Logger. I d
 
 Let me tell you how I fixed it first, before getting into the unclear reasons for why it failed:
 My initial folder setup looked like
-.
+```tree
 +-- blueprint
 |   +-- (various files)
 +-- tests
 |   +-- conftest.py
 |   +-- (various testcases)
-
+```
 
 
 
