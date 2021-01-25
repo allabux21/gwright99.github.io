@@ -363,18 +363,77 @@ Print statements didn't seem to want to appear on stdout when I invoked pytest, 
 
 Print statements didn't work in this test case either, so I needed a Logger. I didn't want to create a new logger in the test_case file, so I tried to import the Logger that I had created in conftest.py and ... set off several hours worth of rage, frustration, and a terrible flashback to trying to fix this bloody problem six months before. ANGER!!!!!!
 
-Let me tell you how I fixed it first, before getting into the unclear reasons for why it failed:
 My initial folder setup looked like
 ```tree
 +-- blueprint
 |   +-- (various files)
 +-- tests
 |   +-- conftest.py
+|   +-- test_app.py
 |   +-- (various testcases)
++-- Makefile
 ```
+I had inserted `sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))` at the top of my conftest.py file in order for it to be able to successfully import module from the blueprint folder. 
+
+Trying to import the LOGGER object from conftest.py into test_app.py ended up reigniting the war between pyright (upon which Pylance relies) and pytest:
+* I could use the `sys.path.insert...` technique to let pyright find the conftest.py file, but this then broke pytest when it tried to execute the test_app.py testcases (ModuleNotFoundError).
+* I could use relative imports with a dot (e.g. `from .conftest import LOGGER`) to fix pytest but this then caused pyright to be unable to find the corresponding module/object and filling up my console with errors.
+* I could use relative imports without a dot (e.g. `from conftest import LOGGER`) to fix pyright but this then broke pytest again.
+
+Stackoverflow pages were full of complaints about this same problem, as well as a variety of overwrought solutions which didn't work. The [pytest documentation](https://docs.pytest.org/en/stable/pythonpath.html#pytest-vs-python-m-pytest) sort of covered this, but not in a way that I found accessible. If I was smart, I would have added my tests WITHIN blueprint, but I was too stubborn to change it at this point. 
+
+#### How I fixed it (I think)
+I found something that seems to work but I don't know WHY it works. I moved the conftest.py file out of the tests file, making it a peer to tests and blueprint. 
+```tree
++-- blueprint
+|   +-- (various files)
++-- tests
+|   +-- test_app.py
+|   +-- (various testcases)
++-- conftest.py
++-- Makefile
+```
+Making this change meant I could:
+* Import the conftest.py's LOGGER object into `/tests/test_app.py` with a simple `from conftest import LOGGER` (without any need to use the `sys.path.insert` shims)
+* Successfully run `python3 -m pytest` from my virtual env root (flask_poc)
+* Successfully run pytest via the Makefile (`pytest`)
+* Successfully invoke tests from VSCode.
+
+I'm so tired of screwing around with this aspect of the project but I can't leave conftest.py outside of the tests folder because that's where all my fixtures are supposed to go!!! :(
+
+UPDATE:
+I moved conftest.py back into tests. I then reread the [pytest docs](https://docs.pytest.org/en/stable/goodpractices.html), specifically the section about _prepend import mode_. It appears each test file (and conftest) are imported at TOP-LEVEL modules becasue 'tests' will be added to the system path. Items of note:
+1. This means all test file names must be unique.
+2. There is a more complicated way to set up the folder structure (covered just below, with packages and init files).
+
+The structure that works:
+```tree
++-- blueprint
+|   +-- (various files)
++-- tests
+|   +-- envvars
+|       +--(various .env files)
+|   +-- unit
+|       +-- test_factory.py
+|   +-- functional
+|       +-- grahamfile.py 
+|       +-- test_app.py
++-- conftest.py
++-- Makefile
+```
+Within `test_factory.py` I had the following imports:
+```python
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from conftest import LOGGER
+# from functional.graham import GRAHAM  # Didnt need to qualify folder anymore since all top-level
+from grahamfile import mykey
+from blueprint.db.database import declarative_base
+```
+Pyright was still chocking on resolving grahamfile and conftest. I needed a fix.
 
 
-
+The more complicated way seems better for the long-term (since you can test source code versus completed code) but I have found this difficult enough that I'll stick with the easy way right now. Unfortunately this has broken pyright's import resolution logic again so I need to go back and fix that.
 
 
 
