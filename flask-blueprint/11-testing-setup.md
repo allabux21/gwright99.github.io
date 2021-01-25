@@ -430,11 +430,19 @@ from conftest import LOGGER
 from grahamfile import mykey
 from blueprint.db.database import declarative_base
 ```
-Pyright was still chocking on resolving grahamfile and conftest. I needed a fix.
-
+Pyright was still choking on resolving grahamfile and conftest. I needed a fix.
 
 The more complicated way seems better for the long-term (since you can test source code versus completed code) but I have found this difficult enough that I'll stick with the easy way right now. Unfortunately this has broken pyright's import resolution logic again so I need to go back and fix that.
 
+I figured it out thanks to [this Github issue](https://github.com/microsoft/python-language-server/issues/1484). I modified my VSCode settings.json to include:
+```json
+ "python.analysis.extraPaths": [
+        "./tests/functional",
+        "./tests/unit",
+        "./tests/"
+    ]
+```
+This caused all the Pyright complaints to cease, and VSCode could import and resolve all the packages again. Thank god.
 
 
 
